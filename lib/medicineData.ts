@@ -130,7 +130,6 @@ export const medicineData: Medicine[] = [
     prime: 0,
     unitsInPen: 1000,
     expire: 28,
-    pensAmount: "",
   },
 
   {
