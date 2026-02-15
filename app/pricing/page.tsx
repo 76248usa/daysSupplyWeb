@@ -133,7 +133,9 @@ export default function PricingPage() {
                   <div className="mt-1">
                     This tool is an estimate and clinical aid only. Always
                     verify against the prescription, product labeling, payer
-                    requirements, and professional judgment.
+                    requirements, and professional judgment. This service does
+                    not sell, dispense, or distribute medication. It is a
+                    professional calculation tool only.
                   </div>
                 </div>
               </div>
