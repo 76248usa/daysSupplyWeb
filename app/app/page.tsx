@@ -1,5 +1,3 @@
-//
-
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -8,6 +6,7 @@ import { medicineData } from "@/lib/medicineData";
 import EyeDropsCalculator from "@/components/EyeDropsCalculator";
 import EarDropsCalculator from "@/components/EarDropsCalculator";
 import { Search } from "lucide-react";
+import { usePro } from "@/context/ProContext";
 
 const TRIAL_LINE =
   "1-month free trial, then $3.99/year. Auto-renews until canceled.";
@@ -17,6 +16,8 @@ type Tab = "medicines" | "eye" | "ear";
 export default function AppHome() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<Tab>("medicines");
+
+  const { effectiveIsPro, isLoading } = usePro();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -34,14 +35,26 @@ export default function AppHome() {
           Fast, audit-safe day-supply calculations
         </p>
 
+        {/* ✅ Gate card */}
         <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 text-center">
           <p className="text-slate-200 font-semibold">{TRIAL_LINE}</p>
-          <Link
-            href="/app/upgrade"
-            className="mt-3 inline-block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900"
-          >
-            Start Free Trial
-          </Link>
+
+          {isLoading ? (
+            <div className="mt-3 text-sm text-slate-400">
+              Checking subscription…
+            </div>
+          ) : effectiveIsPro ? (
+            <div className="mt-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-3 text-emerald-200 text-sm font-semibold">
+              Pro unlocked ✅
+            </div>
+          ) : (
+            <Link
+              href="/pricing"
+              className="mt-3 inline-block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900"
+            >
+              Start Free Trial
+            </Link>
+          )}
         </div>
 
         {/* Segmented toggle */}
@@ -64,17 +77,24 @@ export default function AppHome() {
 
         <DisclaimerAccordion />
 
+        {/* ✅ If locked, show a gentle notice; still allow browsing list */}
+        {!isLoading && !effectiveIsPro ? (
+          <div className="mt-4 rounded-xl border border-amber-700/40 bg-amber-900/20 p-3 text-xs text-amber-200">
+            <p className="font-semibold">Free trial available</p>
+            <p className="mt-1">
+              You can browse medicines, but calculations require starting the
+              trial.
+            </p>
+          </div>
+        ) : null}
+
         {/* Search only when on Medicines tab */}
         {tab === "medicines" ? (
           <div className="mt-5 relative">
-            {/* <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 pointer-events-none">
-              🔍
-            </span> */}
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
             />
-
             <input
               className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-3 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               placeholder="Search insulin name..."
@@ -106,11 +126,19 @@ export default function AppHome() {
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Trial begins when you tap “Start Free Trial” and confirm payment.
-        </p>
-        <div className="mt-2 text-center text-sm text-slate-400">
-          Locked — {TRIAL_LINE}
+        {/* Bottom line only when locked */}
+        {!isLoading && !effectiveIsPro ? (
+          <div className="mt-2 text-center text-sm text-slate-400">
+            Locked — {TRIAL_LINE}
+          </div>
+        ) : (
+          <p className="mt-6 text-center text-xs text-slate-400">
+            Trial begins when you tap “Start Free Trial” and confirm payment.
+          </p>
+        )}
+
+        <div className="mt-3 text-center text-xs text-slate-400">
+          We do not sell user information.
         </div>
       </div>
     </main>

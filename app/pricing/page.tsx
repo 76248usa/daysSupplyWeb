@@ -11,11 +11,20 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function normalizeEmail(raw: string) {
+    return raw.trim().toLowerCase();
+  }
+
+  function isValidEmail(e: string) {
+    // lightweight validation (enough for UI)
+    return e.includes("@") && e.includes(".") && e.length >= 6;
+  }
+
   async function startTrial() {
     setError(null);
 
-    const e = email.trim();
-    if (!e || !e.includes("@")) {
+    const e = normalizeEmail(email);
+    if (!isValidEmail(e)) {
       setError("Please enter a valid email address.");
       return;
     }
@@ -36,6 +45,13 @@ export default function PricingPage() {
       }
 
       if (json?.url) {
+        // ✅ MUST be client-side (browser)
+        localStorage.setItem("ds_email", e);
+        localStorage.setItem(
+          "ds_last_checkout_started_at",
+          new Date().toISOString(),
+        );
+
         window.location.href = json.url;
       } else {
         setError("Checkout link not returned.");
@@ -76,6 +92,7 @@ export default function PricingPage() {
             <div className="mt-0.5 rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-slate-300">
               🔒
             </div>
+
             <div className="flex-1">
               <div className="text-lg font-extrabold text-slate-100">
                 Pro Subscription
@@ -96,6 +113,9 @@ export default function PricingPage() {
                     placeholder="you@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !loading) startTrial();
+                    }}
                     autoComplete="email"
                     inputMode="email"
                   />
@@ -122,8 +142,7 @@ export default function PricingPage() {
 
                 <p className="text-xs text-slate-400">
                   You’ll be asked for a payment method, but you won’t be charged
-                  until the trial ends. Cancel anytime in the Stripe customer
-                  portal (we’ll add it next).
+                  until the trial ends. Cancel anytime.
                 </p>
 
                 <div className="mt-3 rounded-xl border border-amber-700/40 bg-amber-900/20 p-3 text-xs text-amber-200">

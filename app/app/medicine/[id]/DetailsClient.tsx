@@ -1,50 +1,9 @@
-// "use client";
-
-// import { useMemo, useState } from "react";
-// import { usePro } from "@/context/ProContext";
-// import Link from "next/link";
-// import type { Medicine } from "@/lib/medicineData";
-
-// type Medicine = {
-//   id: number;
-//   name: string;
-//   addToName?: string;
-//   ndc?: string;
-//   unitsInPen?: number; // total units per pen/vial
-//   expire?: number; // max in-use days cap
-//   prime?: number; // priming units per injection
-//   pensAmount?: number; // OPTIONAL: pens per box if you use it
-//   dosage?: string;
-// };
-
-// export default function DetailsClient({ medicine }: { medicine: Medicine }) {
-//   const { effectiveIsPro } = usePro();
-
-//   const [units, setUnits] = useState("");
-//   const [times, setTimes] = useState("");
-//   const [answer, setAnswer] = useState<number | null>(null);
-//   const [boxAnswer, setBoxAnswer] = useState<number | null>(null);
-
-//   const prime = Number(medicine?.prime ?? 0);
-
-//   const parsed = useMemo(() => {
-//     const u = Number(units);
-//     const t = Number(times);
-//     return {
-//       u,
-//       t,
-//       valid: Number.isFinite(u) && Number.isFinite(t) && u > 0 && t > 0,
-//     };
-//   }, [units, times]);
-
 "use client";
 
 import { useMemo, useState } from "react";
 import { usePro } from "@/context/ProContext";
 import Link from "next/link";
 import type { Medicine } from "@/lib/medicineData";
-
-// ✅ removed local type Medicine
 
 export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   const { effectiveIsPro } = usePro();
@@ -67,36 +26,20 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   }, [units, times]);
 
   const calculate = () => {
-    if (!effectiveIsPro) {
-      window.alert(
-        "Subscription required. Free trial available. Subscription required for full access.",
-      );
-      return;
-    }
+    if (!effectiveIsPro) return; // ✅ gated
 
-    if (!parsed.valid) {
-      window.alert(
-        "Please enter valid numbers for Units per dose and Times per day.",
-      );
-      return;
-    }
+    if (!parsed.valid) return;
 
     const totalUnits = Number(medicine?.unitsInPen ?? 0);
     const expire = Number(medicine?.expire ?? 0);
 
-    if (!Number.isFinite(totalUnits) || totalUnits <= 0) {
-      window.alert("This medication is missing total units per pen/vial.");
-      return;
-    }
+    if (!Number.isFinite(totalUnits) || totalUnits <= 0) return;
 
     const dailyUnits = parsed.t * parsed.u;
     const dailyPrime = parsed.t * prime;
     const dailyTotal = dailyUnits + dailyPrime;
 
-    if (!Number.isFinite(dailyTotal) || dailyTotal <= 0) {
-      window.alert("Calculation error. Please check inputs.");
-      return;
-    }
+    if (!Number.isFinite(dailyTotal) || dailyTotal <= 0) return;
 
     const rawDays = totalUnits / dailyTotal;
     const cappedDays = expire ? Math.min(rawDays, expire) : rawDays;
@@ -104,7 +47,6 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
 
     setAnswer(floorDays);
 
-    // OPTIONAL: "days supply per box" if pensAmount = pens per box
     const pensPerBox = Number(medicine?.pensAmount ?? 0);
     if (Number.isFinite(pensPerBox) && pensPerBox > 0) {
       setBoxAnswer(floorDays * pensPerBox);
@@ -124,6 +66,8 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     if (e.key === "Enter") calculate();
   };
 
+  const locked = !effectiveIsPro;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
       {/* Header */}
@@ -135,10 +79,10 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
           Home
         </Link>
 
-        {!effectiveIsPro && (
+        {locked && (
           <Link
-            href="/upgrade"
-            className="px-4 py-2 rounded-full border border-yellow-400/40 bg-yellow-300/10 text-yellow-200 font-semibold"
+            href="/pricing"
+            className="px-4 py-2 rounded-full border border-cyan-400/40 bg-cyan-300/10 text-cyan-200 font-semibold"
           >
             Free Trial • Upgrade
           </Link>
@@ -161,10 +105,22 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
         </p>
       )}
 
-      {!effectiveIsPro && (
-        <p className="text-center text-sm text-slate-400 mt-3">
-          Free trial available. Subscription required for full access.
-        </p>
+      {/* ✅ Locked banner (instead of alert) */}
+      {locked && (
+        <div className="mt-4 max-w-2xl mx-auto rounded-xl border border-amber-700/40 bg-amber-900/20 p-4 text-amber-200">
+          <div className="font-extrabold">Free trial available</div>
+          <div className="text-sm mt-1 text-amber-100/90">
+            Calculations require a subscription. Trial begins after you confirm
+            payment and will auto-renew unless canceled.
+          </div>
+
+          <Link
+            href="/pricing"
+            className="mt-3 inline-block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900"
+          >
+            Start Free Trial
+          </Link>
+        </div>
       )}
 
       {/* Results */}
@@ -195,43 +151,55 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
 
       {/* Inputs */}
       <div className="mt-6 max-w-md mx-auto space-y-4">
-        <div>
-          <label className="block text-slate-200 mb-2">Units per dose</label>
-          <input
-            value={units}
-            onChange={(e) => setUnits(e.target.value.replace(/[^0-9.]/g, ""))}
-            onKeyDown={onKeyDown}
-            inputMode="decimal"
-            className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100"
-            placeholder="e.g. 20"
-          />
-        </div>
+        {/* subtle lock overlay by disabling inputs/buttons */}
+        <div className={locked ? "opacity-60" : ""}>
+          <div>
+            <label className="block text-slate-200 mb-2">Units per dose</label>
+            <input
+              value={units}
+              disabled={locked}
+              onChange={(e) => setUnits(e.target.value.replace(/[^0-9.]/g, ""))}
+              onKeyDown={onKeyDown}
+              inputMode="decimal"
+              className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 disabled:cursor-not-allowed"
+              placeholder="e.g. 20"
+            />
+            {!locked && !parsed.valid && units !== "" && times !== "" ? (
+              <p className="mt-2 text-xs text-amber-200">
+                Please enter valid numbers.
+              </p>
+            ) : null}
+          </div>
 
-        <div>
-          <label className="block text-slate-200 mb-2">Times per day</label>
-          <input
-            value={times}
-            onChange={(e) => setTimes(e.target.value.replace(/[^0-9.]/g, ""))}
-            onKeyDown={onKeyDown}
-            inputMode="decimal"
-            className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100"
-            placeholder="e.g. 1"
-          />
-        </div>
+          <div className="mt-4">
+            <label className="block text-slate-200 mb-2">Times per day</label>
+            <input
+              value={times}
+              disabled={locked}
+              onChange={(e) => setTimes(e.target.value.replace(/[^0-9.]/g, ""))}
+              onKeyDown={onKeyDown}
+              inputMode="decimal"
+              className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 disabled:cursor-not-allowed"
+              placeholder="e.g. 1"
+            />
+          </div>
 
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={calculate}
-            className="flex-1 bg-green-500 text-black py-3 rounded-lg font-extrabold hover:opacity-90"
-          >
-            Confirm
-          </button>
-          <button
-            onClick={reset}
-            className="flex-1 border border-slate-500 py-3 rounded-lg font-semibold text-slate-100 hover:bg-slate-900"
-          >
-            Reset
-          </button>
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={calculate}
+              disabled={locked}
+              className="flex-1 bg-green-500 text-black py-3 rounded-lg font-extrabold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm
+            </button>
+            <button
+              onClick={reset}
+              disabled={locked}
+              className="flex-1 border border-slate-500 py-3 rounded-lg font-semibold text-slate-100 hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         <p className="text-center text-xs text-slate-500 pt-2">
