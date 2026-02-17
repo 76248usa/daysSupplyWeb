@@ -167,9 +167,9 @@ export async function POST(req: Request) {
             : (invoice.customer?.id ?? null);
 
         const stripeSubscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : (invoice.subscription?.id ?? null);
+          typeof (invoice as any).subscription === "string"
+            ? ((invoice as any).subscription as string)
+            : ((invoice as any).subscription?.id ?? null);
 
         if (!stripeSubscriptionId) {
           console.warn("invoice.payment_succeeded: missing subscription id");
