@@ -7,44 +7,79 @@ import EyeDropsCalculator from "@/components/EyeDropsCalculator";
 import EarDropsCalculator from "@/components/EarDropsCalculator";
 import { Search } from "lucide-react";
 import { usePro } from "@/context/ProContext";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const TRIAL_LINE =
   "1-month free trial, then $3.99/year. Auto-renews until canceled.";
 
 type Tab = "medicines" | "eye" | "ear";
 
+const RECENT_KEY = "ds_recent_checkout_ts";
+const RECENT_MS = 10 * 60 * 1000; // 10 minutes
+
+function hasRecentCheckout(): boolean {
+  if (typeof window === "undefined") return false;
+  const raw = window.sessionStorage.getItem(RECENT_KEY);
+  const ts = raw ? Number(raw) : 0;
+  return Number.isFinite(ts) && ts > 0 && Date.now() - ts < RECENT_MS;
+}
+
+function setRecentCheckoutNow() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(RECENT_KEY, String(Date.now()));
+}
+
 export default function AppHome() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<Tab>("medicines");
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const checkout = searchParams.get("checkout"); // success/cancel/null
 
   const { effectiveIsPro, isLoading, refreshWithRetry } = usePro();
 
-  // Post-checkout window: allow details navigation while status syncs
+  // “Activating” is now persistent across back navigation (for a while)
   const [activating, setActivating] = useState(false);
 
+  // 1) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
     if (checkout === "success") {
+      setRecentCheckoutNow();
       setActivating(true);
 
-      // Keep "activating" on for a bit even if refresh completes,
-      // so the user can click a medicine immediately.
-      const timer = window.setTimeout(() => setActivating(false), 20000);
+      refreshWithRetry({ attempts: 8, delayMs: 1500 }).catch(() => {});
 
+      // Optional: clean the URL so you don't keep the param around
+      router.replace("/app");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkout]);
+
+  // 2) On Home mount (including when you come back from Details), if we recently checked out,
+  // keep activating on and retry refresh again.
+  useEffect(() => {
+    if (effectiveIsPro) {
+      setActivating(false);
+      return;
+    }
+
+    if (hasRecentCheckout()) {
+      setActivating(true);
       refreshWithRetry({ attempts: 6, delayMs: 1500 })
         .catch(() => {})
         .finally(() => {
-          // timer controls when activating ends
+          // Keep activating true for the entire RECENT window
+          // (so Home doesn’t flip back to “Start Free Trial” between taps)
+          setActivating(hasRecentCheckout() && !effectiveIsPro);
         });
-
-      return () => window.clearTimeout(timer);
+    } else {
+      setActivating(false);
     }
-  }, [checkout, refreshWithRetry]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveIsPro]);
 
-  const locked = !isLoading && !effectiveIsPro;
+  // If they are Pro, or they recently checked out, allow navigation to details
   const canOpenDetails = effectiveIsPro || activating;
 
   const filtered = useMemo(() => {
@@ -63,7 +98,7 @@ export default function AppHome() {
           Fast, audit-safe day-supply calculations
         </p>
 
-        {/* ✅ Gate card */}
+        {/* ✅ Gate card (only place that gates) */}
         <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 text-center">
           <p className="text-slate-200 font-semibold">{TRIAL_LINE}</p>
 
@@ -79,7 +114,7 @@ export default function AppHome() {
             <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 text-slate-200 text-sm font-semibold">
               Activating your subscription…
               <div className="mt-1 text-xs text-slate-400 font-normal">
-                You can select a medication now.
+                You can keep selecting medications while this syncs.
               </div>
             </div>
           ) : (
@@ -134,76 +169,36 @@ export default function AppHome() {
         ) : tab === "ear" ? (
           <EarDropsCalculator />
         ) : (
-          // <div className="mt-4 space-y-3">
-          //   {filtered.map((m) =>
-          //     canOpenDetails ? (
-          //       <Link
-          //         key={m.id}
-          //         href={`/app/medicine/${m.id}`}
-          //         className="block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800"
-          //       >
-          //         <div className="text-lg font-bold">{m.name}</div>
-          //         {m.addToName ? (
-          //           <div className="text-sm text-slate-300">{m.addToName}</div>
-          //         ) : null}
-          //       </Link>
-          //     ) : (
-          //       <div
-          //         key={m.id}
-          //         className="block rounded-xl border border-slate-800 bg-slate-900 p-4 opacity-70"
-          //       >
-          //         <div className="text-lg font-bold">{m.name}</div>
-          //         {m.addToName ? (
-          //           <div className="text-sm text-slate-300">{m.addToName}</div>
-          //         ) : null}
-          //         <div className="mt-2 text-xs text-amber-200">
-          //           Start trial to calculate
-          //         </div>
-          //       </div>
-          //     ),
-          //   )}
-          // </div>
-
           <div className="mt-4 space-y-3">
-            {filtered.map((m) => {
-              const href = canOpenDetails
-                ? `/app/medicine/${m.id}`
-                : "/pricing";
-
-              return (
+            {filtered.map((m) =>
+              canOpenDetails ? (
                 <Link
                   key={m.id}
-                  href={href}
-                  className={[
-                    "block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800",
-                    !canOpenDetails ? "opacity-70" : "",
-                  ].join(" ")}
+                  href={`/app/medicine/${m.id}`}
+                  className="block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800"
                 >
                   <div className="text-lg font-bold">{m.name}</div>
                   {m.addToName ? (
                     <div className="text-sm text-slate-300">{m.addToName}</div>
                   ) : null}
-
-                  {!canOpenDetails ? (
-                    <div className="mt-2 text-xs text-amber-200">
-                      Start trial to calculate
-                    </div>
-                  ) : null}
                 </Link>
-              );
-            })}
+              ) : (
+                <Link
+                  key={m.id}
+                  href="/pricing"
+                  className="block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800 opacity-70"
+                >
+                  <div className="text-lg font-bold">{m.name}</div>
+                  {m.addToName ? (
+                    <div className="text-sm text-slate-300">{m.addToName}</div>
+                  ) : null}
+                  <div className="mt-2 text-xs text-amber-200">
+                    Start trial to calculate
+                  </div>
+                </Link>
+              ),
+            )}
           </div>
-        )}
-
-        {/* Bottom line */}
-        {locked && !activating ? (
-          <div className="mt-2 text-center text-sm text-slate-400">
-            Locked — {TRIAL_LINE}
-          </div>
-        ) : (
-          <p className="mt-6 text-center text-xs text-slate-400">
-            Trial begins when you tap “Start Free Trial” and confirm payment.
-          </p>
         )}
 
         <div className="mt-3 text-center text-xs text-slate-400">
