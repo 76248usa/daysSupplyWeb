@@ -4,138 +4,281 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// ---------- Stripe ----------
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
+});
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// ---------- Supabase (service role) ----------
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-function normEmail(v: unknown) {
-  const s = typeof v === "string" ? v.trim().toLowerCase() : "";
-  return s || null;
+// ---------- Helpers ----------
+function normEmail(v: unknown): string | null {
+  const s = String(v ?? "")
+    .trim()
+    .toLowerCase();
+  return s ? s : null;
 }
 
-async function upsertSubscriptionRow(payload: {
-  email: string | null;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
-  status: string | null;
-  current_period_end: string | null;
-  price_id?: string | null;
-}) {
-  if (!payload.stripe_subscription_id) {
-    // Without a subscription id, we can't safely upsert (avoid polluting the table)
-    console.warn(
-      "Webhook upsert skipped: missing stripe_subscription_id",
-      payload,
-    );
-    return;
+function isoFromUnixSeconds(sec: number | null | undefined): string | null {
+  if (!sec || !Number.isFinite(sec)) return null;
+  return new Date(sec * 1000).toISOString();
+}
+
+// ✅ Backfill email from Stripe Customer when webhook payload has no email
+async function getCustomerEmail(
+  customerId: string | null,
+): Promise<string | null> {
+  if (!customerId) return null;
+  try {
+    const c = await stripe.customers.retrieve(customerId);
+    if ((c as any)?.deleted) return null;
+    return normEmail((c as Stripe.Customer).email);
+  } catch (e) {
+    console.warn("getCustomerEmail failed:", e);
+    return null;
   }
+}
 
-  const { error } = await supabaseAdmin.from("subscriptions").upsert(
-    {
-      email: payload.email,
-      stripe_customer_id: payload.stripe_customer_id,
-      stripe_subscription_id: payload.stripe_subscription_id,
-      status: payload.status,
-      current_period_end: payload.current_period_end,
-      price_id: payload.price_id ?? null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "stripe_subscription_id" },
-  );
+// ✅ Pull authoritative period end + price_id from Stripe subscription
+async function getSubTimingAndPrice(stripeSubscriptionId: string): Promise<{
+  current_period_end: string | null;
+  price_id: string | null;
+  status: string | null;
+}> {
+  try {
+    const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
 
-  if (error) {
-    console.error("Supabase upsert error:", error);
-    throw new Error(`Supabase upsert failed: ${error.message}`);
+    const cpe =
+      typeof (sub as any).current_period_end === "number"
+        ? (sub as any).current_period_end
+        : null;
+
+    const current_period_end = cpe ? new Date(cpe * 1000).toISOString() : null;
+
+    const price_id =
+      (sub as any)?.items?.data?.[0]?.price?.id ??
+      (sub as any)?.items?.data?.[0]?.plan?.id ??
+      null;
+
+    const status = (sub as any)?.status ?? null;
+
+    return { current_period_end, price_id, status };
+  } catch (e) {
+    console.warn("getSubTimingAndPrice failed:", e);
+    return { current_period_end: null, price_id: null, status: null };
   }
 }
 
 export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature");
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  if (!sig || !secret) {
-    console.error("Missing stripe-signature or STRIPE_WEBHOOK_SECRET");
-    return NextResponse.json(
-      { error: "webhook_not_configured" },
-      { status: 400 },
-    );
+  if (!sig) {
+    return NextResponse.json({ error: "missing_signature" }, { status: 400 });
   }
 
   const body = await req.text();
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, secret);
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: any) {
     console.error("Invalid webhook signature:", err?.message);
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
   try {
-    // A) Checkout completion — good moment to record customer/subscription + email
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
+    switch (event.type) {
+      /**
+       * 1) Checkout completion
+       * Capture email + customer + subscription id as early as possible.
+       * ✅ IMPORTANT: write status "trialing" (NOT "unknown") so Home can flip immediately.
+       */
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
 
-      const email =
-        normEmail(session.customer_details?.email) ??
-        normEmail(session.customer_email) ??
-        normEmail((session.metadata as any)?.email);
+        const stripeCustomerId =
+          typeof session.customer === "string" ? session.customer : null;
 
-      const stripeCustomerId =
-        typeof session.customer === "string" ? session.customer : null;
+        const stripeSubscriptionId =
+          typeof session.subscription === "string"
+            ? session.subscription
+            : null;
 
-      const stripeSubscriptionId =
-        typeof session.subscription === "string" ? session.subscription : null;
+        if (!stripeSubscriptionId) {
+          console.warn("checkout.session.completed: missing subscription id");
+          break;
+        }
 
-      await upsertSubscriptionRow({
-        email,
-        stripe_customer_id: stripeCustomerId,
-        stripe_subscription_id: stripeSubscriptionId,
-        status: "checkout_completed",
-        current_period_end: null,
-      });
+        let email =
+          normEmail(session.customer_details?.email) ??
+          normEmail(session.customer_email) ??
+          normEmail((session.metadata as any)?.email) ??
+          null;
+
+        if (!email) {
+          email = await getCustomerEmail(stripeCustomerId);
+        }
+
+        // Try to fill these right away (nice-to-have)
+        const subInfo = await getSubTimingAndPrice(stripeSubscriptionId);
+
+        const { error } = await supabaseAdmin.from("subscriptions").upsert(
+          {
+            email,
+            stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: stripeSubscriptionId,
+
+            // ✅ Make Pro flip immediately after successful checkout
+            status: "trialing",
+
+            // nice-to-have if available
+            current_period_end: subInfo.current_period_end,
+            price_id: subInfo.price_id,
+
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "stripe_subscription_id" },
+        );
+
+        if (error) {
+          console.error(
+            "Supabase upsert error (checkout.session.completed):",
+            error,
+          );
+        }
+
+        break;
+      }
+
+      /**
+       * 2) Invoice payment succeeded
+       * ✅ Set status active + fill current_period_end + price_id reliably from subscription.
+       */
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as Stripe.Invoice;
+
+        const stripeCustomerId =
+          typeof invoice.customer === "string"
+            ? invoice.customer
+            : (invoice.customer?.id ?? null);
+
+        const stripeSubscriptionId =
+          typeof invoice.subscription === "string"
+            ? invoice.subscription
+            : (invoice.subscription?.id ?? null);
+
+        if (!stripeSubscriptionId) {
+          console.warn("invoice.payment_succeeded: missing subscription id");
+          break;
+        }
+
+        let email =
+          normEmail(invoice.customer_email) ??
+          normEmail((invoice as any)?.customer_details?.email) ??
+          null;
+
+        if (!email) {
+          email = await getCustomerEmail(stripeCustomerId);
+        }
+
+        const subInfo = await getSubTimingAndPrice(stripeSubscriptionId);
+
+        const { error } = await supabaseAdmin.from("subscriptions").upsert(
+          {
+            email,
+            stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: stripeSubscriptionId,
+
+            status: "active",
+
+            // ✅ filled from subscription (more reliable than invoice.lines)
+            current_period_end: subInfo.current_period_end,
+
+            // ✅ fill price_id too
+            price_id: subInfo.price_id,
+
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "stripe_subscription_id" },
+        );
+
+        if (error) {
+          console.error(
+            "Supabase upsert error (invoice.payment_succeeded):",
+            error,
+          );
+        }
+
+        break;
+      }
+
+      /**
+       * 3) Subscription lifecycle updates
+       * Keeps status in sync (trialing/active/past_due/canceled/etc)
+       * ✅ Also fills current_period_end + price_id from subscription.
+       */
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+
+        const stripeSubscriptionId = sub.id ?? null;
+        const stripeCustomerId =
+          typeof sub.customer === "string"
+            ? sub.customer
+            : (sub.customer?.id ?? null);
+
+        if (!stripeSubscriptionId) {
+          console.warn(`${event.type}: missing subscription id`);
+          break;
+        }
+
+        const stripeStatus = (sub.status ?? "unknown") as string;
+
+        // Backfill email (subscription objects usually don't include it)
+        const email = await getCustomerEmail(stripeCustomerId);
+
+        const subInfo = await getSubTimingAndPrice(stripeSubscriptionId);
+
+        const { error } = await supabaseAdmin.from("subscriptions").upsert(
+          {
+            email,
+            stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: stripeSubscriptionId,
+
+            // Prefer Stripe’s canonical status here
+            status: stripeStatus,
+
+            current_period_end: subInfo.current_period_end,
+            price_id: subInfo.price_id,
+
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "stripe_subscription_id" },
+        );
+
+        if (error) {
+          console.error(`Supabase upsert error (${event.type}):`, error);
+        }
+
+        break;
+      }
+
+      default:
+        // ignore
+        break;
     }
 
-    // B) Subscription lifecycle — this is where trialing/active/canceled comes from
-    if (
-      event.type === "customer.subscription.created" ||
-      event.type === "customer.subscription.updated" ||
-      event.type === "customer.subscription.deleted"
-    ) {
-      const sub = event.data.object as Stripe.Subscription;
-
-      const stripeCustomerId =
-        typeof sub.customer === "string" ? sub.customer : null;
-
-      // Try to keep email if we stored it earlier via checkout metadata/email.
-      // If you later add metadata.email during checkout, this will always be present.
-      const email = normEmail((sub.metadata as any)?.email);
-
-      const currentPeriodEnd =
-        typeof sub.current_period_end === "number"
-          ? new Date(sub.current_period_end * 1000).toISOString()
-          : null;
-
-      const priceId = sub.items?.data?.[0]?.price?.id
-        ? String(sub.items.data[0].price.id)
-        : null;
-
-      await upsertSubscriptionRow({
-        email,
-        stripe_customer_id: stripeCustomerId,
-        stripe_subscription_id: sub.id,
-        status: sub.status ?? null,
-        current_period_end: currentPeriodEnd,
-        price_id: priceId,
-      });
-    }
-
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (err: any) {
-    console.error("Webhook handler failed:", err?.message ?? err);
-    return NextResponse.json({ error: "webhook_failed" }, { status: 500 });
+    console.error("Webhook handler error:", err?.message || err);
+    return NextResponse.json(
+      { error: "webhook_handler_failed" },
+      { status: 500 },
+    );
   }
 }

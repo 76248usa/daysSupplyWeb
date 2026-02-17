@@ -22,8 +22,11 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/billing/success`,
-      cancel_url: `${origin}/pricing`,
+      // success_url: `${origin}/billing/success`,
+      // cancel_url: `${origin}/pricing`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/app?checkout=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/app?checkout=cancel`,
+
       metadata: {
         email,
       },

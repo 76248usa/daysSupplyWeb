@@ -8,7 +8,16 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
+// Only these count as "pro", *if not expired*
+
 const PRO_STATUSES = new Set(["trialing", "active"]);
+
+function isNotExpired(currentPeriodEnd: string | null | undefined) {
+  if (!currentPeriodEnd) return true; // if you don't store it, don't block
+  const t = Date.parse(currentPeriodEnd);
+  if (!Number.isFinite(t)) return true;
+  return t > Date.now();
+}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -21,6 +30,7 @@ export async function GET(req: Request) {
     );
   }
 
+  // Prefer most recently updated record for that email
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .select("status,current_period_end,updated_at")
@@ -31,14 +41,21 @@ export async function GET(req: Request) {
 
   if (error) {
     console.error("pro-status query error:", error);
+    // IMPORTANT: keep status in your client union, or update your union to include db_error
     return NextResponse.json(
-      { isPro: false, status: "db_error" },
+      { isPro: false, status: "unknown" },
       { status: 200 },
     );
   }
 
-  const status = data?.status ?? null;
-  const isPro = status ? PRO_STATUSES.has(status) : false;
+  const status = (data?.status ?? "unknown") as string;
+  const notExpired = isNotExpired(data?.current_period_end ?? null);
 
-  return NextResponse.json({ isPro, status }, { status: 200 });
+  const isPro = PRO_STATUSES.has(status as any) && notExpired;
+
+  // Optional: if expired but status still says active/trialing, you can surface that:
+  const effectiveStatus =
+    !notExpired && PRO_STATUSES.has(status as any) ? "canceled" : status;
+
+  return NextResponse.json({ isPro, status: effectiveStatus }, { status: 200 });
 }

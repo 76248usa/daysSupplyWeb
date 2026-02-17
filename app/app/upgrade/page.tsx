@@ -1,58 +1,89 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useMemo } from "react";
+import { usePro } from "@/context/ProContext";
 
-const TRIAL_LABEL = "1-month";
-const PRICE = "$3.99";
-const PERIOD = "year";
+export default function UpgradePage() {
+  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
 
-const KEY_LINE = `${TRIAL_LABEL} free trial, then ${PRICE}/${PERIOD}. Auto-renews until canceled.`;
+  // On first mount, refresh status (helpful after returning from Stripe)
+  useEffect(() => {
+    refreshWithRetry({ attempts: 3, delayMs: 1200 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-export default function Upgrade() {
+  // If Pro is active, get out of here
+  useEffect(() => {
+    if (effectiveIsPro) {
+      window.location.href = "/app";
+    }
+  }, [effectiveIsPro]);
+
+  const showUpgrade = useMemo(() => !effectiveIsPro, [effectiveIsPro]);
+
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-2xl p-6">
-        <h1 className="text-2xl font-extrabold">Unlock Unlimited Use</h1>
-        <p className="mt-2 text-slate-300">
-          Unlock unlimited Days’ Supply calculations (priming included).
-        </p>
-
-        <p className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 font-extrabold">
-          {KEY_LINE}
-        </p>
-
-        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <div className="text-lg font-bold">Yearly Pro</div>
-          <div className="mt-2 text-slate-300">
-            Unlimited calculations, priming included.
-          </div>
-          <div className="mt-3 text-xl font-extrabold">
-            {PRICE}/{PERIOD}
-          </div>
-
-          <button
-            className="mt-4 w-full rounded-xl bg-green-400 px-4 py-3 font-extrabold text-slate-900"
-            onClick={() => alert("Next step: connect Stripe Checkout")}
-          >
-            Start Free Trial
-          </button>
-
-          <p className="mt-3 text-xs text-slate-400">
-            Payment will be charged at confirmation. Subscription automatically
-            renews unless canceled at least 24 hours before the end of the
-            current period.
-          </p>
-        </div>
-
-        <div className="mt-5">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
+      <div className="max-w-xl mx-auto">
+        <div className="flex items-center justify-between">
           <Link
             href="/app"
-            className="inline-block w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-center font-bold hover:bg-slate-800"
+            className="px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900"
           >
-            Not Now
+            Home
+          </Link>
+
+          <Link
+            href="/pricing"
+            className="px-4 py-2 rounded-full border border-cyan-400/40 bg-cyan-300/10 text-cyan-200 font-semibold"
+          >
+            Pricing
           </Link>
         </div>
+
+        <h1 className="text-3xl font-extrabold mt-8">Upgrade</h1>
+        <p className="text-slate-300 mt-2">
+          Unlock unlimited calculations and Pro features.
+        </p>
+
+        {/* Loading / syncing */}
+        {isLoading && (
+          <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/20 p-4 text-slate-200">
+            Checking subscription status…
+          </div>
+        )}
+
+        {/* Only show the trial CTA if NOT Pro */}
+        {showUpgrade && !isLoading && (
+          <div className="mt-6 rounded-xl border border-amber-700/40 bg-amber-900/20 p-5">
+            <div className="text-amber-200 font-extrabold text-lg">
+              Start your free trial
+            </div>
+            <div className="text-amber-100/90 text-sm mt-1">
+              Trial begins after you confirm payment and will auto-renew unless
+              canceled.
+            </div>
+
+            <Link
+              href="/pricing"
+              className="mt-4 inline-block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900"
+            >
+              Start Free Trial
+            </Link>
+
+            <div className="mt-2 text-[11px] text-amber-100/70">
+              Status: {status}
+            </div>
+          </div>
+        )}
+
+        {/* If Pro (briefly visible before redirect) */}
+        {!showUpgrade && (
+          <div className="mt-6 rounded-xl border border-emerald-700/30 bg-emerald-900/10 p-4 text-emerald-200">
+            Pro is active. Redirecting…
+          </div>
+        )}
       </div>
-    </main>
+    </div>
   );
 }
