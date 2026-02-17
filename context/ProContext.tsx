@@ -9,7 +9,7 @@ import React, {
   useState,
 } from "react";
 
-type ProStatus =
+export type ProStatus =
   | "trialing"
   | "active"
   | "canceled"
@@ -48,10 +48,19 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function normalizeEmail(raw: unknown) {
-  return String(raw ?? "")
-    .trim()
-    .toLowerCase();
+// ✅ Validate/coerce unknown server strings into our ProStatus union
+const ALLOWED_STATUSES = new Set<ProStatus>([
+  "trialing",
+  "active",
+  "canceled",
+  "past_due",
+  "incomplete",
+  "unknown",
+  "no_email",
+]);
+
+function toProStatus(v: unknown): ProStatus {
+  return ALLOWED_STATUSES.has(v as ProStatus) ? (v as ProStatus) : "unknown";
 }
 
 export function ProProvider({ children }: { children: React.ReactNode }) {
@@ -62,52 +71,35 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
   const SCREENSHOT_MODE = process.env.NEXT_PUBLIC_SCREENSHOT_MODE === "1";
   const effectiveIsPro = SCREENSHOT_MODE ? true : isPro;
 
-  // Avoid overlapping refresh calls + stale updates
+  // Avoid overlapping refresh calls
   const inFlight = useRef<Promise<RefreshResult> | null>(null);
   const lastEmailRef = useRef<string>("");
-  const mountedRef = useRef(false);
 
   const refresh = async (): Promise<RefreshResult> => {
-    // Screenshot mode: always pro, no network calls
-    if (SCREENSHOT_MODE) {
-      const r = { isPro: true, status: "active" as ProStatus };
-      setIsPro(true);
-      setStatus("active");
-      return r;
-    }
-
     if (inFlight.current) return inFlight.current;
 
-    const run = (async () => {
+    const run: Promise<RefreshResult> = (async () => {
       setIsLoading(true);
-
-      const email =
-        typeof window !== "undefined"
-          ? normalizeEmail(window.localStorage.getItem("ds_email"))
-          : "";
-
-      lastEmailRef.current = email;
-
-      if (!email) {
-        setIsPro(false);
-        setStatus("no_email");
-        setIsLoading(false);
-        return { isPro: false, status: "no_email" };
-      }
-
       try {
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        const email =
+          typeof window !== "undefined"
+            ? (window.localStorage.getItem("ds_email") || "")
+                .trim()
+                .toLowerCase()
+            : "";
+
+        lastEmailRef.current = email;
+
+        if (!email) {
+          setIsPro(false);
+          setStatus("no_email");
+          return { isPro: false, status: "no_email" };
+        }
 
         const res = await fetch(
           `/api/pro-status?email=${encodeURIComponent(email)}`,
-          {
-            method: "GET",
-            cache: "no-store",
-            signal: controller.signal,
-            headers: { "cache-control": "no-store" },
-          },
-        ).finally(() => window.clearTimeout(timeout));
+          { method: "GET", cache: "no-store" },
+        );
 
         let j: any = null;
         try {
@@ -116,17 +108,8 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
           j = null;
         }
 
-        // If ds_email changed while request was in-flight, ignore result
-        const emailNow =
-          typeof window !== "undefined"
-            ? normalizeEmail(window.localStorage.getItem("ds_email"))
-            : "";
-        if (emailNow !== email) {
-          return { isPro: false, status: "unknown" };
-        }
-
         const nextIsPro = Boolean(j?.isPro);
-        const nextStatus: ProStatus = (j?.status as ProStatus) ?? "unknown";
+        const nextStatus = toProStatus(j?.status);
 
         setIsPro(nextIsPro);
         setStatus(nextStatus);
@@ -157,7 +140,10 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     let last: RefreshResult = { isPro: effectiveIsPro, status };
     for (let i = 0; i < attempts; i++) {
       last = await refresh();
+
+      // If we flipped to Pro, stop early
       if (last.isPro) return last;
+
       if (i < attempts - 1) await sleep(delayMs);
     }
     return last;
@@ -165,15 +151,11 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
 
   // Initial load
   useEffect(() => {
-    mountedRef.current = true;
     refresh();
-    return () => {
-      mountedRef.current = false;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh when the tab becomes active again (user returns from Stripe / switches tabs)
+  // Refresh when tab becomes active again
   useEffect(() => {
     const onVis = () => {
       if (document.visibilityState === "visible") refresh();
@@ -190,9 +172,11 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("storage", onStorage);
 
-    // Same-tab storage changes don't fire storage event
+    // Also poll occasionally for same-tab changes (storage event doesn't fire in same tab)
     const id = window.setInterval(() => {
-      const email = normalizeEmail(window.localStorage.getItem("ds_email"));
+      const email = (window.localStorage.getItem("ds_email") || "")
+        .trim()
+        .toLowerCase();
       if (email !== lastEmailRef.current) refresh();
     }, 1500);
 
@@ -202,9 +186,6 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Optional: expose quick debugging in console
-  // window.__dsPro = { refresh, refreshWithRetry } (disabled by default)
 
   const value = useMemo(
     () => ({
