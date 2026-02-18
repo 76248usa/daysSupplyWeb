@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
