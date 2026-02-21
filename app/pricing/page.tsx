@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 const PLAN_LINE =
-  "1-month free trial, then $10/year. Auto-renews until canceled.";
+  "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
 
 export default function PricingPage() {
   const [email, setEmail] = useState("");
@@ -51,7 +51,6 @@ export default function PricingPage() {
           "ds_last_checkout_started_at",
           new Date().toISOString(),
         );
-
         window.location.href = json.url;
       } else {
         setError("Checkout link not returned.");
@@ -80,11 +79,11 @@ export default function PricingPage() {
         </div>
 
         <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-center">
-          Go Pro
+          Professional Access
         </h1>
         <p className="mt-2 text-center text-slate-300">
-          Unlock unlimited use across insulin, eye drops, and ear drops
-          calculators.
+          Unlimited calculations for insulin day-supply (including priming and
+          expiration), plus eye and ear drops tools.
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
@@ -99,7 +98,27 @@ export default function PricingPage() {
               </div>
               <div className="mt-1 text-sm text-slate-300">{PLAN_LINE}</div>
 
-              <div className="mt-4 grid gap-3">
+              <div className="mt-4">
+                <div className="text-4xl font-black text-center">
+                  $10
+                  <span className="text-base font-semibold text-slate-400">
+                    {" "}
+                    / year
+                  </span>
+                </div>
+                <div className="text-center text-xs text-slate-400 mt-2">
+                  1-month free trial • Cancel anytime
+                </div>
+              </div>
+
+              <ul className="mt-6 space-y-2 text-sm text-slate-300">
+                <li>• Unlimited insulin calculations</li>
+                <li>• Priming-aware dose adjustments</li>
+                <li>• Expiration-based day caps</li>
+                <li>• Supports consistent, audit-ready documentation</li>
+              </ul>
+
+              <div className="mt-6 grid gap-3">
                 <label className="text-xs font-semibold text-slate-300">
                   Email address
                 </label>
@@ -137,24 +156,42 @@ export default function PricingPage() {
                       : "bg-cyan-400 text-slate-900 hover:brightness-110",
                   ].join(" ")}
                 >
-                  {loading ? "Opening secure checkout…" : "Start Free Trial"}
+                  {loading
+                    ? "Opening secure checkout…"
+                    : "Start Professional Trial"}
                 </button>
 
                 <p className="text-xs text-slate-400">
-                  You’ll be asked for a payment method, but you won’t be charged
-                  until the trial ends. Cancel anytime.
+                  A payment method is required to start the trial. You won’t be
+                  charged until the trial ends. Cancel anytime in the Stripe
+                  billing portal.
                 </p>
 
                 <div className="mt-3 rounded-xl border border-amber-700/40 bg-amber-900/20 p-3 text-xs text-amber-200">
-                  <div className="font-semibold">
-                    Professional use disclaimer
-                  </div>
+                  <div className="font-semibold">Professional Use Notice</div>
                   <div className="mt-1">
-                    This tool is an estimate and clinical aid only. Always
-                    verify against the prescription, product labeling, payer
-                    requirements, and professional judgment. This service does
-                    not sell, dispense, or distribute medication. It is a
-                    professional calculation tool only.
+                    This calculator is intended for licensed healthcare
+                    professionals. Results are provided as a clinical support
+                    tool only and do not replace professional judgment. Users
+                    are responsible for verifying calculations against the
+                    prescription, manufacturer labeling, payer requirements, and
+                    applicable regulations. This service does not sell,
+                    dispense, or distribute medication.
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/30 p-3 text-xs text-slate-300">
+                  <div className="font-semibold text-slate-200">
+                    Credibility
+                  </div>
+                  <div className="mt-1 text-slate-400">
+                    Built to standardize priming calculations and reduce manual
+                    math errors in day-supply documentation.
+                  </div>
+                  <div className="mt-2 space-y-1 text-slate-400">
+                    <div>• Priming + expiration logic included</div>
+                    <div>• Designed for pharmacy workflows</div>
+                    <div>• No user data is sold</div>
                   </div>
                 </div>
               </div>
@@ -164,7 +201,7 @@ export default function PricingPage() {
           <div className="mt-5 grid grid-cols-1 gap-2 text-xs text-slate-400">
             <div>• Trial: 1 month</div>
             <div>• Then: $10/year auto-renewing</div>
-            <div>• No user data is sold</div>
+            <div>• Cancel anytime</div>
           </div>
         </div>
 

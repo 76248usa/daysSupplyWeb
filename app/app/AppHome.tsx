@@ -4,13 +4,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
 import EyeDropsCalculator from "@/components/EyeDropsCalculator";
-import EarDropsCalculator from "@/components/EarDropsCalculator";
+import EarDropsCalculator from "@/components/EarDropsCalculatorClient";
 import { Search } from "lucide-react";
 import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
 
 const TRIAL_LINE =
-  "1-month free trial, then $3.99/year. Auto-renews until canceled.";
+  "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
 
 type Tab = "medicines" | "eye" | "ear";
 
@@ -29,20 +29,32 @@ function setRecentCheckoutNow() {
   window.sessionStorage.setItem(RECENT_KEY, String(Date.now()));
 }
 
+function isTab(v: string | null): v is Tab {
+  return v === "medicines" || v === "eye" || v === "ear";
+}
+
 export default function AppHome() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<Tab>("medicines");
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const checkout = searchParams.get("checkout"); // success/cancel/null
+  const tabParam = searchParams.get("tab"); // medicines/eye/ear/null
 
   const { effectiveIsPro, isLoading, refreshWithRetry } = usePro();
 
   // “Activating” is now persistent across back navigation (for a while)
   const [activating, setActivating] = useState(false);
 
-  // 1) If we returned from Stripe with checkout=success, persist it and retry refresh.
+  // A) Support landing pages: /app?tab=eye (etc)
+  useEffect(() => {
+    if (isTab(tabParam)) setTab(tabParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
+
+  // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
     if (checkout === "success") {
       setRecentCheckoutNow();
@@ -50,13 +62,14 @@ export default function AppHome() {
 
       refreshWithRetry({ attempts: 8, delayMs: 1500 }).catch(() => {});
 
-      // Optional: clean the URL so you don't keep the param around
-      router.replace("/app");
+      // ✅ Clean the URL but preserve tab, so user stays on the right section
+      const next = isTab(tabParam) ? `/app?tab=${tabParam}` : "/app";
+      router.replace(next);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkout]);
 
-  // 2) On Home mount (including when you come back from Details), if we recently checked out,
+  // C) On Home mount (including when you come back from Details), if we recently checked out,
   // keep activating on and retry refresh again.
   useEffect(() => {
     if (effectiveIsPro) {
@@ -92,14 +105,16 @@ export default function AppHome() {
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
         <h1 className="text-2xl font-extrabold text-center">
-          Insulin Days’ Supply with Priming
+          Insulin Days’ Supply Calculator with Priming
         </h1>
+
         <p className="text-center text-slate-300 mt-2">
-          Fast, audit-safe day-supply calculations
+          Professional insulin day-supply calculations with priming and
+          expiration logic.
         </p>
 
         {/* ✅ Gate card (only place that gates) */}
-        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 text-center">
+        {/* <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 text-center">
           <p className="text-slate-200 font-semibold">{TRIAL_LINE}</p>
 
           {isLoading ? (
@@ -108,7 +123,7 @@ export default function AppHome() {
             </div>
           ) : effectiveIsPro ? (
             <div className="mt-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-3 text-emerald-200 text-sm font-semibold">
-              Pro unlocked ✅
+              Pro access active ✓
             </div>
           ) : activating ? (
             <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 text-slate-200 text-sm font-semibold">
@@ -125,6 +140,39 @@ export default function AppHome() {
               Start Free Trial
             </Link>
           )}
+        </div>  */}
+
+        {/* ✅ Compact Pro banner */}
+        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="text-sm text-slate-200 font-semibold">
+              {TRIAL_LINE}
+              <div className="text-xs text-slate-400 mt-1">
+                Secure checkout via Stripe • Cancel anytime
+              </div>
+            </div>
+
+            <div className="sm:text-right">
+              {isLoading ? (
+                <div className="text-xs text-slate-400">Checking…</div>
+              ) : effectiveIsPro ? (
+                <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
+                  Pro active ✓
+                </div>
+              ) : activating ? (
+                <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
+                  Activating…
+                </div>
+              ) : (
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110"
+                >
+                  Start Free Trial
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Segmented toggle */}
@@ -145,7 +193,7 @@ export default function AppHome() {
           </div>
         </div>
 
-        <DisclaimerAccordion />
+        {tab === "medicines" ? <DisclaimerAccordion /> : null}
 
         {/* Search only when on Medicines tab */}
         {tab === "medicines" ? (
@@ -203,7 +251,26 @@ export default function AppHome() {
 
         <div className="mt-3 text-center text-xs text-slate-400">
           We do not sell user information.
+          <p className="mt-4 text-center text-xs text-slate-500">
+            For licensed pharmacy professionals only.
+          </p>
+          <p className="mt-2 text-center text-xs text-slate-500">
+            This software tool is independently developed and is not affiliated
+            with any pharmaceutical manufacturer.
+          </p>
         </div>
+
+        <details className="mt-6 text-xs text-slate-500 max-w-xl mx-auto">
+          <summary className="cursor-pointer text-center">
+            About this insulin calculator
+          </summary>
+          <p className="mt-2 text-center">
+            This insulin days supply calculator helps pharmacy professionals
+            calculate accurate day-supply quantities for insulin pens and
+            related products, incorporating priming adjustments and expiration
+            constraints commonly required for insurance and audit documentation.
+          </p>
+        </details>
       </div>
     </main>
   );
@@ -267,11 +334,24 @@ function DisclaimerAccordion() {
       {open ? (
         <div className="px-4 pb-4 text-xs text-slate-300">
           <div className="rounded-lg border border-amber-700/40 bg-amber-900/20 p-3 text-amber-200">
-            <p className="font-semibold">Professional Use Disclaimer</p>
-            <p className="mt-1">
-              Calculations are provided as a clinical aid only. Always verify
-              against the prescription, product labeling, payer requirements,
-              and professional judgment.
+            <p className="font-semibold">Professional Use Notice</p>
+
+            <p className="mt-2">
+              This calculator is intended for licensed healthcare professionals.
+              It assists with insulin day-supply estimations incorporating
+              priming and product-specific expiration considerations.
+            </p>
+
+            <p className="mt-2">
+              Results are provided as a clinical support tool only and do not
+              replace professional judgment. Users are responsible for verifying
+              calculations against the prescription, manufacturer labeling,
+              payer requirements, and applicable regulations.
+            </p>
+
+            <p className="mt-2">
+              This tool does not provide medical advice and is not intended for
+              direct patient use.
             </p>
           </div>
         </div>
