@@ -218,4 +218,70 @@ export const earDropProducts: EarDropProduct[] = [
     dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
     suggestedDurationDays: 7,
   },
+  {
+    ndc11: "00713085109",
+    brand: "Ofloxacin Otic 0.3%",
+    activeIngredients: ["Ofloxacin 0.3%"],
+    volumeMl: 5,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
+
+  {
+    ndc11: "69543045714",
+    brand: "Ciprofloxacin/Dexamethasone Otic",
+    activeIngredients: ["Ciprofloxacin 0.3%", "Dexamethasone 0.1%"],
+    volumeMl: 7.5,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
+
+  {
+    ndc11: "64980043201",
+    brand: "Neomycin/Polymyxin B/Hydrocortisone Otic",
+    activeIngredients: [
+      "Neomycin sulfate",
+      "Polymyxin B sulfate",
+      "Hydrocortisone",
+    ],
+    volumeMl: 10,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
+
+  {
+    ndc11: "70069068601",
+    brand: "Ciprofloxacin Otic 0.2%",
+    activeIngredients: ["Ciprofloxacin 0.2%"],
+    volumeMl: 14,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
+
+  {
+    ndc11: "70752015920",
+    brand: "Ofloxacin Otic 0.3%",
+    activeIngredients: ["Ofloxacin 0.3%"],
+    volumeMl: 10,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
+
+  {
+    ndc11: "71656006410",
+    brand: "Ciprofloxacin/Dexamethasone Otic",
+    activeIngredients: ["Ciprofloxacin 0.3%", "Dexamethasone 0.1%"],
+    volumeMl: 7.5,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
+
+  {
+    ndc11: "64980044810",
+    brand: "Acetic Acid 2% Otic",
+    activeIngredients: ["Acetic acid 2%"],
+    volumeMl: 15,
+    dropsPerMlDefault: DEFAULT_DROPS_PER_ML,
+    suggestedDurationDays: 7,
+  },
 ];

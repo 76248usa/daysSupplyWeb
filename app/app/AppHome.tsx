@@ -113,35 +113,6 @@ export default function AppHome() {
           expiration logic.
         </p>
 
-        {/* ✅ Gate card (only place that gates) */}
-        {/* <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 text-center">
-          <p className="text-slate-200 font-semibold">{TRIAL_LINE}</p>
-
-          {isLoading ? (
-            <div className="mt-3 text-sm text-slate-400">
-              Checking subscription…
-            </div>
-          ) : effectiveIsPro ? (
-            <div className="mt-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-3 text-emerald-200 text-sm font-semibold">
-              Pro access active ✓
-            </div>
-          ) : activating ? (
-            <div className="mt-3 rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 text-slate-200 text-sm font-semibold">
-              Activating your subscription…
-              <div className="mt-1 text-xs text-slate-400 font-normal">
-                You can keep selecting medications while this syncs.
-              </div>
-            </div>
-          ) : (
-            <Link
-              href="/pricing"
-              className="mt-3 inline-block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900"
-            >
-              Start Free Trial
-            </Link>
-          )}
-        </div>  */}
-
         {/* ✅ Compact Pro banner */}
         <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
