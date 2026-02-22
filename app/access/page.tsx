@@ -1,8 +1,13 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
+import { usePro } from "@/context/ProContext";
 
 function normalizeEmail(raw: string) {
   return raw.trim().toLowerCase();
@@ -15,25 +20,17 @@ function isValidEmail(e: string) {
 export default function AccessPage() {
   const router = useRouter();
   const sp = useSearchParams();
+  const { effectiveIsPro, isLoading, status, refresh } = usePro();
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  // Optional: prefill from localStorage if present
-  useEffect(() => {
-    try {
-      const existing =
-        typeof window !== "undefined"
-          ? (window.localStorage.getItem("ds_email") || "").trim().toLowerCase()
-          : "";
-      if (existing) setEmail(existing);
-    } catch {
-      // ignore
-    }
-  }, []);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
+  // Compute where to go next
   const nextHref = useMemo(() => {
-    // Preserve these if you ever link /access?tab=ear or /access?checkout=success
     const tab = sp.get("tab");
     const checkout = sp.get("checkout");
 
@@ -45,8 +42,37 @@ export default function AccessPage() {
     return qs ? `/app?${qs}` : "/app";
   }, [sp]);
 
-  function continueToApp() {
+  // Load auth state
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      const { data } = await supabaseBrowser.auth.getUser();
+      const e = data.user?.email ?? null;
+      if (!mounted) return;
+      setUserEmail(e);
+      // once we know auth state, refresh Pro (so status reflects auth email)
+      await refresh();
+    })();
+
+    const { data: sub } = supabaseBrowser.auth.onAuthStateChange(
+      async (_event, session) => {
+        const e = session?.user?.email ?? null;
+        setUserEmail(e);
+        await refresh();
+      },
+    );
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function sendMagicLink() {
     setError(null);
+    setSent(false);
 
     const e = normalizeEmail(email);
     if (!isValidEmail(e)) {
@@ -54,19 +80,32 @@ export default function AccessPage() {
       return;
     }
 
-    try {
-      window.localStorage.setItem("ds_email", e);
-    } catch {
-      // if localStorage blocked, still try to proceed
-    }
+    setSending(true);
+    const { error } = await supabaseBrowser.auth.signInWithOtp({
+      email: e,
+      options: {
+        // user clicks email link -> lands here -> session established -> redirect
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    setSending(false);
 
+    if (error) setError(error.message);
+    else setSent(true);
+  }
+
+  function continueToApp() {
     router.push(nextHref);
+  }
+
+  async function signOut() {
+    await supabaseBrowser.auth.signOut();
+    setUserEmail(null);
   }
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-lg p-6">
-        {/* Top */}
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/"
@@ -75,56 +114,114 @@ export default function AccessPage() {
             ← Home
           </Link>
 
-          <div className="text-xs text-slate-400">Professional access</div>
+          <div className="text-xs text-slate-400">
+            {userEmail ? (
+              <span className="inline-flex items-center gap-2">
+                {userEmail}
+                <button
+                  onClick={signOut}
+                  className="rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-800"
+                >
+                  Sign out
+                </button>
+              </span>
+            ) : (
+              "Professional access"
+            )}
+          </div>
         </div>
 
         <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-center">
           Access the Calculator
         </h1>
-        <p className="mt-2 text-center text-slate-300">
-          Enter your email to continue. This helps us associate Pro access with
-          your subscription.
-        </p>
 
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <label className="block text-xs font-semibold text-slate-300 mb-2">
-            Email address
-          </label>
+        {!userEmail ? (
+          <>
+            <p className="mt-2 text-center text-slate-300">
+              Sign in with a secure email link. You’ll stay signed in on this
+              device.
+            </p>
 
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-              ✉️
-            </span>
-            <input
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-11 pr-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") continueToApp();
-              }}
-              autoComplete="email"
-              inputMode="email"
-            />
-          </div>
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+              <label className="block text-xs font-semibold text-slate-300 mb-2">
+                Email address
+              </label>
 
-          {error ? (
-            <div className="mt-3 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
-              {error}
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                  ✉️
+                </span>
+                <input
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-11 pr-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  placeholder="you@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") sendMagicLink();
+                  }}
+                  autoComplete="email"
+                  inputMode="email"
+                />
+              </div>
+
+              {error ? (
+                <div className="mt-3 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
+                  {error}
+                </div>
+              ) : null}
+
+              {sent ? (
+                <div className="mt-3 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
+                  Link sent! Check your email to sign in.
+                </div>
+              ) : null}
+
+              <button
+                onClick={sendMagicLink}
+                disabled={sending}
+                className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
+              >
+                {sending ? "Sending…" : "Email me a sign-in link"}
+              </button>
+
+              <div className="mt-3 text-xs text-slate-400">
+                No password required. You’ll stay signed in unless you sign out.
+              </div>
             </div>
-          ) : null}
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-center text-slate-300">
+              You’re signed in. {isLoading ? "Checking access…" : null}
+            </p>
 
-          <button
-            onClick={continueToApp}
-            className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
-          >
-            Continue
-          </button>
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+              <div className="text-sm text-slate-300">
+                Status: <span className="font-semibold">{status}</span>
+              </div>
 
-          <div className="mt-3 text-xs text-slate-400">
-            No password required. You can start a free trial on the next screen.
-          </div>
-        </div>
+              {effectiveIsPro ? (
+                <button
+                  onClick={continueToApp}
+                  className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
+                >
+                  Open calculator
+                </button>
+              ) : (
+                <Link
+                  href="/pricing"
+                  className="mt-4 block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
+                >
+                  Start free trial / Subscribe
+                </Link>
+              )}
+
+              <div className="mt-3 text-xs text-slate-400">
+                Tip: add this site to your home screen for one-tap access.
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="mt-6 text-center text-xs text-slate-500">
           For licensed pharmacy professionals only.

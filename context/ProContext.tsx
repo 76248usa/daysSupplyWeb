@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export type ProStatus =
   | "trialing"
@@ -26,16 +27,12 @@ type ProContextValue = {
 
   isLoading: boolean;
 
-  // env-driven override for screenshots
   effectiveIsPro: boolean;
 
-  // optional but useful for UI/debugging
   status: ProStatus;
 
-  // single refresh call
   refresh: () => Promise<RefreshResult>;
 
-  // helper: retry refresh a couple times (useful after Stripe checkout)
   refreshWithRetry: (opts?: {
     attempts?: number;
     delayMs?: number;
@@ -48,7 +45,6 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ✅ Validate/coerce unknown server strings into our ProStatus union
 const ALLOWED_STATUSES = new Set<ProStatus>([
   "trialing",
   "active",
@@ -69,26 +65,21 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const SCREENSHOT_MODE = process.env.NEXT_PUBLIC_SCREENSHOT_MODE === "1";
+
   const effectiveIsPro = SCREENSHOT_MODE ? true : isPro;
 
-  // Avoid overlapping refresh calls
   const inFlight = useRef<Promise<RefreshResult> | null>(null);
-  const lastEmailRef = useRef<string>("");
 
   const refresh = async (): Promise<RefreshResult> => {
     if (inFlight.current) return inFlight.current;
 
     const run: Promise<RefreshResult> = (async () => {
       setIsLoading(true);
-      try {
-        const email =
-          typeof window !== "undefined"
-            ? (window.localStorage.getItem("ds_email") || "")
-                .trim()
-                .toLowerCase()
-            : "";
 
-        lastEmailRef.current = email;
+      try {
+        // 🔑 Get authenticated Supabase user
+        const { data } = await supabaseBrowser.auth.getUser();
+        const email = (data.user?.email || "").trim().toLowerCase();
 
         if (!email) {
           setIsPro(false);
@@ -98,7 +89,10 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
 
         const res = await fetch(
           `/api/pro-status?email=${encodeURIComponent(email)}`,
-          { method: "GET", cache: "no-store" },
+          {
+            method: "GET",
+            cache: "no-store",
+          },
         );
 
         let j: any = null;
@@ -138,14 +132,15 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     const delayMs = Math.max(0, opts?.delayMs ?? 1200);
 
     let last: RefreshResult = { isPro: effectiveIsPro, status };
+
     for (let i = 0; i < attempts; i++) {
       last = await refresh();
 
-      // If we flipped to Pro, stop early
       if (last.isPro) return last;
 
       if (i < attempts - 1) await sleep(delayMs);
     }
+
     return last;
   };
 
@@ -158,31 +153,24 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
   // Refresh when tab becomes active again
   useEffect(() => {
     const onVis = () => {
-      if (document.visibilityState === "visible") refresh();
+      if (document.visibilityState === "visible") {
+        refresh();
+      }
     };
+
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refresh when ds_email changes (login/logout flows)
+  // 🔁 Refresh automatically when auth state changes
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "ds_email") refresh();
-    };
-    window.addEventListener("storage", onStorage);
-
-    // Also poll occasionally for same-tab changes (storage event doesn't fire in same tab)
-    const id = window.setInterval(() => {
-      const email = (window.localStorage.getItem("ds_email") || "")
-        .trim()
-        .toLowerCase();
-      if (email !== lastEmailRef.current) refresh();
-    }, 1500);
+    const { data: sub } = supabaseBrowser.auth.onAuthStateChange(() => {
+      refresh();
+    });
 
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.clearInterval(id);
+      sub.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
