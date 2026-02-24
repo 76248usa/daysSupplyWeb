@@ -30,6 +30,11 @@ function setRecentCheckoutNow() {
   window.sessionStorage.setItem(RECENT_KEY, String(Date.now()));
 }
 
+function clearRecentCheckout() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(RECENT_KEY);
+}
+
 function isTab(v: string | null): v is Tab {
   return v === "medicines" || v === "eye" || v === "ear";
 }
@@ -46,14 +51,8 @@ export default function AppHome() {
 
   const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
 
-  // Inline auth UI state (only used when status === "no_user")
-  const [authEmail, setAuthEmail] = useState("");
-  const [authSending, setAuthSending] = useState(false);
-  const [authSent, setAuthSent] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  // “Activating” is now persistent across back navigation (for a while)
   const [activating, setActivating] = useState(false);
+
   const AUTH_DISABLED = process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
 
   // A) Support landing pages: /app?tab=eye (etc)
@@ -62,73 +61,58 @@ export default function AppHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
-  useEffect(() => {
-    if (AUTH_DISABLED) return;
-    if (status !== "no_user") return;
-
-    const next = isTab(tabParam) ? `/app?tab=${tabParam}` : "/app";
-    router.replace(`/login?next=${encodeURIComponent(next)}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [AUTH_DISABLED, status, tabParam]);
-
   // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
-    if (checkout === "success") {
-      setRecentCheckoutNow();
-      setActivating(true);
+    if (checkout !== "success") return;
 
-      refreshWithRetry({ attempts: 8, delayMs: 1500 }).catch(() => {});
+    setRecentCheckoutNow();
+    setActivating(true);
 
-      // ✅ Clean the URL but preserve tab
-      const next = isTab(tabParam) ? `/app?tab=${tabParam}` : "/app";
-      router.replace(next);
-    }
+    refreshWithRetry({ attempts: 8, delayMs: 1500 }).catch(() => {});
+
+    // ✅ Clean the URL but preserve tab
+    const next = isTab(tabParam) ? `/app?tab=${tabParam}` : "/app";
+    router.replace(next);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkout]);
 
-  // C) On Home mount (including when you come back from Details), if we recently checked out,
-  // keep activating on and retry refresh again.
+  // C1) If Pro becomes true, stop activating + clear flag immediately
   useEffect(() => {
-    if (effectiveIsPro) {
-      setActivating(false);
-      return;
-    }
-
-    if (hasRecentCheckout()) {
-      setActivating(true);
-      refreshWithRetry({ attempts: 6, delayMs: 1500 })
-        .catch(() => {})
-        .finally(() => {
-          setActivating(hasRecentCheckout() && !effectiveIsPro);
-        });
-    } else {
-      setActivating(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!effectiveIsPro) return;
+    clearRecentCheckout();
+    setActivating(false);
   }, [effectiveIsPro]);
 
-  async function sendMagicLink() {
-    setAuthError(null);
-    setAuthSent(false);
+  // C2) If not Pro but we recently checked out, retry a few times then stop
+  useEffect(() => {
+    if (effectiveIsPro) return;
 
-    const e = authEmail.trim().toLowerCase();
-    if (!e.includes("@") || !e.includes(".")) {
-      setAuthError("Please enter a valid email address.");
+    if (!hasRecentCheckout()) {
+      setActivating(false);
       return;
     }
 
-    setAuthSending(true);
-    const { error } = await supabaseBrowser.auth.signInWithOtp({
-      email: e,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    setAuthSending(false);
+    let cancelled = false;
+    setActivating(true);
 
-    if (error) setAuthError(error.message);
-    else setAuthSent(true);
-  }
+    refreshWithRetry({ attempts: 6, delayMs: 1500 })
+      .catch(() => {})
+      .finally(() => {
+        if (cancelled) return;
+
+        // If Pro still isn't active after retries, stop and clear the flag
+        if (!effectiveIsPro) {
+          clearRecentCheckout();
+        }
+        setActivating(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveIsPro]);
 
   async function signOut() {
     await supabaseBrowser.auth.signOut();
@@ -140,35 +124,16 @@ export default function AppHome() {
     return medicineData.filter((m) => m.name.toLowerCase().includes(q));
   }, [search]);
 
-  // If they are Pro, or they recently checked out, allow navigation to details
   const canOpenDetails = effectiveIsPro || activating;
-  if (!AUTH_DISABLED && status === "no_user") {
-    // You can also just render a minimal message while redirecting
 
-    return (
-      <main className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto max-w-2xl p-6 text-center text-slate-300">
-          Redirecting to sign in…
-        </div>
-      </main>
-    );
-  }
+  const showAlreadyProSignIn =
+    !AUTH_DISABLED && status === "no_user" && !effectiveIsPro && !activating;
 
-  // Signed-in UI
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
-        {/* <div className="flex items-center justify-end">
-          <button
-            onClick={signOut}
-            className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
-          >
-            Sign out
-          </button>
-        </div> */}
-
-        <div className="flex items-center justify-end">
-          {!AUTH_DISABLED ? (
+        <div className="flex items-center justify-end gap-3">
+          {!AUTH_DISABLED && status !== "no_user" ? (
             <button
               onClick={signOut}
               className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
@@ -190,13 +155,6 @@ export default function AppHome() {
         {/* ✅ Compact Pro banner */}
         <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            {/* <div className="text-sm text-slate-200 font-semibold">
-              {TRIAL_LINE}
-              <div className="text-xs text-slate-400 mt-1">
-                Secure checkout via Stripe • Cancel anytime
-              </div>
-            </div> */}
-
             <div className="text-sm text-slate-200 font-semibold">
               {AUTH_DISABLED
                 ? "Pro is enabled in development mode."
@@ -206,28 +164,23 @@ export default function AppHome() {
                   ? "Checkout is disabled while auth is disabled."
                   : "Secure checkout via Stripe • Cancel anytime"}
               </div>
+
+              {/* ✅ Subtle: Already Pro? Sign in */}
+              {showAlreadyProSignIn ? (
+                <div className="mt-2 text-xs">
+                  <Link
+                    href={`/login?next=${encodeURIComponent(
+                      isTab(tabParam) ? `/app?tab=${tabParam}` : "/app",
+                    )}`}
+                    className="text-cyan-400 hover:brightness-110 text-sm font-semibold underline underline-offset-4"
+                  >
+                    Already Pro? Sign in
+                  </Link>
+                </div>
+              ) : null}
             </div>
 
             <div className="sm:text-right">
-              {/* {isLoading ? (
-                <div className="text-xs text-slate-400">Checking…</div>
-              ) : effectiveIsPro ? (
-                <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
-                  Pro active ✓
-                </div>
-              ) : activating ? (
-                <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
-                  Activating…
-                </div>
-              ) : (
-                <Link
-                  href="/app/upgrade"
-                  className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110"
-                >
-                  Start Free Trial
-                </Link>
-              )} */}
-
               {isLoading ? (
                 <div className="text-xs text-slate-400">Checking…</div>
               ) : effectiveIsPro ? (

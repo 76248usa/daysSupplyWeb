@@ -1,18 +1,41 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function UpgradePage() {
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const router = useRouter();
 
   const AUTH_DISABLED = useMemo(
     () => process.env.NEXT_PUBLIC_AUTH_DISABLED === "1",
     [],
   );
+
+  // ✅ Enforce login ONLY here (Upgrade), not on AppHome.
+  useEffect(() => {
+    if (AUTH_DISABLED) {
+      setCheckingAuth(false);
+      return;
+    }
+
+    (async () => {
+      const { data } = await supabaseBrowser.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        router.replace(`/login?next=${encodeURIComponent("/app/upgrade")}`);
+        return;
+      }
+
+      setCheckingAuth(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [AUTH_DISABLED]);
 
   async function startCheckout() {
     if (AUTH_DISABLED) return;
@@ -25,8 +48,7 @@ export default function UpgradePage() {
       const token = data.session?.access_token;
 
       if (!token) {
-        setError("Please sign in first.");
-        setLoading(false);
+        router.replace(`/login?next=${encodeURIComponent("/app/upgrade")}`);
         return;
       }
 
@@ -41,7 +63,6 @@ export default function UpgradePage() {
 
       if (!res.ok) {
         setError(json?.detail || json?.error || "Checkout failed");
-        setLoading(false);
         return;
       }
 
@@ -56,6 +77,19 @@ export default function UpgradePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // If we are checking auth, show a light placeholder (prevents button flashing)
+  if (!AUTH_DISABLED && checkingAuth) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="mx-auto max-w-xl p-6">
+          <div className="mt-10 text-center text-slate-300">
+            Checking sign-in…
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
