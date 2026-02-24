@@ -62,6 +62,15 @@ export default function AppHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
+  useEffect(() => {
+    if (AUTH_DISABLED) return;
+    if (status !== "no_user") return;
+
+    const next = isTab(tabParam) ? `/app?tab=${tabParam}` : "/app";
+    router.replace(`/login?next=${encodeURIComponent(next)}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [AUTH_DISABLED, status, tabParam]);
+
   // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
     if (checkout === "success") {
@@ -133,65 +142,13 @@ export default function AppHome() {
 
   // If they are Pro, or they recently checked out, allow navigation to details
   const canOpenDetails = effectiveIsPro || activating;
-
-  // ✅ Auth gate: show inline sign-in if not signed in
   if (!AUTH_DISABLED && status === "no_user") {
+    // You can also just render a minimal message while redirecting
+
     return (
       <main className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto max-w-2xl p-6">
-          <h1 className="text-2xl font-extrabold text-center">
-            Insulin Days’ Supply Calculator with Priming
-          </h1>
-
-          <p className="text-center text-slate-300 mt-2">
-            Sign in once and you’ll stay signed in on this device.
-          </p>
-
-          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5 max-w-lg mx-auto">
-            <label className="block text-xs font-semibold text-slate-300 mb-2">
-              Email address
-            </label>
-
-            <input
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="you@email.com"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendMagicLink();
-              }}
-              autoComplete="email"
-              inputMode="email"
-            />
-
-            {authError ? (
-              <div className="mt-3 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
-                {authError}
-              </div>
-            ) : null}
-
-            {authSent ? (
-              <div className="mt-3 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
-                Link sent — check your email to sign in.
-              </div>
-            ) : null}
-
-            <button
-              onClick={sendMagicLink}
-              disabled={authSending}
-              className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
-            >
-              {authSending ? "Sending…" : "Email me a sign-in link"}
-            </button>
-
-            <div className="mt-3 text-xs text-slate-400 text-center">
-              No password required • Secure sign-in via Supabase
-            </div>
-          </div>
-
-          <div className="mt-6 text-center text-xs text-slate-500">
-            For licensed pharmacy professionals only.
-          </div>
+        <div className="mx-auto max-w-2xl p-6 text-center text-slate-300">
+          Redirecting to sign in…
         </div>
       </main>
     );
