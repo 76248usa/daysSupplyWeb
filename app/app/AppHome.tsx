@@ -8,6 +8,7 @@ import EarDropsCalculator from "@/components/EarDropsCalculatorClient";
 import { Search } from "lucide-react";
 import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 const TRIAL_LINE =
   "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
@@ -43,10 +44,17 @@ export default function AppHome() {
   const checkout = searchParams.get("checkout"); // success/cancel/null
   const tabParam = searchParams.get("tab"); // medicines/eye/ear/null
 
-  const { effectiveIsPro, isLoading, refreshWithRetry } = usePro();
+  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
+
+  // Inline auth UI state (only used when status === "no_user")
+  const [authEmail, setAuthEmail] = useState("");
+  const [authSending, setAuthSending] = useState(false);
+  const [authSent, setAuthSent] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // “Activating” is now persistent across back navigation (for a while)
   const [activating, setActivating] = useState(false);
+  const AUTH_DISABLED = process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
 
   // A) Support landing pages: /app?tab=eye (etc)
   useEffect(() => {
@@ -62,7 +70,7 @@ export default function AppHome() {
 
       refreshWithRetry({ attempts: 8, delayMs: 1500 }).catch(() => {});
 
-      // ✅ Clean the URL but preserve tab, so user stays on the right section
+      // ✅ Clean the URL but preserve tab
       const next = isTab(tabParam) ? `/app?tab=${tabParam}` : "/app";
       router.replace(next);
     }
@@ -82,8 +90,6 @@ export default function AppHome() {
       refreshWithRetry({ attempts: 6, delayMs: 1500 })
         .catch(() => {})
         .finally(() => {
-          // Keep activating true for the entire RECENT window
-          // (so Home doesn’t flip back to “Start Free Trial” between taps)
           setActivating(hasRecentCheckout() && !effectiveIsPro);
         });
     } else {
@@ -92,8 +98,32 @@ export default function AppHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveIsPro]);
 
-  // If they are Pro, or they recently checked out, allow navigation to details
-  const canOpenDetails = effectiveIsPro || activating;
+  async function sendMagicLink() {
+    setAuthError(null);
+    setAuthSent(false);
+
+    const e = authEmail.trim().toLowerCase();
+    if (!e.includes("@") || !e.includes(".")) {
+      setAuthError("Please enter a valid email address.");
+      return;
+    }
+
+    setAuthSending(true);
+    const { error } = await supabaseBrowser.auth.signInWithOtp({
+      email: e,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    setAuthSending(false);
+
+    if (error) setAuthError(error.message);
+    else setAuthSent(true);
+  }
+
+  async function signOut() {
+    await supabaseBrowser.auth.signOut();
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -101,10 +131,97 @@ export default function AppHome() {
     return medicineData.filter((m) => m.name.toLowerCase().includes(q));
   }, [search]);
 
+  // If they are Pro, or they recently checked out, allow navigation to details
+  const canOpenDetails = effectiveIsPro || activating;
+
+  // ✅ Auth gate: show inline sign-in if not signed in
+  if (!AUTH_DISABLED && status === "no_user") {
+    return (
+      <main className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="mx-auto max-w-2xl p-6">
+          <h1 className="text-2xl font-extrabold text-center">
+            Insulin Days’ Supply Calculator with Priming
+          </h1>
+
+          <p className="text-center text-slate-300 mt-2">
+            Sign in once and you’ll stay signed in on this device.
+          </p>
+
+          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5 max-w-lg mx-auto">
+            <label className="block text-xs font-semibold text-slate-300 mb-2">
+              Email address
+            </label>
+
+            <input
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              placeholder="you@email.com"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMagicLink();
+              }}
+              autoComplete="email"
+              inputMode="email"
+            />
+
+            {authError ? (
+              <div className="mt-3 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
+                {authError}
+              </div>
+            ) : null}
+
+            {authSent ? (
+              <div className="mt-3 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
+                Link sent — check your email to sign in.
+              </div>
+            ) : null}
+
+            <button
+              onClick={sendMagicLink}
+              disabled={authSending}
+              className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
+            >
+              {authSending ? "Sending…" : "Email me a sign-in link"}
+            </button>
+
+            <div className="mt-3 text-xs text-slate-400 text-center">
+              No password required • Secure sign-in via Supabase
+            </div>
+          </div>
+
+          <div className="mt-6 text-center text-xs text-slate-500">
+            For licensed pharmacy professionals only.
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Signed-in UI
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
-        <h1 className="text-2xl font-extrabold text-center">
+        {/* <div className="flex items-center justify-end">
+          <button
+            onClick={signOut}
+            className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
+          >
+            Sign out
+          </button>
+        </div> */}
+
+        <div className="flex items-center justify-end">
+          {!AUTH_DISABLED ? (
+            <button
+              onClick={signOut}
+              className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
+            >
+              Sign out
+            </button>
+          ) : null}
+        </div>
+
+        <h1 className="mt-3 text-2xl font-extrabold text-center">
           Insulin Days’ Supply Calculator with Priming
         </h1>
 
@@ -116,15 +233,26 @@ export default function AppHome() {
         {/* ✅ Compact Pro banner */}
         <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="text-sm text-slate-200 font-semibold">
+            {/* <div className="text-sm text-slate-200 font-semibold">
               {TRIAL_LINE}
               <div className="text-xs text-slate-400 mt-1">
                 Secure checkout via Stripe • Cancel anytime
               </div>
+            </div> */}
+
+            <div className="text-sm text-slate-200 font-semibold">
+              {AUTH_DISABLED
+                ? "Pro is enabled in development mode."
+                : TRIAL_LINE}
+              <div className="text-xs text-slate-400 mt-1">
+                {AUTH_DISABLED
+                  ? "Checkout is disabled while auth is disabled."
+                  : "Secure checkout via Stripe • Cancel anytime"}
+              </div>
             </div>
 
             <div className="sm:text-right">
-              {isLoading ? (
+              {/* {isLoading ? (
                 <div className="text-xs text-slate-400">Checking…</div>
               ) : effectiveIsPro ? (
                 <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
@@ -136,7 +264,30 @@ export default function AppHome() {
                 </div>
               ) : (
                 <Link
-                  href="/pricing"
+                  href="/app/upgrade"
+                  className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110"
+                >
+                  Start Free Trial
+                </Link>
+              )} */}
+
+              {isLoading ? (
+                <div className="text-xs text-slate-400">Checking…</div>
+              ) : effectiveIsPro ? (
+                <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
+                  Pro active ✓
+                </div>
+              ) : activating ? (
+                <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
+                  Activating…
+                </div>
+              ) : AUTH_DISABLED ? (
+                <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
+                  Checkout disabled (dev)
+                </div>
+              ) : (
+                <Link
+                  href="/app/upgrade"
                   className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110"
                 >
                   Start Free Trial
@@ -204,7 +355,7 @@ export default function AppHome() {
               ) : (
                 <Link
                   key={m.id}
-                  href="/pricing"
+                  href="/app/upgrade"
                   className="block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800 opacity-70"
                 >
                   <div className="text-lg font-bold">{m.name}</div>

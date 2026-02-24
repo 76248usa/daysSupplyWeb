@@ -1,89 +1,111 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo } from "react";
-import { usePro } from "@/context/ProContext";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function UpgradePage() {
-  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // On first mount, refresh status (helpful after returning from Stripe)
-  useEffect(() => {
-    refreshWithRetry({ attempts: 3, delayMs: 1200 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const AUTH_DISABLED = useMemo(
+    () => process.env.NEXT_PUBLIC_AUTH_DISABLED === "1",
+    [],
+  );
 
-  // If Pro is active, get out of here
-  useEffect(() => {
-    if (effectiveIsPro) {
-      window.location.href = "/app";
+  async function startCheckout() {
+    if (AUTH_DISABLED) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await supabaseBrowser.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        setError("Please sign in first.");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json?.detail || json?.error || "Checkout failed");
+        setLoading(false);
+        return;
+      }
+
+      if (json?.url) {
+        window.location.href = json.url;
+        return;
+      }
+
+      setError("No checkout URL returned.");
+    } catch (e: any) {
+      setError(e?.message || String(e));
+    } finally {
+      setLoading(false);
     }
-  }, [effectiveIsPro]);
-
-  const showUpgrade = useMemo(() => !effectiveIsPro, [effectiveIsPro]);
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
-      <div className="max-w-xl mx-auto">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/app"
-            className="px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900"
-          >
-            Home
-          </Link>
+    <main className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="mx-auto max-w-xl p-6">
+        <h1 className="text-2xl font-extrabold text-center">Upgrade to Pro</h1>
 
-          <Link
-            href="/pricing"
-            className="px-4 py-2 rounded-full border border-cyan-400/40 bg-cyan-300/10 text-cyan-200 font-semibold"
-          >
-            Pricing
-          </Link>
-        </div>
-
-        <h1 className="text-3xl font-extrabold mt-8">Upgrade</h1>
-        <p className="text-slate-300 mt-2">
-          Unlock unlimited calculations and Pro features.
+        <p className="text-center text-slate-300 mt-3">
+          {AUTH_DISABLED
+            ? "Pro is enabled in development mode. Checkout is disabled for now."
+            : "Start a 1-month free trial. Then $10 per year. Cancel anytime."}
         </p>
 
-        {/* Loading / syncing */}
-        {isLoading && (
-          <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/20 p-4 text-slate-200">
-            Checking subscription status…
-          </div>
-        )}
+        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          <ul className="space-y-3 text-sm text-slate-300">
+            <li>✓ Unlimited insulin calculations</li>
+            <li>✓ Priming logic included</li>
+            <li>✓ Expiration-aware day supply</li>
+            <li>✓ Audit documentation support</li>
+          </ul>
 
-        {/* Only show the trial CTA if NOT Pro */}
-        {showUpgrade && !isLoading && (
-          <div className="mt-6 rounded-xl border border-amber-700/40 bg-amber-900/20 p-5">
-            <div className="text-amber-200 font-extrabold text-lg">
-              Start your free trial
+          {AUTH_DISABLED ? (
+            <div className="mt-6 rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 text-sm text-slate-200">
+              Checkout disabled (dev). When auth is re-enabled, this button will
+              start Stripe checkout.
             </div>
-            <div className="text-amber-100/90 text-sm mt-1">
-              Trial begins after you confirm payment and will auto-renew unless
-              canceled.
-            </div>
-
-            <Link
-              href="/pricing"
-              className="mt-4 inline-block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900"
+          ) : (
+            <button
+              onClick={startCheckout}
+              disabled={loading}
+              className="mt-6 w-full rounded-xl bg-cyan-400 px-4 py-3 font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
             >
-              Start Free Trial
-            </Link>
+              {loading ? "Redirecting to secure checkout…" : "Start Free Trial"}
+            </button>
+          )}
 
-            <div className="mt-2 text-[11px] text-amber-100/70">
-              Status: {status}
+          {!AUTH_DISABLED && error ? (
+            <div className="mt-4 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
+              {error}
             </div>
-          </div>
-        )}
+          ) : null}
 
-        {/* If Pro (briefly visible before redirect) */}
-        {!showUpgrade && (
-          <div className="mt-6 rounded-xl border border-emerald-700/30 bg-emerald-900/10 p-4 text-emerald-200">
-            Pro is active. Redirecting…
-          </div>
-        )}
+          <button
+            onClick={() => router.push("/app")}
+            className="mt-4 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+          >
+            Back to App
+          </button>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

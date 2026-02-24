@@ -1,20 +1,35 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
 
-  if (!code) return NextResponse.redirect(new URL("/access", url));
+  const cookieStore = cookies();
 
-  // Using anon key is OK for exchanging the code for a session in the browser flow
-  const supabase = createClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
+    },
   );
 
-  await supabase.auth.exchangeCodeForSession(code);
+  if (code) {
+    await supabase.auth.exchangeCodeForSession(code);
+  }
 
-  // After signing in, take them back to Access (or /app)
-  return NextResponse.redirect(new URL("/access", url));
+  // ✅ Always go to AppHome
+  return NextResponse.redirect(new URL("/app", url));
 }
