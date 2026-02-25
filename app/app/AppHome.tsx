@@ -55,6 +55,10 @@ export default function AppHome() {
 
   const AUTH_DISABLED = process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
 
+  // Stripe billing portal
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
+
   // A) Support landing pages: /app?tab=eye (etc)
   useEffect(() => {
     if (isTab(tabParam)) setTab(tabParam);
@@ -118,6 +122,53 @@ export default function AppHome() {
     await supabaseBrowser.auth.signOut();
   }
 
+  // ✅ UPDATED: sends Bearer token because your /api/stripe/create-portal route requires it
+  async function openBillingPortal() {
+    setPortalError(null);
+    setPortalLoading(true);
+
+    try {
+      // Get current session + JWT
+      const { data: sessionData, error: sessErr } =
+        await supabaseBrowser.auth.getSession();
+      if (sessErr) throw sessErr;
+
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        throw new Error("Please sign in to manage billing.");
+      }
+
+      const returnUrl = `${window.location.origin}${
+        isTab(tabParam) ? `/app?tab=${tabParam}` : "/app"
+      }`;
+
+      const res = await fetch("/api/stripe/create-portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ returnUrl }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // Your portal route returns { error, detail } on failures — show the useful one.
+        throw new Error(
+          json?.detail || json?.error || "Failed to open billing portal.",
+        );
+      }
+
+      if (!json?.url) throw new Error("No billing portal URL returned.");
+      window.location.href = json.url;
+    } catch (e: any) {
+      setPortalError(e?.message ?? "Something went wrong.");
+    } finally {
+      setPortalLoading(false);
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return medicineData;
@@ -129,12 +180,33 @@ export default function AppHome() {
   const showAlreadyProSignIn =
     !AUTH_DISABLED && status === "no_user" && !effectiveIsPro && !activating;
 
+  const showManageBilling =
+    !AUTH_DISABLED && status !== "no_user" && effectiveIsPro && !isLoading;
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
         <div className="flex items-center justify-end gap-3">
+          {/* Manage billing button (only when Pro + signed in + auth enabled) */}
+          {showManageBilling ? (
+            <div className="flex flex-col items-end gap-1">
+              <button
+                type="button"
+                onClick={openBillingPortal}
+                disabled={portalLoading}
+                className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-60 disabled:hover:bg-slate-900"
+              >
+                {portalLoading ? "Opening billing…" : "Manage billing"}
+              </button>
+              {portalError ? (
+                <div className="text-[11px] text-rose-300">{portalError}</div>
+              ) : null}
+            </div>
+          ) : null}
+
           {!AUTH_DISABLED && status !== "no_user" ? (
             <button
+              type="button"
               onClick={signOut}
               className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
             >

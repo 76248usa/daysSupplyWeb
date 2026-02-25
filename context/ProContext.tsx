@@ -183,11 +183,14 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [AUTH_DISABLED]);
 
+  // ✅ Key fix for magic-link login:
+  // When auth changes, the session can take a beat to become queryable.
+  // Use retry to reliably flip to Pro after login.
   useEffect(() => {
     if (AUTH_DISABLED) return;
 
     const { data: sub } = supabaseBrowser.auth.onAuthStateChange(() => {
-      refresh();
+      refreshWithRetry({ attempts: 6, delayMs: 800 }).catch(() => {});
     });
 
     return () => sub.subscription.unsubscribe();

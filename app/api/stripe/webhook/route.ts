@@ -5,7 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 
 // ---------- Stripe ----------
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
+});
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // ---------- Supabase (service role) ----------
@@ -40,6 +42,13 @@ function getPriceIdFromSubscription(sub: Stripe.Subscription): string | null {
     anySub?.items?.data?.[0]?.plan?.id ??
     null
   );
+}
+
+function subscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
+  const anyInv: any = invoice as any;
+  return typeof anyInv.subscription === "string"
+    ? (anyInv.subscription as string)
+    : (anyInv.subscription?.id ?? null);
 }
 
 async function getSubInfo(subId: string): Promise<{
@@ -125,8 +134,48 @@ async function updateByStripeSubscriptionId(subId: string, patch: any) {
   console.log("[webhook] ✅ updated by stripe_subscription_id:", subId);
 }
 
-// ---------- Handler ----------
+async function applySubscriptionUpdate(args: {
+  stripeSubscriptionId: string;
+  stripeCustomerId: string | null;
+  userId: string | null;
+  status: string | null;
+  current_period_end: string | null;
+  // price_id?: string | null; // uncomment ONLY if column exists
+}) {
+  const {
+    stripeSubscriptionId,
+    stripeCustomerId,
+    userId,
+    status,
+    current_period_end,
+  } = args;
 
+  if (userId) {
+    await upsertByUserId(userId, {
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: stripeSubscriptionId,
+      status,
+      current_period_end,
+      // price_id, // uncomment ONLY if column exists
+    });
+    return;
+  }
+
+  // Fallback: if we can't identify user_id, at least update any row we already have by stripe_subscription_id
+  console.warn(
+    "[webhook] Missing supabase user id; falling back to updateByStripeSubscriptionId",
+    { stripeSubscriptionId },
+  );
+
+  await updateByStripeSubscriptionId(stripeSubscriptionId, {
+    stripe_customer_id: stripeCustomerId,
+    status,
+    current_period_end,
+    // price_id,
+  });
+}
+
+// ---------- Handler ----------
 export async function GET() {
   console.log("🔥 WEBHOOK GET HIT");
   return NextResponse.json(
@@ -134,15 +183,13 @@ export async function GET() {
     { status: 200 },
   );
 }
+
 export async function POST(req: Request) {
-  console.log("🔥 WEBHOOK POST HIT");
   console.log("🔥 WEBHOOK POST HIT", new Date().toISOString());
 
-  console.log(
-    "🔥 stripe-signature present?",
-    Boolean(req.headers.get("stripe-signature")),
-  );
   const sig = req.headers.get("stripe-signature");
+  console.log("🔥 stripe-signature present?", Boolean(sig));
+
   if (!sig) {
     return NextResponse.json({ error: "missing_signature" }, { status: 400 });
   }
@@ -157,10 +204,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
-  console.log("🔥 WEBHOOK POST HIT");
-  console.log("🔥 EVENT TYPE:", event.type);
-
-  // THIS is the log you should see in your Next.js terminal
   console.log("[webhook] ✅ HIT:", event.type);
 
   try {
@@ -199,72 +242,72 @@ export async function POST(req: Request) {
         const subInfo = await getSubInfo(stripeSubscriptionId);
         const effectiveUserId = userId || subInfo.user_id;
 
-        if (!effectiveUserId) {
-          console.error(
-            "[webhook] ❌ Missing supabase user id (session + subscription metadata).",
-          );
-
-          // If you have rows keyed by stripe_subscription_id already, this can update them.
-          // If not, this won't do anything, but we log it.
-          await updateByStripeSubscriptionId(stripeSubscriptionId, {
-            stripe_customer_id: stripeCustomerId ?? subInfo.stripe_customer_id,
-            status: subInfo.status ?? "trialing",
-            current_period_end: subInfo.current_period_end,
-            // price_id: subInfo.price_id, // uncomment ONLY if column exists
-          });
-
-          break;
-        }
-
-        await upsertByUserId(effectiveUserId, {
-          stripe_customer_id: stripeCustomerId ?? subInfo.stripe_customer_id,
-          stripe_subscription_id: stripeSubscriptionId,
+        await applySubscriptionUpdate({
+          stripeSubscriptionId,
+          stripeCustomerId: stripeCustomerId ?? subInfo.stripe_customer_id,
+          userId: effectiveUserId,
           status: subInfo.status ?? "trialing",
           current_period_end: subInfo.current_period_end,
-          // price_id: subInfo.price_id, // uncomment ONLY if column exists
+          // price_id: subInfo.price_id,
         });
 
         break;
       }
 
+      // Treat both events the same. Enable BOTH in Stripe.
+      case "invoice.paid":
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
 
-        const stripeSubscriptionId =
-          typeof (invoice as any).subscription === "string"
-            ? ((invoice as any).subscription as string)
-            : ((invoice as any).subscription?.id ?? null);
+        const stripeSubscriptionId = subscriptionIdFromInvoice(invoice);
 
-        console.log("[webhook] invoice.payment_succeeded fields:", {
+        console.log(`[webhook] ${event.type} fields:`, {
+          stripeSubscriptionId,
+        });
+
+        if (!stripeSubscriptionId) {
+          console.warn(`[webhook] ${event.type}: missing subscription id`);
+          break;
+        }
+
+        const subInfo = await getSubInfo(stripeSubscriptionId);
+
+        await applySubscriptionUpdate({
+          stripeSubscriptionId,
+          stripeCustomerId: subInfo.stripe_customer_id,
+          userId: subInfo.user_id,
+          status: "active",
+          current_period_end: subInfo.current_period_end,
+          // price_id: subInfo.price_id,
+        });
+
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const stripeSubscriptionId = subscriptionIdFromInvoice(invoice);
+
+        console.log("[webhook] invoice.payment_failed fields:", {
           stripeSubscriptionId,
         });
 
         if (!stripeSubscriptionId) {
           console.warn(
-            "[webhook] invoice.payment_succeeded: missing subscription id",
+            "[webhook] invoice.payment_failed: missing subscription",
           );
           break;
         }
 
         const subInfo = await getSubInfo(stripeSubscriptionId);
 
-        if (!subInfo.user_id) {
-          console.error(
-            "[webhook] ❌ invoice.payment_succeeded: missing supabase_user_id on subscription metadata",
-          );
-          await updateByStripeSubscriptionId(stripeSubscriptionId, {
-            stripe_customer_id: subInfo.stripe_customer_id,
-            status: "active",
-            current_period_end: subInfo.current_period_end,
-            // price_id: subInfo.price_id,
-          });
-          break;
-        }
-
-        await upsertByUserId(subInfo.user_id, {
-          stripe_customer_id: subInfo.stripe_customer_id,
-          stripe_subscription_id: stripeSubscriptionId,
-          status: "active",
+        // Stripe will also send customer.subscription.updated with status changes
+        // but handling this can help you react faster if you choose.
+        await applySubscriptionUpdate({
+          stripeSubscriptionId,
+          stripeCustomerId: subInfo.stripe_customer_id,
+          userId: subInfo.user_id,
+          status: subInfo.status ?? "past_due",
           current_period_end: subInfo.current_period_end,
           // price_id: subInfo.price_id,
         });
@@ -278,6 +321,8 @@ export async function POST(req: Request) {
         const sub = event.data.object as Stripe.Subscription;
 
         const stripeSubscriptionId = sub.id ?? null;
+        if (!stripeSubscriptionId) break;
+
         const userId =
           (sub.metadata?.supabase_user_id as string | undefined) ?? null;
 
@@ -305,24 +350,10 @@ export async function POST(req: Request) {
           price_id,
         });
 
-        if (!stripeSubscriptionId) break;
-
-        if (!userId) {
-          console.warn(
-            `[webhook] ${event.type}: missing supabase_user_id on subscription metadata`,
-          );
-          await updateByStripeSubscriptionId(stripeSubscriptionId, {
-            stripe_customer_id: stripeCustomerId,
-            status,
-            current_period_end,
-            // price_id,
-          });
-          break;
-        }
-
-        await upsertByUserId(userId, {
-          stripe_customer_id: stripeCustomerId,
-          stripe_subscription_id: stripeSubscriptionId,
+        await applySubscriptionUpdate({
+          stripeSubscriptionId,
+          stripeCustomerId,
+          userId,
           status,
           current_period_end,
           // price_id,
@@ -332,6 +363,7 @@ export async function POST(req: Request) {
       }
 
       default:
+        // It’s fine to ignore other events.
         break;
     }
 

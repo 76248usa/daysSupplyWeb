@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
+function safeNextPath(nextParam: string | null | undefined): string {
+  // Only allow internal redirects to avoid open-redirect vulnerabilities
+  if (!nextParam) return "/app";
+  if (nextParam.startsWith("/")) return nextParam;
+  return "/app";
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const nextParam = url.searchParams.get("next");
 
   const cookieStore = cookies();
 
@@ -30,6 +38,8 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // ✅ Always go to AppHome
-  return NextResponse.redirect(new URL("/app", url));
+  const nextPath = safeNextPath(nextParam);
+
+  // ✅ Redirect back to where the user wanted to go (ex: /app/upgrade)
+  return NextResponse.redirect(new URL(nextPath, url.origin));
 }

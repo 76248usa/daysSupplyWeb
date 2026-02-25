@@ -19,6 +19,11 @@ export default function AccessPage() {
   const sp = useSearchParams();
   const { effectiveIsPro, isLoading, status, refresh } = usePro();
 
+  const AUTH_DISABLED = useMemo(
+    () => process.env.NEXT_PUBLIC_AUTH_DISABLED === "1",
+    [],
+  );
+
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -81,7 +86,10 @@ export default function AccessPage() {
     const { error } = await supabaseBrowser.auth.signInWithOtp({
       email: e,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // If you want to preserve nextHref after login, you can include:
+        // emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextHref)}`,
+
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextHref)}`,
       },
     });
     setSending(false);
@@ -97,6 +105,34 @@ export default function AccessPage() {
   async function signOut() {
     await supabaseBrowser.auth.signOut();
     setUserEmail(null);
+  }
+
+  async function openManageSubscription() {
+    try {
+      const { data } = await supabaseBrowser.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        router.push(`/login?next=${encodeURIComponent("/app")}`);
+        return;
+      }
+
+      const res = await fetch("/api/stripe/create-portal-session", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        console.error("portal error:", json);
+        return;
+      }
+
+      if (json?.url) window.location.href = json.url;
+    } catch (e) {
+      console.error("portal failed:", e);
+    }
   }
 
   return (
@@ -134,8 +170,8 @@ export default function AccessPage() {
         {!userEmail ? (
           <>
             <p className="mt-2 text-center text-slate-300">
-              Sign in with a secure email link. You’ll stay signed in on this
-              device.
+              Enter your email to receive a secure sign-in link. No password
+              required.
             </p>
 
             <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
@@ -157,6 +193,7 @@ export default function AccessPage() {
                   }}
                   autoComplete="email"
                   inputMode="email"
+                  disabled={sending}
                 />
               </div>
 
@@ -181,7 +218,7 @@ export default function AccessPage() {
               </button>
 
               <div className="mt-3 text-xs text-slate-400">
-                No password required. You’ll stay signed in unless you sign out.
+                You’ll stay signed in unless you sign out.
               </div>
             </div>
           </>
@@ -197,15 +234,38 @@ export default function AccessPage() {
               </div>
 
               {effectiveIsPro ? (
-                <button
-                  onClick={continueToApp}
-                  className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
-                >
-                  Open calculator
-                </button>
+                <>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
+                      Pro active ✓
+                    </div>
+
+                    {!AUTH_DISABLED ? (
+                      <button
+                        onClick={openManageSubscription}
+                        className="rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                      >
+                        Manage subscription
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <button
+                    onClick={continueToApp}
+                    className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
+                  >
+                    Open calculator
+                  </button>
+                </>
               ) : (
+                // <Link
+                //   href="/pricing"
+                //   className="mt-4 block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
+                // >
+                //   Start free trial / Subscribe
+                // </Link>
                 <Link
-                  href="/pricing"
+                  href="/app/upgrade"
                   className="mt-4 block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
                 >
                   Start free trial / Subscribe
