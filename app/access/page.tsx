@@ -1,4 +1,5 @@
-"use client";
+export const dynamic = "force-dynamic";
+("use client");
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -117,7 +118,7 @@ export default function AccessPage() {
         return;
       }
 
-      const res = await fetch("/api/stripe/create-portal-session", {
+      const res = await fetch("/api/stripe/create-portal", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
