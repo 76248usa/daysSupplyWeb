@@ -4,9 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: Stripe.LatestApiVersion,
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// (no apiVersion)
 
 export async function GET() {
   return new Response("create-portal OK", { status: 200 });
