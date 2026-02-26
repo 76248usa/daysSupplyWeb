@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const nextParam = url.searchParams.get("next");
 
-  const cookieStore = cookies();
+  // ✅ Next.js: cookies() may be async depending on version/runtime
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +29,8 @@ export async function GET(request: Request) {
           cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
+          // ✅ Expire the cookie
+          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
         },
       },
     },
