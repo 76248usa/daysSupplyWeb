@@ -44,10 +44,10 @@ export default function LoginClient() {
 
     setSending(true);
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
-        nextUrl,
-      )}`;
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
+      const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(nextUrl)}`;
       const { error } = await supabaseBrowser.auth.signInWithOtp({
         email: e,
         options: {

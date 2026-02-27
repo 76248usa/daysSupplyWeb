@@ -2,7 +2,7 @@
 
 // components/EarDropsCalculatorClient.tsx
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_DROPS_PER_ML,
   earDropProducts,
@@ -18,19 +18,47 @@ function isPositive(n: number | null): n is number {
   return typeof n === "number" && Number.isFinite(n) && n > 0;
 }
 
+function productKey(p: EarDropProduct) {
+  // de-dupe key for dropdown display:
+  // brand + volume + actives (ignores NDC/manufacturer)
+  return `${p.brand}__${p.volumeMl}__${p.activeIngredients.join("|")}`;
+}
+
 export default function EarDropsCalculatorClient({
   showBackToApp = true,
 }: {
   showBackToApp?: boolean;
 }) {
-  const [productId, setProductId] = useState(earDropProducts[0]?.ndc11 ?? "");
+  // ✅ De-dupe for dropdown (keep first match)
+  const uniqueProducts = useMemo(() => {
+    const map = new Map<string, EarDropProduct>();
+    for (const p of earDropProducts) {
+      const key = productKey(p);
+      if (!map.has(key)) map.set(key, p);
+    }
+    return Array.from(map.values());
+  }, []);
+
+  const [productId, setProductId] = useState(
+    uniqueProducts[0]?.ndc11 ?? earDropProducts[0]?.ndc11 ?? "",
+  );
+
+  // ✅ If productId is no longer valid (data changed), reset to first
+  useEffect(() => {
+    if (!productId) return;
+    const exists = earDropProducts.some((p) => p.ndc11 === productId);
+    if (!exists) {
+      setProductId(uniqueProducts[0]?.ndc11 ?? earDropProducts[0]?.ndc11 ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uniqueProducts]);
 
   const product = useMemo(
     () => earDropProducts.find((p) => p.ndc11 === productId) ?? null,
     [productId],
   );
 
-  // ✅ NEW: drops/mL is a first-class, required input (default 20)
+  // ✅ drops/mL is a first-class, required input (default 20)
   const [dropsPerMl, setDropsPerMl] = useState(String(DEFAULT_DROPS_PER_ML));
 
   // SIG inputs
@@ -70,7 +98,6 @@ export default function EarDropsCalculatorClient({
     const t = parseNumber(timesPerDay);
     const dur = parseNumber(durationDays);
 
-    // ✅ validate drops/mL first
     if (!isPositive(dpm)) return setError("Enter a valid drops per mL value.");
     if (!isPositive(d)) return setError("Enter a valid drops-per-dose value.");
     if (!isPositive(t)) return setError("Enter a valid times-per-day value.");
@@ -107,6 +134,9 @@ export default function EarDropsCalculatorClient({
     setDurationDays("");
     setResult(null);
     setError(null);
+
+    // optional: reset product too
+    setProductId(uniqueProducts[0]?.ndc11 ?? earDropProducts[0]?.ndc11 ?? "");
   }
 
   return (
@@ -119,13 +149,16 @@ export default function EarDropsCalculatorClient({
           <label className="block text-xs font-semibold text-slate-300 mb-2">
             Select ear drops product
           </label>
-          <select
-            value={productId}
-            onChange={(e) => setProductId(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          >
-            {earDropProducts.map((p) => (
-              <option key={p.ndc11} value={p.ndc11}>
+          <select>
+            {Array.from(
+              new Map(
+                earDropProducts.map((p) => {
+                  const label = `${p.brand} (${p.volumeMl} mL)`;
+                  return [label, p] as const; // keep first product for this label
+                }),
+              ).values(),
+            ).map((p) => (
+              <option key={`${p.brand}-${p.volumeMl}`} value={p.ndc11}>
                 {p.brand} ({p.volumeMl} mL)
               </option>
             ))}
@@ -168,7 +201,7 @@ export default function EarDropsCalculatorClient({
           Directions (SIG)
         </div>
 
-        {/* ✅ NEW: drops/mL first */}
+        {/* drops/mL */}
         <div className="mt-4">
           <label className="block text-xs font-semibold text-slate-300 mb-2">
             Drops per mL <span className="text-slate-500">(required)</span>
@@ -355,8 +388,8 @@ export default function EarDropsCalculatorClient({
                   </span>
                 </div>
                 <div>
-                  Billed days supply = floor(raw days){" "}
-                  <span className="text-slate-400">(rounded down)</span>
+                  Billed days supply = floor(raw days{" "}
+                  <span className="text-slate-400">(rounded down)</span>)
                 </div>
               </div>
             </div>

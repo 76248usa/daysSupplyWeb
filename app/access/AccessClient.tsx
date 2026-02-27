@@ -14,6 +14,14 @@ function isValidEmail(e: string) {
   return e.includes("@") && e.includes(".") && e.length >= 6;
 }
 
+function getSiteUrl(): string {
+  // Prefer an explicit production URL so magic links never point to localhost.
+  // Set NEXT_PUBLIC_SITE_URL in Vercel (Production + Preview).
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, "");
+  return typeof window !== "undefined" ? window.location.origin : "";
+}
+
 export default function AccessClient() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -80,14 +88,24 @@ export default function AccessClient() {
     }
 
     setSending(true);
+
+    const siteUrl = getSiteUrl();
+    if (!siteUrl) {
+      setSending(false);
+      setError("Missing site URL. Set NEXT_PUBLIC_SITE_URL in Vercel.");
+      return;
+    }
+
     const { error } = await supabaseBrowser.auth.signInWithOtp({
       email: e,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+        // ✅ Never use localhost in production emails
+        emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(
           nextHref,
         )}`,
       },
     });
+
     setSending(false);
 
     if (error) setError(error.message);
@@ -113,7 +131,6 @@ export default function AccessClient() {
         return;
       }
 
-      // ✅ updated route name
       const res = await fetch("/api/stripe/create-portal", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
