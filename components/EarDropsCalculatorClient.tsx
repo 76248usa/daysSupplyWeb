@@ -2,7 +2,7 @@
 
 // components/EarDropsCalculatorClient.tsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   DEFAULT_DROPS_PER_ML,
   earDropProducts,
@@ -19,9 +19,13 @@ function isPositive(n: number | null): n is number {
 }
 
 function productKey(p: EarDropProduct) {
-  // de-dupe key for dropdown display:
+  // De-dupe key for dropdown display:
   // brand + volume + actives (ignores NDC/manufacturer)
   return `${p.brand}__${p.volumeMl}__${p.activeIngredients.join("|")}`;
+}
+
+function displayLabel(p: EarDropProduct) {
+  return `${p.brand} (${p.volumeMl} mL)`;
 }
 
 export default function EarDropsCalculatorClient({
@@ -43,7 +47,7 @@ export default function EarDropsCalculatorClient({
     uniqueProducts[0]?.ndc11 ?? earDropProducts[0]?.ndc11 ?? "",
   );
 
-  // ✅ If productId is no longer valid (data changed), reset to first
+  // ✅ Ensure productId remains valid if data changes
   useEffect(() => {
     if (!productId) return;
     const exists = earDropProducts.some((p) => p.ndc11 === productId);
@@ -62,6 +66,7 @@ export default function EarDropsCalculatorClient({
   const [dropsPerMl, setDropsPerMl] = useState(String(DEFAULT_DROPS_PER_ML));
 
   // SIG inputs
+  const dropsPerDoseRef = useRef<HTMLInputElement | null>(null);
   const [dropsPerDose, setDropsPerDose] = useState("");
   const [timesPerDay, setTimesPerDay] = useState("");
   const [ears, setEars] = useState<1 | 2>(1);
@@ -83,6 +88,25 @@ export default function EarDropsCalculatorClient({
   const [error, setError] = useState<string | null>(null);
 
   const suggestedDuration = product?.suggestedDurationDays ?? null;
+
+  // ✅ Auto-focus first SIG field (Drops per dose) on load + product change
+  useEffect(() => {
+    // Use rAF (more reliable than setTimeout) to focus after paint
+    requestAnimationFrame(() => {
+      dropsPerDoseRef.current?.focus();
+    });
+  }, [productId]);
+
+  // (Optional debug; safe to keep or remove)
+  useEffect(() => {
+    console.log("earDropProducts length:", earDropProducts.length);
+    console.log("uniqueProducts length:", uniqueProducts.length);
+
+    const labels = uniqueProducts.map((p) => displayLabel(p));
+    const dupLabels = labels.filter((l, i) => labels.indexOf(l) !== i);
+
+    console.log("duplicate labels in uniqueProducts:", dupLabels);
+  }, [uniqueProducts]);
 
   function calculate() {
     setError(null);
@@ -135,19 +159,13 @@ export default function EarDropsCalculatorClient({
     setResult(null);
     setError(null);
 
-    // optional: reset product too
     setProductId(uniqueProducts[0]?.ndc11 ?? earDropProducts[0]?.ndc11 ?? "");
+
+    // Re-focus after reset as well
+    requestAnimationFrame(() => {
+      dropsPerDoseRef.current?.focus();
+    });
   }
-
-  useEffect(() => {
-    console.log("earDropProducts length:", earDropProducts.length);
-    console.log("uniqueProducts length:", uniqueProducts.length);
-
-    const labels = uniqueProducts.map((p) => `${p.brand} (${p.volumeMl} mL)`);
-    const dupLabels = labels.filter((l, i) => labels.indexOf(l) !== i);
-
-    console.log("duplicate labels in uniqueProducts:", dupLabels);
-  }, [uniqueProducts]);
 
   return (
     <div className="mt-6">
@@ -159,17 +177,21 @@ export default function EarDropsCalculatorClient({
           <label className="block text-xs font-semibold text-slate-300 mb-2">
             Select ear drops product
           </label>
-          <select>
+
+          {/* ✅ Controlled select (fixes productId updates + focus effect trigger) */}
+          <select
+            value={productId}
+            onChange={(e) => setProductId(e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          >
+            {/* ✅ Extra de-dupe at render time by label (prevents “looks duplicated”) */}
             {Array.from(
               new Map(
-                earDropProducts.map((p) => {
-                  const label = `${p.brand} (${p.volumeMl} mL)`;
-                  return [label, p] as const; // keep first product for this label
-                }),
+                uniqueProducts.map((p) => [displayLabel(p), p] as const),
               ).values(),
             ).map((p) => (
-              <option key={`${p.brand}-${p.volumeMl}`} value={p.ndc11}>
-                {p.brand} ({p.volumeMl} mL)
+              <option key={displayLabel(p)} value={p.ndc11}>
+                {displayLabel(p)}
               </option>
             ))}
           </select>
@@ -253,6 +275,7 @@ export default function EarDropsCalculatorClient({
               Drops per dose
             </label>
             <input
+              ref={dropsPerDoseRef}
               value={dropsPerDose}
               onChange={(e) =>
                 setDropsPerDose(e.target.value.replace(/[^0-9.]/g, ""))
