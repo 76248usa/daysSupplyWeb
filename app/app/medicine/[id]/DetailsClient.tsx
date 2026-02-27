@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Medicine } from "@/lib/medicineData";
 
@@ -9,6 +9,9 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   const [times, setTimes] = useState("");
   const [answer, setAnswer] = useState<number | null>(null);
   const [boxAnswer, setBoxAnswer] = useState<number | null>(null);
+
+  // ✅ Auto-focus first SIG field (Units per dose)
+  const unitsRef = useRef<HTMLInputElement | null>(null);
 
   const prime = Number(medicine?.prime ?? 0);
 
@@ -21,6 +24,13 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
       valid: Number.isFinite(u) && Number.isFinite(t) && u > 0 && t > 0,
     };
   }, [units, times]);
+
+  // Focus on mount + whenever the medicine changes (navigating between meds)
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      unitsRef.current?.focus();
+    });
+  }, [medicine?.id]);
 
   const calculate = () => {
     if (!parsed.valid) return;
@@ -55,6 +65,11 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     setTimes("");
     setAnswer(null);
     setBoxAnswer(null);
+
+    // ✅ Re-focus after reset
+    requestAnimationFrame(() => {
+      unitsRef.current?.focus();
+    });
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -120,6 +135,7 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
         <div>
           <label className="block text-slate-200 mb-2">Units per dose</label>
           <input
+            ref={unitsRef}
             value={units}
             onChange={(e) => setUnits(e.target.value.replace(/[^0-9.]/g, ""))}
             onKeyDown={onKeyDown}
