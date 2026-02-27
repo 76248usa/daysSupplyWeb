@@ -139,6 +139,16 @@ export default function EarDropsCalculatorClient({
     setProductId(uniqueProducts[0]?.ndc11 ?? earDropProducts[0]?.ndc11 ?? "");
   }
 
+  useEffect(() => {
+    console.log("earDropProducts length:", earDropProducts.length);
+    console.log("uniqueProducts length:", uniqueProducts.length);
+
+    const labels = uniqueProducts.map((p) => `${p.brand} (${p.volumeMl} mL)`);
+    const dupLabels = labels.filter((l, i) => labels.indexOf(l) !== i);
+
+    console.log("duplicate labels in uniqueProducts:", dupLabels);
+  }, [uniqueProducts]);
+
   return (
     <div className="mt-6">
       {/* Product */}
