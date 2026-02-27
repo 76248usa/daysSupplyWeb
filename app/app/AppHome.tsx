@@ -50,6 +50,17 @@ function formatRenewalDate(iso?: string | null) {
     day: "numeric",
   });
 }
+function daysUntil(iso?: string | null) {
+  if (!iso) return null;
+  const end = new Date(iso);
+  const now = new Date();
+  if (!Number.isFinite(end.getTime())) return null;
+
+  const ms = end.getTime() - now.getTime();
+  // If already passed, clamp to 0
+  const days = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+  return days;
+}
 
 export default function AppHome() {
   const [search, setSearch] = useState("");
@@ -73,6 +84,7 @@ export default function AppHome() {
 
   // ✅ Subscription confidence: pull current_period_end from /api/pro-status
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
+  const [effectiveStatus, setEffectiveStatus] = useState<string | null>(null);
 
   const renewalLabel = useMemo(() => {
     const formatted = formatRenewalDate(currentPeriodEnd);

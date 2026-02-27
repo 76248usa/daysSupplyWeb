@@ -42,6 +42,14 @@ function isNotExpired(currentPeriodEnd: string | null | undefined) {
   return ms > Date.now();
 }
 
+function daysUntilIso(iso: string | null | undefined): number | null {
+  const ms = parseMs(iso ?? null);
+  if (ms == null) return null;
+  const diff = ms - Date.now();
+  // clamp so you never show negative days
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get("authorization") || "";
@@ -51,7 +59,17 @@ export async function GET(req: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { isPro: false, status: "no_user", reason: "missing_token" },
+        {
+          isPro: false,
+          status: "no_user",
+          effectiveStatus: "no_user",
+          rawStatus: "no_user",
+          reason: "missing_token",
+          current_period_end: null,
+          stripe_subscription_id: null,
+          updated_at: null,
+          trialEndsInDays: null,
+        },
         { status: 200 },
       );
     }
@@ -63,7 +81,17 @@ export async function GET(req: Request) {
     if (userErr || !userData?.user) {
       console.error("[pro-status] getUser failed", userErr);
       return NextResponse.json(
-        { isPro: false, status: "no_user", reason: "invalid_token" },
+        {
+          isPro: false,
+          status: "no_user",
+          effectiveStatus: "no_user",
+          rawStatus: "no_user",
+          reason: "invalid_token",
+          current_period_end: null,
+          stripe_subscription_id: null,
+          updated_at: null,
+          trialEndsInDays: null,
+        },
         { status: 200 },
       );
     }
@@ -79,47 +107,93 @@ export async function GET(req: Request) {
     if (error) {
       console.error("[pro-status] subscriptions query error:", error);
       return NextResponse.json(
-        { isPro: false, status: "unknown", reason: "db_error" },
+        {
+          isPro: false,
+          status: "unknown",
+          effectiveStatus: "unknown",
+          rawStatus: "unknown",
+          reason: "db_error",
+          current_period_end: null,
+          stripe_subscription_id: null,
+          updated_at: null,
+          trialEndsInDays: null,
+        },
         { status: 200 },
       );
     }
 
-    // If there is no row yet, we are not Pro (this is the key signal for “webhook didn’t write”)
+    // If there is no row yet, we are not Pro (key signal: “webhook didn’t write”)
     if (!row) {
       console.warn("[pro-status] no subscription row for user:", userId);
       return NextResponse.json(
-        { isPro: false, status: "unknown", reason: "no_row" },
+        {
+          isPro: false,
+          status: "unknown",
+          effectiveStatus: "unknown",
+          rawStatus: "unknown",
+          reason: "no_row",
+          current_period_end: null,
+          stripe_subscription_id: null,
+          updated_at: null,
+          trialEndsInDays: null,
+        },
         { status: 200 },
       );
     }
 
-    const status = String(row.status ?? "unknown");
-    const notExpired = isNotExpired(row.current_period_end ?? null);
+    const rawStatus = String(row.status ?? "unknown");
+    const current_period_end = (row.current_period_end ?? null) as
+      | string
+      | null;
+    const notExpired = isNotExpired(current_period_end);
 
-    const isPro = PRO_STATUSES.has(status) && notExpired;
+    const isPro = PRO_STATUSES.has(rawStatus) && notExpired;
 
     // If expired but still marked active/trialing, downgrade to canceled
     const effectiveStatus =
-      !notExpired && PRO_STATUSES.has(status) ? "canceled" : status;
+      !notExpired && PRO_STATUSES.has(rawStatus) ? "canceled" : rawStatus;
+
+    const trialEndsInDays =
+      effectiveStatus === "trialing" ? daysUntilIso(current_period_end) : null;
 
     // Helpful debug so you can see exactly what the server is using
     console.log("[pro-status] user:", userId, {
-      status,
+      rawStatus,
       effectiveStatus,
       isPro,
-      current_period_end: row.current_period_end ?? null,
+      current_period_end,
       stripe_subscription_id: row.stripe_subscription_id ?? null,
       updated_at: row.updated_at ?? null,
+      trialEndsInDays,
     });
 
     return NextResponse.json(
-      { isPro, status: effectiveStatus },
+      {
+        isPro,
+        status: effectiveStatus, // keep backward compatibility with your existing clients
+        effectiveStatus,
+        rawStatus,
+        current_period_end,
+        stripe_subscription_id: row.stripe_subscription_id ?? null,
+        updated_at: row.updated_at ?? null,
+        trialEndsInDays,
+      },
       { status: 200 },
     );
   } catch (e: any) {
     console.error("[pro-status] route error:", e?.message ?? e);
     return NextResponse.json(
-      { isPro: false, status: "unknown", reason: "exception" },
+      {
+        isPro: false,
+        status: "unknown",
+        effectiveStatus: "unknown",
+        rawStatus: "unknown",
+        reason: "exception",
+        current_period_end: null,
+        stripe_subscription_id: null,
+        updated_at: null,
+        trialEndsInDays: null,
+      },
       { status: 200 },
     );
   }
