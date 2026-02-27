@@ -41,7 +41,6 @@ function isTab(v: string | null): v is Tab {
 
 function formatRenewalDate(iso?: string | null) {
   if (!iso) return null;
-
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return null;
 
@@ -62,18 +61,7 @@ export default function AppHome() {
   const checkout = searchParams.get("checkout"); // success/cancel/null
   const tabParam = searchParams.get("tab"); // medicines/eye/ear/null
 
-  const {
-    effectiveIsPro,
-    isLoading,
-    status,
-    current_period_end,
-    refreshWithRetry,
-  } = usePro();
-
-  const renewalLabel = useMemo(() => {
-    const formatted = formatRenewalDate(current_period_end);
-    return formatted ? `Renews ${formatted}` : null;
-  }, [current_period_end]);
+  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
 
   const [activating, setActivating] = useState(false);
 
@@ -83,23 +71,64 @@ export default function AppHome() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
+  // ✅ Subscription confidence: pull current_period_end from /api/pro-status
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
+
+  const renewalLabel = useMemo(() => {
+    const formatted = formatRenewalDate(currentPeriodEnd);
+    return formatted ? `Renews ${formatted}` : null;
+  }, [currentPeriodEnd]);
+
+  // Fetch current_period_end when signed in (and whenever Pro state changes)
+  useEffect(() => {
+    if (AUTH_DISABLED) {
+      setCurrentPeriodEnd(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data } = await supabaseBrowser.auth.getSession();
+        const token = data.session?.access_token;
+
+        // Not signed in => nothing to show
+        if (!token) {
+          if (!cancelled) setCurrentPeriodEnd(null);
+          return;
+        }
+
+        // Ask server for Pro details (includes current_period_end in your logs)
+        const res = await fetch("/api/pro-status", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        // Be defensive about shape: support current_period_end or currentPeriodEnd
+        const iso =
+          (json?.current_period_end as string | null | undefined) ??
+          (json?.currentPeriodEnd as string | null | undefined) ??
+          (json?.data?.current_period_end as string | null | undefined) ??
+          null;
+
+        if (!cancelled) setCurrentPeriodEnd(iso);
+      } catch {
+        if (!cancelled) setCurrentPeriodEnd(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [AUTH_DISABLED, effectiveIsPro, status]);
+
   // A) Support landing pages: /app?tab=eye (etc)
   useEffect(() => {
     if (isTab(tabParam)) setTab(tabParam);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
-
-  function formatRenewalDate(iso: string | null | undefined): string | null {
-    if (!iso) return null;
-    const d = new Date(iso);
-    if (!Number.isFinite(d.getTime())) return null;
-
-    return d.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
 
   // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
@@ -158,18 +187,15 @@ export default function AppHome() {
     await supabaseBrowser.auth.signOut();
   }
 
-  // ✅ UPDATED: sends Bearer token because your /api/stripe/create-portal route requires it
   async function openBillingPortal() {
     setPortalError(null);
     setPortalLoading(true);
 
     try {
-      // Get current session + JWT
-      const { data: sessionData, error: sessErr } =
-        await supabaseBrowser.auth.getSession();
-      if (sessErr) throw sessErr;
+      // Must be logged in (portal is meaningless without a Stripe customer)
+      const { data } = await supabaseBrowser.auth.getSession();
+      const token = data.session?.access_token;
 
-      const token = sessionData.session?.access_token;
       if (!token) {
         throw new Error("Please sign in to manage billing.");
       }
@@ -180,20 +206,12 @@ export default function AppHome() {
 
       const res = await fetch("/api/stripe/create-portal", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ returnUrl }),
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const json = await res.json().catch(() => ({}));
-
       if (!res.ok) {
-        // Your portal route returns { error, detail } on failures — show the useful one.
-        throw new Error(
-          json?.detail || json?.error || "Failed to open billing portal.",
-        );
+        throw new Error(json?.error || "Failed to open billing portal.");
       }
 
       if (!json?.url) throw new Error("No billing portal URL returned.");
@@ -227,7 +245,6 @@ export default function AppHome() {
           {showManageBilling ? (
             <div className="flex flex-col items-end gap-1">
               <button
-                type="button"
                 onClick={openBillingPortal}
                 disabled={portalLoading}
                 className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-60 disabled:hover:bg-slate-900"
@@ -242,7 +259,6 @@ export default function AppHome() {
 
           {!AUTH_DISABLED && status !== "no_user" ? (
             <button
-              type="button"
               onClick={signOut}
               className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
             >
