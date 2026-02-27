@@ -39,6 +39,19 @@ function isTab(v: string | null): v is Tab {
   return v === "medicines" || v === "eye" || v === "ear";
 }
 
+function formatRenewalDate(iso?: string | null) {
+  if (!iso) return null;
+
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return null;
+
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function AppHome() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<Tab>("medicines");
@@ -49,7 +62,18 @@ export default function AppHome() {
   const checkout = searchParams.get("checkout"); // success/cancel/null
   const tabParam = searchParams.get("tab"); // medicines/eye/ear/null
 
-  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
+  const {
+    effectiveIsPro,
+    isLoading,
+    status,
+    current_period_end,
+    refreshWithRetry,
+  } = usePro();
+
+  const renewalLabel = useMemo(() => {
+    const formatted = formatRenewalDate(current_period_end);
+    return formatted ? `Renews ${formatted}` : null;
+  }, [current_period_end]);
 
   const [activating, setActivating] = useState(false);
 
@@ -64,6 +88,18 @@ export default function AppHome() {
     if (isTab(tabParam)) setTab(tabParam);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
+
+  function formatRenewalDate(iso: string | null | undefined): string | null {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (!Number.isFinite(d.getTime())) return null;
+
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
 
   // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
@@ -256,8 +292,15 @@ export default function AppHome() {
               {isLoading ? (
                 <div className="text-xs text-slate-400">Checking…</div>
               ) : effectiveIsPro ? (
-                <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
-                  Pro active ✓
+                <div className="inline-flex flex-col items-end">
+                  <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
+                    Pro active ✓
+                  </div>
+
+                  {/* ✅ Subscription confidence */}
+                  <div className="mt-1 text-[11px] text-slate-400">
+                    {renewalLabel ?? "Subscription verified"}
+                  </div>
                 </div>
               ) : activating ? (
                 <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
