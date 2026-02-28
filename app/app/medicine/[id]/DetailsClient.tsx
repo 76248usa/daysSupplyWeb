@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Medicine } from "@/lib/medicineData";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
@@ -24,6 +24,18 @@ function daysUntil(iso?: string | null) {
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
+function shouldAvoidStealingFocus() {
+  if (typeof document === "undefined") return false;
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  const tag = el.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    el.getAttribute("contenteditable") === "true"
+  );
+}
+
 export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   const [units, setUnits] = useState("");
   const [times, setTimes] = useState("");
@@ -31,6 +43,9 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   const [boxAnswer, setBoxAnswer] = useState<number | null>(null);
 
   const prime = Number(medicine?.prime ?? 0);
+
+  // ✅ Autofocus ref for "Units per dose"
+  const unitsRef = useRef<HTMLInputElement | null>(null);
 
   /* ---------------------------------------------------
      ✅ Subscription confidence state
@@ -97,6 +112,18 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   }, [subStatus, trialEndsInDays, currentPeriodEnd, effectiveIsPro]);
 
   /* ---------------------------------------------------
+     ✅ Autofocus "Units per dose" on mount
+  --------------------------------------------------- */
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (shouldAvoidStealingFocus()) return;
+      unitsRef.current?.focus();
+    }, 80);
+
+    return () => window.clearTimeout(id);
+  }, []);
+
+  /* ---------------------------------------------------
      Calculator logic (unchanged)
   --------------------------------------------------- */
 
@@ -143,6 +170,11 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     setTimes("");
     setAnswer(null);
     setBoxAnswer(null);
+
+    // ✅ Re-focus after reset
+    window.setTimeout(() => {
+      unitsRef.current?.focus();
+    }, 0);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -231,6 +263,7 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
         <div>
           <label className="block text-slate-200 mb-2">Units per dose</label>
           <input
+            ref={unitsRef}
             value={units}
             onChange={(e) => setUnits(e.target.value.replace(/[^0-9.]/g, ""))}
             onKeyDown={onKeyDown}
