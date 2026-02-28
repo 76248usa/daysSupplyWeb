@@ -39,27 +39,23 @@ function isTab(v: string | null): v is Tab {
   return v === "medicines" || v === "eye" || v === "ear";
 }
 
-function formatRenewalDate(iso?: string | null) {
+function formatDateShort(iso?: string | null) {
   if (!iso) return null;
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return null;
-
   return d.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
-    day: "numeric",
+    day: "2-digit",
   });
 }
+
 function daysUntil(iso?: string | null) {
   if (!iso) return null;
   const end = new Date(iso);
-  const now = new Date();
   if (!Number.isFinite(end.getTime())) return null;
-
-  const ms = end.getTime() - now.getTime();
-  // If already passed, clamp to 0
-  const days = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-  return days;
+  const ms = end.getTime() - Date.now();
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
 export default function AppHome() {
@@ -82,59 +78,10 @@ export default function AppHome() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
-  // ✅ Subscription confidence: pull current_period_end from /api/pro-status
+  // ✅ Subscription confidence (from /api/pro-status)
+  const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
-  const [effectiveStatus, setEffectiveStatus] = useState<string | null>(null);
-
-  const renewalLabel = useMemo(() => {
-    const formatted = formatRenewalDate(currentPeriodEnd);
-    return formatted ? `Renews ${formatted}` : null;
-  }, [currentPeriodEnd]);
-
-  // Fetch current_period_end when signed in (and whenever Pro state changes)
-  useEffect(() => {
-    if (AUTH_DISABLED) {
-      setCurrentPeriodEnd(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { data } = await supabaseBrowser.auth.getSession();
-        const token = data.session?.access_token;
-
-        // Not signed in => nothing to show
-        if (!token) {
-          if (!cancelled) setCurrentPeriodEnd(null);
-          return;
-        }
-
-        // Ask server for Pro details (includes current_period_end in your logs)
-        const res = await fetch("/api/pro-status", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const json = await res.json().catch(() => ({}));
-
-        // Be defensive about shape: support current_period_end or currentPeriodEnd
-        const iso =
-          (json?.current_period_end as string | null | undefined) ??
-          (json?.currentPeriodEnd as string | null | undefined) ??
-          (json?.data?.current_period_end as string | null | undefined) ??
-          null;
-
-        if (!cancelled) setCurrentPeriodEnd(iso);
-      } catch {
-        if (!cancelled) setCurrentPeriodEnd(null);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [AUTH_DISABLED, effectiveIsPro, status]);
+  const [trialEndsInDays, setTrialEndsInDays] = useState<number | null>(null);
 
   // A) Support landing pages: /app?tab=eye (etc)
   useEffect(() => {
@@ -195,6 +142,71 @@ export default function AppHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveIsPro]);
 
+  // ✅ D) Fetch pro-status details (renewal date + trial countdown)
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (AUTH_DISABLED) {
+          if (!cancelled) {
+            setSubStatus("active");
+            setCurrentPeriodEnd(null);
+            setTrialEndsInDays(null);
+          }
+          return;
+        }
+
+        const { data } = await supabaseBrowser.auth.getSession();
+        const token = data.session?.access_token;
+
+        if (!token) {
+          if (!cancelled) {
+            setSubStatus(null);
+            setCurrentPeriodEnd(null);
+            setTrialEndsInDays(null);
+          }
+          return;
+        }
+
+        const res = await fetch("/api/pro-status", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        const eff =
+          (json?.effectiveStatus as string | undefined) ??
+          (json?.status as string | undefined) ??
+          null;
+
+        const cpe =
+          (json?.current_period_end as string | null | undefined) ?? null;
+
+        const ted =
+          typeof json?.trialEndsInDays === "number"
+            ? json.trialEndsInDays
+            : null;
+
+        if (!cancelled) {
+          setSubStatus(eff);
+          setCurrentPeriodEnd(cpe);
+          setTrialEndsInDays(ted);
+        }
+      } catch {
+        if (!cancelled) {
+          setSubStatus(null);
+          setCurrentPeriodEnd(null);
+          setTrialEndsInDays(null);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [AUTH_DISABLED, effectiveIsPro, status]);
+
   async function signOut() {
     await supabaseBrowser.auth.signOut();
   }
@@ -204,7 +216,6 @@ export default function AppHome() {
     setPortalLoading(true);
 
     try {
-      // Must be logged in (portal is meaningless without a Stripe customer)
       const { data } = await supabaseBrowser.auth.getSession();
       const token = data.session?.access_token;
 
@@ -222,14 +233,13 @@ export default function AppHome() {
       });
 
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      if (!res.ok)
         throw new Error(json?.error || "Failed to open billing portal.");
-      }
-
       if (!json?.url) throw new Error("No billing portal URL returned.");
+
       window.location.href = json.url;
     } catch (e: any) {
-      setPortalError(e?.message ?? "Something went wrong.");
+      setPortalError(e?.message ?? "Failed to open billing portal.");
     } finally {
       setPortalLoading(false);
     }
@@ -249,11 +259,32 @@ export default function AppHome() {
   const showManageBilling =
     !AUTH_DISABLED && status !== "no_user" && effectiveIsPro && !isLoading;
 
+  // ✅ Polished confidence line
+  const proConfidenceLine = useMemo(() => {
+    if (AUTH_DISABLED) return "Pro enabled (dev mode)";
+
+    const s = (subStatus ?? "").toLowerCase();
+
+    if (s === "trialing") {
+      const d = trialEndsInDays ?? daysUntil(currentPeriodEnd);
+
+      if (d == null) return "Trial active";
+      if (d === 0) return "Trial ends today";
+      if (d === 1) return "Trial ends in 1 day";
+      return `Trial ends in ${d} days`;
+    }
+
+    const dt = formatDateShort(currentPeriodEnd);
+    if (dt) return `Renews ${dt}`;
+
+    // fallback (webhook may not have set current_period_end yet)
+    return "Subscription verified";
+  }, [AUTH_DISABLED, subStatus, trialEndsInDays, currentPeriodEnd]);
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
         <div className="flex items-center justify-end gap-3">
-          {/* Manage billing button (only when Pro + signed in + auth enabled) */}
           {showManageBilling ? (
             <div className="flex flex-col items-end gap-1">
               <button
@@ -301,7 +332,6 @@ export default function AppHome() {
                   : "Secure checkout via Stripe • Cancel anytime"}
               </div>
 
-              {/* ✅ Subtle: Already Pro? Sign in */}
               {showAlreadyProSignIn ? (
                 <div className="mt-2 text-xs">
                   <Link
@@ -320,14 +350,12 @@ export default function AppHome() {
               {isLoading ? (
                 <div className="text-xs text-slate-400">Checking…</div>
               ) : effectiveIsPro ? (
-                <div className="inline-flex flex-col items-end">
-                  <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
+                <div className="inline-flex flex-col items-start rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2">
+                  <div className="text-emerald-200 text-xs font-semibold">
                     Pro active ✓
                   </div>
-
-                  {/* ✅ Subscription confidence */}
-                  <div className="mt-1 text-[11px] text-slate-400">
-                    {renewalLabel ?? "Subscription verified"}
+                  <div className="mt-0.5 text-[11px] text-emerald-100/80">
+                    {proConfidenceLine}
                   </div>
                 </div>
               ) : activating ? (
@@ -370,7 +398,6 @@ export default function AppHome() {
 
         {tab === "medicines" ? <DisclaimerAccordion /> : null}
 
-        {/* Search only when on Medicines tab */}
         {tab === "medicines" ? (
           <div className="mt-5 relative">
             <Search
