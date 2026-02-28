@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-// Prefer NEXT_PUBLIC_SUPABASE_URL everywhere to avoid mismatched projects
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 
@@ -13,16 +12,22 @@ if (!SUPABASE_URL) {
   );
 }
 
-// Service role for DB query (bypasses RLS)
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY env var.");
+}
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY env var.");
+}
+
 const supabaseAdmin = createClient(
   SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-// Public client (anon) used only to validate the JWT and get the user
 const supabaseAuth = createClient(
   SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 );
 
 const PRO_STATUSES = new Set(["trialing", "active"]);
@@ -34,19 +39,18 @@ function parseMs(iso: string | null | undefined): number | null {
 }
 
 function isNotExpired(currentPeriodEnd: string | null | undefined) {
-  // If your webhook hasn't set this yet, treat as "not expired" and rely on status.
-  // If you prefer stricter behavior, change this to `return false;`
+  // Keep your prior behavior:
+  // if webhook hasn't set it yet, allow status to control access
   if (!currentPeriodEnd) return true;
   const ms = parseMs(currentPeriodEnd);
   if (ms == null) return true;
   return ms > Date.now();
 }
 
-function daysUntilIso(iso: string | null | undefined): number | null {
-  const ms = parseMs(iso ?? null);
+function calcDaysLeft(iso: string | null | undefined): number | null {
+  const ms = parseMs(iso);
   if (ms == null) return null;
   const diff = ms - Date.now();
-  // clamp so you never show negative days
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
@@ -63,34 +67,26 @@ export async function GET(req: Request) {
           isPro: false,
           status: "no_user",
           effectiveStatus: "no_user",
-          rawStatus: "no_user",
-          reason: "missing_token",
           current_period_end: null,
-          stripe_subscription_id: null,
-          updated_at: null,
           trialEndsInDays: null,
+          reason: "missing_token",
         },
         { status: 200 },
       );
     }
 
-    // Validate token -> get user
     const { data: userData, error: userErr } =
       await supabaseAuth.auth.getUser(token);
 
     if (userErr || !userData?.user) {
-      console.error("[pro-status] getUser failed", userErr);
       return NextResponse.json(
         {
           isPro: false,
           status: "no_user",
           effectiveStatus: "no_user",
-          rawStatus: "no_user",
-          reason: "invalid_token",
           current_period_end: null,
-          stripe_subscription_id: null,
-          updated_at: null,
           trialEndsInDays: null,
+          reason: "invalid_token",
         },
         { status: 200 },
       );
@@ -105,94 +101,67 @@ export async function GET(req: Request) {
       .maybeSingle();
 
     if (error) {
-      console.error("[pro-status] subscriptions query error:", error);
       return NextResponse.json(
         {
           isPro: false,
           status: "unknown",
           effectiveStatus: "unknown",
-          rawStatus: "unknown",
+          current_period_end: null,
+          trialEndsInDays: null,
           reason: "db_error",
-          current_period_end: null,
-          stripe_subscription_id: null,
-          updated_at: null,
-          trialEndsInDays: null,
         },
         { status: 200 },
       );
     }
 
-    // If there is no row yet, we are not Pro (key signal: “webhook didn’t write”)
     if (!row) {
-      console.warn("[pro-status] no subscription row for user:", userId);
       return NextResponse.json(
         {
           isPro: false,
           status: "unknown",
           effectiveStatus: "unknown",
-          rawStatus: "unknown",
-          reason: "no_row",
           current_period_end: null,
-          stripe_subscription_id: null,
-          updated_at: null,
           trialEndsInDays: null,
+          reason: "no_row",
         },
         { status: 200 },
       );
     }
 
-    const rawStatus = String(row.status ?? "unknown");
-    const current_period_end = (row.current_period_end ?? null) as
-      | string
-      | null;
+    const status = String(row.status ?? "unknown");
+    const current_period_end =
+      (row.current_period_end as string | null) ?? null;
+
     const notExpired = isNotExpired(current_period_end);
+    const isPro = PRO_STATUSES.has(status) && notExpired;
 
-    const isPro = PRO_STATUSES.has(rawStatus) && notExpired;
-
-    // If expired but still marked active/trialing, downgrade to canceled
     const effectiveStatus =
-      !notExpired && PRO_STATUSES.has(rawStatus) ? "canceled" : rawStatus;
+      !notExpired && PRO_STATUSES.has(status) ? "canceled" : status;
 
     const trialEndsInDays =
-      effectiveStatus === "trialing" ? daysUntilIso(current_period_end) : null;
-
-    // Helpful debug so you can see exactly what the server is using
-    console.log("[pro-status] user:", userId, {
-      rawStatus,
-      effectiveStatus,
-      isPro,
-      current_period_end,
-      stripe_subscription_id: row.stripe_subscription_id ?? null,
-      updated_at: row.updated_at ?? null,
-      trialEndsInDays,
-    });
+      effectiveStatus === "trialing" ? calcDaysLeft(current_period_end) : null;
 
     return NextResponse.json(
       {
         isPro,
-        status: effectiveStatus, // keep backward compatibility with your existing clients
+        status,
         effectiveStatus,
-        rawStatus,
         current_period_end,
+        trialEndsInDays,
         stripe_subscription_id: row.stripe_subscription_id ?? null,
         updated_at: row.updated_at ?? null,
-        trialEndsInDays,
       },
       { status: 200 },
     );
   } catch (e: any) {
-    console.error("[pro-status] route error:", e?.message ?? e);
     return NextResponse.json(
       {
         isPro: false,
         status: "unknown",
         effectiveStatus: "unknown",
-        rawStatus: "unknown",
-        reason: "exception",
         current_period_end: null,
-        stripe_subscription_id: null,
-        updated_at: null,
         trialEndsInDays: null,
+        reason: "exception",
       },
       { status: 200 },
     );

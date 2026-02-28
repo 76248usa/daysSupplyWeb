@@ -1,4 +1,4 @@
-"use client";
+("use client");
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -47,10 +47,13 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   // ✅ Autofocus ref for "Units per dose"
   const unitsRef = useRef<HTMLInputElement | null>(null);
 
+  // ✅ Validation / error UI
+  const [attempted, setAttempted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   /* ---------------------------------------------------
      ✅ Subscription confidence state
   --------------------------------------------------- */
-
   const [effectiveIsPro, setEffectiveIsPro] = useState(false);
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
@@ -71,18 +74,23 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
         });
 
         const json = await res.json().catch(() => ({}));
-
         if (cancelled) return;
 
         setEffectiveIsPro(Boolean(json?.isPro));
-        setSubStatus(json?.effectiveStatus ?? json?.status ?? null);
-        setCurrentPeriodEnd(json?.current_period_end ?? null);
+        setSubStatus(
+          (json?.effectiveStatus ?? json?.status ?? null) as string | null,
+        );
+        setCurrentPeriodEnd(
+          (json?.current_period_end ?? null) as string | null,
+        );
 
-        if (typeof json?.trialEndsInDays === "number") {
-          setTrialEndsInDays(json.trialEndsInDays);
-        }
+        setTrialEndsInDays(
+          typeof json?.trialEndsInDays === "number"
+            ? json.trialEndsInDays
+            : null,
+        );
       } catch {
-        // silent — UI just won't show confidence line
+        // silent
       }
     })();
 
@@ -96,7 +104,6 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
 
     if (s === "trialing") {
       const d = trialEndsInDays ?? daysUntil(currentPeriodEnd);
-
       if (d == null) return "Trial active";
       if (d === 0) return "Trial ends today";
       if (d === 1) return "Trial ends in 1 day";
@@ -119,37 +126,66 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
       if (shouldAvoidStealingFocus()) return;
       unitsRef.current?.focus();
     }, 80);
-
     return () => window.clearTimeout(id);
   }, []);
 
   /* ---------------------------------------------------
-     Calculator logic (unchanged)
+     Calculator logic
   --------------------------------------------------- */
-
   const parsed = useMemo(() => {
     const u = Number(units);
     const t = Number(times);
+
+    const unitsValid = Number.isFinite(u) && u > 0;
+    const timesValid = Number.isFinite(t) && t > 0;
+
     return {
       u,
       t,
-      valid: Number.isFinite(u) && Number.isFinite(t) && u > 0 && t > 0,
+      unitsValid,
+      timesValid,
+      valid: unitsValid && timesValid,
     };
   }, [units, times]);
 
+  // Clear error as user types
+  useEffect(() => {
+    if (!attempted) return;
+    if (parsed.valid) setError(null);
+  }, [attempted, parsed.valid]);
+
   const calculate = () => {
-    if (!parsed.valid) return;
+    setAttempted(true);
+    setError(null);
+
+    if (!parsed.valid) {
+      if (!parsed.unitsValid && !parsed.timesValid)
+        return setError(
+          "Enter valid numbers for Units per dose and Times per day.",
+        );
+      if (!parsed.unitsValid)
+        return setError("Enter a valid Units per dose value.");
+      if (!parsed.timesValid)
+        return setError("Enter a valid Times per day value.");
+      return;
+    }
 
     const totalUnits = Number(medicine?.unitsInPen ?? 0);
     const expire = Number(medicine?.expire ?? 0);
 
-    if (!Number.isFinite(totalUnits) || totalUnits <= 0) return;
+    if (!Number.isFinite(totalUnits) || totalUnits <= 0) {
+      setError("This product has an invalid total units value.");
+      return;
+    }
 
     const dailyUnits = parsed.t * parsed.u;
     const dailyPrime = parsed.t * prime;
     const dailyTotal = dailyUnits + dailyPrime;
 
-    if (!Number.isFinite(dailyTotal) || dailyTotal <= 0) return;
+    if (!Number.isFinite(dailyTotal) || dailyTotal <= 0) {
+      setError("Invalid dosing inputs.");
+      return;
+    }
 
     const rawDays = totalUnits / dailyTotal;
     const cappedDays = expire ? Math.min(rawDays, expire) : rawDays;
@@ -170,8 +206,9 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     setTimes("");
     setAnswer(null);
     setBoxAnswer(null);
+    setAttempted(false);
+    setError(null);
 
-    // ✅ Re-focus after reset
     window.setTimeout(() => {
       unitsRef.current?.focus();
     }, 0);
@@ -184,7 +221,6 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   /* ---------------------------------------------------
      UI
   --------------------------------------------------- */
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
       {/* Header */}
@@ -202,12 +238,11 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
             <div className="text-emerald-200 text-xs font-semibold">
               Pro active ✓
             </div>
-
-            {proConfidenceLine && (
+            {proConfidenceLine ? (
               <div className="text-[11px] text-emerald-100/80">
                 {proConfidenceLine}
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
@@ -268,7 +303,12 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
             onChange={(e) => setUnits(e.target.value.replace(/[^0-9.]/g, ""))}
             onKeyDown={onKeyDown}
             inputMode="decimal"
-            className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100"
+            className={[
+              "w-full p-3 rounded-lg bg-slate-900 border text-slate-100",
+              attempted && !parsed.unitsValid
+                ? "border-rose-500/60"
+                : "border-slate-700",
+            ].join(" ")}
             placeholder="e.g. 20"
           />
         </div>
@@ -280,12 +320,23 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
             onChange={(e) => setTimes(e.target.value.replace(/[^0-9.]/g, ""))}
             onKeyDown={onKeyDown}
             inputMode="decimal"
-            className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-slate-100"
+            className={[
+              "w-full p-3 rounded-lg bg-slate-900 border text-slate-100",
+              attempted && !parsed.timesValid
+                ? "border-rose-500/60"
+                : "border-slate-700",
+            ].join(" ")}
             placeholder="e.g. 1"
           />
         </div>
 
-        <div className="flex gap-3 pt-4">
+        {error ? (
+          <div className="rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="flex gap-3 pt-2">
           <button
             onClick={calculate}
             className="flex-1 bg-green-500 text-black py-3 rounded-lg font-extrabold hover:opacity-90"
