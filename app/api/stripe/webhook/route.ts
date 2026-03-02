@@ -5,13 +5,11 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 
 // ---------- Stripe ----------
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 // (no apiVersion)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // ---------- Supabase (service role) ----------
-// Use ONE consistent URL (same project as your app)
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 
@@ -98,8 +96,6 @@ async function getSubInfo(subId: string): Promise<{
 }
 
 async function upsertByUserId(userId: string, row: any) {
-  // IMPORTANT: Only include columns that actually exist in your table.
-  // If your table does not have price_id, remove it (or add the column).
   const payload = {
     user_id: userId,
     ...row,
@@ -140,7 +136,6 @@ async function applySubscriptionUpdate(args: {
   userId: string | null;
   status: string | null;
   current_period_end: string | null;
-  // price_id?: string | null; // uncomment ONLY if column exists
 }) {
   const {
     stripeSubscriptionId,
@@ -156,12 +151,10 @@ async function applySubscriptionUpdate(args: {
       stripe_subscription_id: stripeSubscriptionId,
       status,
       current_period_end,
-      // price_id, // uncomment ONLY if column exists
     });
     return;
   }
 
-  // Fallback: if we can't identify user_id, at least update any row we already have by stripe_subscription_id
   console.warn(
     "[webhook] Missing supabase user id; falling back to updateByStripeSubscriptionId",
     { stripeSubscriptionId },
@@ -171,8 +164,27 @@ async function applySubscriptionUpdate(args: {
     stripe_customer_id: stripeCustomerId,
     status,
     current_period_end,
-    // price_id,
   });
+}
+
+/**
+ * ✅ Idempotency guard: insert Stripe event id into stripe_webhook_events.
+ * - First time: insert succeeds => process event.
+ * - Duplicate delivery: unique violation => skip processing.
+ */
+async function assertNotProcessed(eventId: string): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .insert({ id: eventId });
+
+  if (!error) return true;
+
+  // Postgres unique violation
+  const code = (error as any).code;
+  if (code === "23505") return false;
+
+  console.error("[webhook] stripe_webhook_events insert failed:", error);
+  throw error;
 }
 
 // ---------- Handler ----------
@@ -204,7 +216,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
-  console.log("[webhook] ✅ HIT:", event.type);
+  console.log("[webhook] ✅ HIT:", event.type, event.id);
+
+  // ✅ Idempotency: ignore duplicates BEFORE doing any work
+  try {
+    const firstTime = await assertNotProcessed(event.id);
+    if (!firstTime) {
+      console.log("[webhook] ↩️ duplicate event ignored:", event.id);
+      return NextResponse.json(
+        { received: true, duplicate: true },
+        { status: 200 },
+      );
+    }
+  } catch (e: any) {
+    // If idempotency table insert fails for unexpected reasons, fail loudly so Stripe retries.
+    console.error("[webhook] ❌ idempotency check failed:", e?.message ?? e);
+    return NextResponse.json({ error: "idempotency_failed" }, { status: 500 });
+  }
 
   try {
     switch (event.type) {
@@ -248,7 +276,6 @@ export async function POST(req: Request) {
           userId: effectiveUserId,
           status: subInfo.status ?? "trialing",
           current_period_end: subInfo.current_period_end,
-          // price_id: subInfo.price_id,
         });
 
         break;
@@ -258,7 +285,6 @@ export async function POST(req: Request) {
       case "invoice.paid":
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-
         const stripeSubscriptionId = subscriptionIdFromInvoice(invoice);
 
         console.log(`[webhook] ${event.type} fields:`, {
@@ -278,7 +304,6 @@ export async function POST(req: Request) {
           userId: subInfo.user_id,
           status: "active",
           current_period_end: subInfo.current_period_end,
-          // price_id: subInfo.price_id,
         });
 
         break;
@@ -301,15 +326,12 @@ export async function POST(req: Request) {
 
         const subInfo = await getSubInfo(stripeSubscriptionId);
 
-        // Stripe will also send customer.subscription.updated with status changes
-        // but handling this can help you react faster if you choose.
         await applySubscriptionUpdate({
           stripeSubscriptionId,
           stripeCustomerId: subInfo.stripe_customer_id,
           userId: subInfo.user_id,
           status: subInfo.status ?? "past_due",
           current_period_end: subInfo.current_period_end,
-          // price_id: subInfo.price_id,
         });
 
         break;
@@ -356,20 +378,21 @@ export async function POST(req: Request) {
           userId,
           status,
           current_period_end,
-          // price_id,
         });
 
         break;
       }
 
       default:
-        // It’s fine to ignore other events.
         break;
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err: any) {
     console.error("[webhook] ❌ handler failed:", err?.message ?? err);
+
+    // IMPORTANT: because we inserted the event id already, Stripe retry won't re-run it.
+    // If you want "retryable" behavior, we can upgrade this to a processing/processed state table.
     return NextResponse.json(
       { error: "webhook_handler_failed" },
       { status: 500 },

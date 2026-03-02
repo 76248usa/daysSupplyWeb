@@ -24,3 +24,24 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ---------- App-like behavior ---------- */
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none; /* prevents iOS rubber-band scroll */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent text selection flashes on tap (mobile-app feel) */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth font rendering like native apps */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

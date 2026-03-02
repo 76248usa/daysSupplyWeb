@@ -36,6 +36,10 @@ function shouldAvoidStealingFocus() {
   );
 }
 
+// ✅ Same native-tap style as AppHome
+const PRESS =
+  "select-none cursor-pointer active:scale-[0.97] transition-transform";
+
 export default function DetailsClient({ medicine }: { medicine: Medicine }) {
   const [units, setUnits] = useState("");
   const [times, setTimes] = useState("");
@@ -227,7 +231,7 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/app"
-          className="px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900"
+          className={`${PRESS} px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900 inline-flex items-center`}
         >
           Home
         </Link>
@@ -305,6 +309,7 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
             inputMode="decimal"
             className={[
               "w-full p-3 rounded-lg bg-slate-900 border text-slate-100",
+              "focus:outline-none focus:ring-2 focus:ring-cyan-400/70",
               attempted && !parsed.unitsValid
                 ? "border-rose-500/60"
                 : "border-slate-700",
@@ -322,6 +327,7 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
             inputMode="decimal"
             className={[
               "w-full p-3 rounded-lg bg-slate-900 border text-slate-100",
+              "focus:outline-none focus:ring-2 focus:ring-cyan-400/70",
               attempted && !parsed.timesValid
                 ? "border-rose-500/60"
                 : "border-slate-700",
@@ -339,14 +345,14 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
         <div className="flex gap-3 pt-2">
           <button
             onClick={calculate}
-            className="flex-1 bg-green-500 text-black py-3 rounded-lg font-extrabold hover:opacity-90"
+            className={`${PRESS} flex-1 bg-green-500 text-black py-3 rounded-lg font-extrabold hover:opacity-90`}
           >
             Confirm
           </button>
 
           <button
             onClick={reset}
-            className="flex-1 border border-slate-500 py-3 rounded-lg font-semibold text-slate-100 hover:bg-slate-900"
+            className={`${PRESS} flex-1 border border-slate-500 py-3 rounded-lg font-semibold text-slate-100 hover:bg-slate-900`}
           >
             Reset
           </button>

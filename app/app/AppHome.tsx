@@ -10,6 +10,8 @@ import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 const TRIAL_LINE =
   "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
 
@@ -57,6 +59,10 @@ function daysUntil(iso?: string | null) {
   const ms = end.getTime() - Date.now();
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
+
+// ✅ One consistent “native tap” style you can reuse everywhere
+const PRESS =
+  "select-none cursor-pointer active:scale-[0.97] transition-transform";
 
 export default function AppHome() {
   const [search, setSearch] = useState("");
@@ -129,7 +135,6 @@ export default function AppHome() {
       .finally(() => {
         if (cancelled) return;
 
-        // If Pro still isn't active after retries, stop and clear the flag
         if (!effectiveIsPro) {
           clearRecentCheckout();
         }
@@ -223,10 +228,6 @@ export default function AppHome() {
         throw new Error("Please sign in to manage billing.");
       }
 
-      const returnUrl = `${window.location.origin}${
-        isTab(tabParam) ? `/app?tab=${tabParam}` : "/app"
-      }`;
-
       const res = await fetch("/api/stripe/create-portal", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -277,204 +278,224 @@ export default function AppHome() {
     const dt = formatDateShort(currentPeriodEnd);
     if (dt) return `Renews ${dt}`;
 
-    // fallback (webhook may not have set current_period_end yet)
     return "Subscription verified";
   }, [AUTH_DISABLED, subStatus, trialEndsInDays, currentPeriodEnd]);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-2xl p-6">
-        <div className="flex items-center justify-end gap-3">
-          {showManageBilling ? (
-            <div className="flex flex-col items-end gap-1">
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
+    >
+      <main className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="mx-auto max-w-2xl p-6">
+          <div className="flex items-center justify-end gap-3">
+            {showManageBilling ? (
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={openBillingPortal}
+                  disabled={portalLoading}
+                  className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-60 disabled:hover:bg-slate-900`}
+                >
+                  {portalLoading ? "Opening billing…" : "Manage billing"}
+                </button>
+                {portalError ? (
+                  <div className="text-[11px] text-rose-300">{portalError}</div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {!AUTH_DISABLED && status !== "no_user" ? (
               <button
-                onClick={openBillingPortal}
-                disabled={portalLoading}
-                className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-60 disabled:hover:bg-slate-900"
+                onClick={signOut}
+                className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800`}
               >
-                {portalLoading ? "Opening billing…" : "Manage billing"}
+                Sign out
               </button>
-              {portalError ? (
-                <div className="text-[11px] text-rose-300">{portalError}</div>
-              ) : null}
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
-          {!AUTH_DISABLED && status !== "no_user" ? (
-            <button
-              onClick={signOut}
-              className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
-            >
-              Sign out
-            </button>
-          ) : null}
-        </div>
+          <h1 className="mt-3 text-2xl font-extrabold text-center">
+            Insulin Days’ Supply Calculator with Priming
+          </h1>
 
-        <h1 className="mt-3 text-2xl font-extrabold text-center">
-          Insulin Days’ Supply Calculator with Priming
-        </h1>
+          <p className="text-center text-slate-300 mt-2">
+            Professional insulin day-supply calculations with priming and
+            expiration logic.
+          </p>
 
-        <p className="text-center text-slate-300 mt-2">
-          Professional insulin day-supply calculations with priming and
-          expiration logic.
-        </p>
-
-        {/* ✅ Compact Pro banner */}
-        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="text-sm text-slate-200 font-semibold">
-              {AUTH_DISABLED
-                ? "Pro is enabled in development mode."
-                : TRIAL_LINE}
-              <div className="text-xs text-slate-400 mt-1">
+          {/* ✅ Compact Pro banner */}
+          <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="text-sm text-slate-200 font-semibold">
                 {AUTH_DISABLED
-                  ? "Checkout is disabled while auth is disabled."
-                  : "Secure checkout via Stripe • Cancel anytime"}
+                  ? "Pro is enabled in development mode."
+                  : TRIAL_LINE}
+                <div className="text-xs text-slate-400 mt-1">
+                  {AUTH_DISABLED
+                    ? "Checkout is disabled while auth is disabled."
+                    : "Secure checkout via Stripe • Cancel anytime"}
+                </div>
+
+                {showAlreadyProSignIn ? (
+                  <div className="mt-2 text-xs">
+                    <Link
+                      href={`/login?next=${encodeURIComponent(
+                        isTab(tabParam) ? `/app?tab=${tabParam}` : "/app",
+                      )}`}
+                      className={`${PRESS} inline-flex text-cyan-400 hover:brightness-110 text-sm font-semibold underline underline-offset-4`}
+                    >
+                      Already Pro? Sign in
+                    </Link>
+                  </div>
+                ) : null}
               </div>
 
-              {showAlreadyProSignIn ? (
-                <div className="mt-2 text-xs">
+              <div className="sm:text-right">
+                {isLoading ? (
+                  <div className="text-xs text-slate-400">Checking…</div>
+                ) : effectiveIsPro ? (
+                  <div className="inline-flex flex-col items-start rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2">
+                    <div className="text-emerald-200 text-xs font-semibold">
+                      Pro active ✓
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-emerald-100/80">
+                      {proConfidenceLine}
+                    </div>
+                  </div>
+                ) : activating ? (
+                  <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
+                    Activating…
+                  </div>
+                ) : AUTH_DISABLED ? (
+                  <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
+                    Checkout disabled (dev)
+                  </div>
+                ) : (
                   <Link
-                    href={`/login?next=${encodeURIComponent(
-                      isTab(tabParam) ? `/app?tab=${tabParam}` : "/app",
-                    )}`}
-                    className="text-cyan-400 hover:brightness-110 text-sm font-semibold underline underline-offset-4"
+                    href="/app/upgrade"
+                    className={`${PRESS} inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110`}
                   >
-                    Already Pro? Sign in
+                    Start Free Trial
                   </Link>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="sm:text-right">
-              {isLoading ? (
-                <div className="text-xs text-slate-400">Checking…</div>
-              ) : effectiveIsPro ? (
-                <div className="inline-flex flex-col items-start rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2">
-                  <div className="text-emerald-200 text-xs font-semibold">
-                    Pro active ✓
-                  </div>
-                  <div className="mt-0.5 text-[11px] text-emerald-100/80">
-                    {proConfidenceLine}
-                  </div>
-                </div>
-              ) : activating ? (
-                <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
-                  Activating…
-                </div>
-              ) : AUTH_DISABLED ? (
-                <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
-                  Checkout disabled (dev)
-                </div>
-              ) : (
-                <Link
-                  href="/app/upgrade"
-                  className="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110"
-                >
-                  Start Free Trial
-                </Link>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Segmented toggle */}
-        <div className="mt-5 flex justify-center">
-          <div className="inline-flex rounded-xl border border-slate-800 bg-slate-900 p-1">
-            <TabButton
-              active={tab === "medicines"}
-              onClick={() => setTab("medicines")}
+          {/* Segmented toggle */}
+          <div className="mt-5 flex justify-center">
+            <div className="inline-flex rounded-xl border border-slate-800 bg-slate-900 p-1">
+              <TabButton
+                active={tab === "medicines"}
+                onClick={() => setTab("medicines")}
+              >
+                Medicines
+              </TabButton>
+              <TabButton active={tab === "eye"} onClick={() => setTab("eye")}>
+                Eye drops
+              </TabButton>
+              <TabButton active={tab === "ear"} onClick={() => setTab("ear")}>
+                Ear drops
+              </TabButton>
+            </div>
+          </div>
+
+          {tab === "medicines" ? <DisclaimerAccordion /> : null}
+
+          {tab === "medicines" ? (
+            <div className="mt-5 relative">
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
+              <input
+                className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-3 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                placeholder="Search insulin name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          ) : null}
+
+          {/* Content area */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
             >
-              Medicines
-            </TabButton>
-            <TabButton active={tab === "eye"} onClick={() => setTab("eye")}>
-              Eye drops
-            </TabButton>
-            <TabButton active={tab === "ear"} onClick={() => setTab("ear")}>
-              Ear drops
-            </TabButton>
-          </div>
-        </div>
-
-        {tab === "medicines" ? <DisclaimerAccordion /> : null}
-
-        {tab === "medicines" ? (
-          <div className="mt-5 relative">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-            />
-            <input
-              className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-3 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="Search insulin name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        ) : null}
-
-        {/* Content area */}
-        {tab === "eye" ? (
-          <EyeDropsCalculator />
-        ) : tab === "ear" ? (
-          <EarDropsCalculator />
-        ) : (
-          <div className="mt-4 space-y-3">
-            {filtered.map((m) =>
-              canOpenDetails ? (
-                <Link
-                  key={m.id}
-                  href={`/app/medicine/${m.id}`}
-                  className="block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800"
-                >
-                  <div className="text-lg font-bold">{m.name}</div>
-                  {m.addToName ? (
-                    <div className="text-sm text-slate-300">{m.addToName}</div>
-                  ) : null}
-                </Link>
+              {tab === "eye" ? (
+                <EyeDropsCalculator />
+              ) : tab === "ear" ? (
+                <EarDropsCalculator />
               ) : (
-                <Link
-                  key={m.id}
-                  href="/app/upgrade"
-                  className="block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800 opacity-70"
-                >
-                  <div className="text-lg font-bold">{m.name}</div>
-                  {m.addToName ? (
-                    <div className="text-sm text-slate-300">{m.addToName}</div>
-                  ) : null}
-                  <div className="mt-2 text-xs text-amber-200">
-                    Start trial to calculate
-                  </div>
-                </Link>
-              ),
-            )}
+                <div className="mt-4 space-y-3">
+                  {filtered.map((m) =>
+                    canOpenDetails ? (
+                      <Link
+                        key={m.id}
+                        href={`/app/medicine/${m.id}`}
+                        className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800`}
+                      >
+                        <div className="text-lg font-bold">{m.name}</div>
+                        {m.addToName ? (
+                          <div className="text-sm text-slate-300">
+                            {m.addToName}
+                          </div>
+                        ) : null}
+                      </Link>
+                    ) : (
+                      <Link
+                        key={m.id}
+                        href="/app/upgrade"
+                        className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800 opacity-70`}
+                      >
+                        <div className="text-lg font-bold">{m.name}</div>
+                        {m.addToName ? (
+                          <div className="text-sm text-slate-300">
+                            {m.addToName}
+                          </div>
+                        ) : null}
+                        <div className="mt-2 text-xs text-amber-200">
+                          Start trial to calculate
+                        </div>
+                      </Link>
+                    ),
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="mt-3 text-center text-xs text-slate-400">
+            We do not sell user information.
+            <p className="mt-4 text-center text-xs text-slate-500">
+              For licensed pharmacy professionals only.
+            </p>
+            <p className="mt-2 text-center text-xs text-slate-500">
+              This software tool is independently developed and is not
+              affiliated with any pharmaceutical manufacturer.
+            </p>
           </div>
-        )}
 
-        <div className="mt-3 text-center text-xs text-slate-400">
-          We do not sell user information.
-          <p className="mt-4 text-center text-xs text-slate-500">
-            For licensed pharmacy professionals only.
-          </p>
-          <p className="mt-2 text-center text-xs text-slate-500">
-            This software tool is independently developed and is not affiliated
-            with any pharmaceutical manufacturer.
-          </p>
+          <details className="mt-6 text-xs text-slate-500 max-w-xl mx-auto">
+            <summary className="cursor-pointer text-center">
+              About this insulin calculator
+            </summary>
+            <p className="mt-2 text-center">
+              This insulin days supply calculator helps pharmacy professionals
+              calculate accurate day-supply quantities for insulin pens and
+              related products, incorporating priming adjustments and expiration
+              constraints commonly required for insurance and audit
+              documentation.
+            </p>
+          </details>
         </div>
-
-        <details className="mt-6 text-xs text-slate-500 max-w-xl mx-auto">
-          <summary className="cursor-pointer text-center">
-            About this insulin calculator
-          </summary>
-          <p className="mt-2 text-center">
-            This insulin days supply calculator helps pharmacy professionals
-            calculate accurate day-supply quantities for insulin pens and
-            related products, incorporating priming adjustments and expiration
-            constraints commonly required for insurance and audit documentation.
-          </p>
-        </details>
-      </div>
-    </main>
+      </main>
+    </motion.div>
   );
 }
 
@@ -492,7 +513,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={[
-        "px-4 py-2 rounded-lg text-sm font-semibold transition",
+        "select-none active:scale-[0.97] transition-transform px-4 py-2 rounded-lg text-sm font-semibold",
         active
           ? "bg-slate-950 text-white border border-slate-700"
           : "text-slate-300 hover:text-white",
@@ -511,7 +532,7 @@ function DisclaimerAccordion() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 p-4 text-left"
+        className="select-none active:scale-[0.97] transition-transform w-full flex items-center justify-between gap-3 p-4 text-left"
         aria-expanded={open}
       >
         <div>
