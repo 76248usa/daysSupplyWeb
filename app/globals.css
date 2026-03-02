@@ -40,8 +40,20 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+/* Native iOS app feel */
+
 /* Smooth font rendering like native apps */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+/* iOS native-app gesture feel */
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
