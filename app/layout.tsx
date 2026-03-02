@@ -1,25 +1,55 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css"; // ✅ THIS is what brings Tailwind back
 import Providers from "./providers";
-import TransitionShell from "./TransitionShell";
 
-export const metadata = {
+// export const metadata: Metadata = {
+//   title: "Insulin Days' Supply",
+//   applicationName: "Insulin Days' Supply",
+//   manifest: "/manifest.webmanifest",
+//   themeColor: "#020617",
+//   appleWebApp: {
+//     capable: true,
+//     statusBarStyle: "black-translucent",
+//     title: "Insulin Days' Supply",
+//   },
+//   icons: {
+//     apple: "/apple-touch-icon.png",
+//     icon: [
+//       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+//       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+//     ],
+//   },
+// };
+
+export const metadata: Metadata = {
   title: "Insulin Days' Supply",
-  manifest: "/manifest.json",
-  themeColor: "#020617",
+  applicationName: "Insulin Days' Supply",
+  manifest: "/manifest.webmanifest",
+
+  // ❌ REMOVE this line from here:
+  // themeColor: "#020617",
+
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Days Supply",
+    title: "Insulin Days' Supply",
   },
+
   icons: {
-    apple: "/icons/icon-192.png",
+    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
   },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#020617",
 };
 
 export default function RootLayout({
@@ -30,23 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-slate-950 overscroll-none">
-        <Providers>
-          <TransitionShell>{children}</TransitionShell>
-
-          <footer className="mt-16 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-            <div className="space-x-4">
-              <a href="/terms" className="hover:text-slate-300 underline">
-                Terms
-              </a>
-              <a href="/privacy" className="hover:text-slate-300 underline">
-                Privacy
-              </a>
-            </div>
-            <div className="mt-2">
-              © {new Date().getFullYear()} Insulin Days’ Supply
-            </div>
-          </footer>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
