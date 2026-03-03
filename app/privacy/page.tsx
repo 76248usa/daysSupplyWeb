@@ -4,20 +4,25 @@ export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
-        <Link
+        {/* <Link
           href="/pricing"
           className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
         >
           ← Back
-        </Link>
+        </Link> */}
 
+        <Link
+          href="/app"
+          className="select-none active:scale-[0.97] transition-transform px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900"
+        >
+          Back
+        </Link>
         <h1 className="mt-6 text-3xl font-extrabold tracking-tight">
           Privacy Policy
         </h1>
         <p className="mt-2 text-sm text-slate-400">
           Last updated: {new Date().toLocaleDateString()}
         </p>
-
         <div className="mt-6 space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-200">
           <section className="space-y-2">
             <h2 className="text-lg font-extrabold text-slate-100">

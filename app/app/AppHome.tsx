@@ -55,6 +55,18 @@ function daysUntil(iso?: string | null) {
 const PRESS =
   "select-none cursor-pointer active:scale-[0.97] transition-transform";
 
+function shouldAvoidStealingFocus() {
+  if (typeof document === "undefined") return false;
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  const tag = el.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    el.getAttribute("contenteditable") === "true"
+  );
+}
+
 export default function AppHome() {
   const [search, setSearch] = useState("");
 
@@ -77,6 +89,67 @@ export default function AppHome() {
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
   const [trialEndsInDays, setTrialEndsInDays] = useState<number | null>(null);
+
+  // ✅ App-style header menu (Terms/Privacy/Disclaimer)
+  const [menuOpen, setMenuOpen] = useState(false);
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  // Close menu on ESC + outside click
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    function onClickOutside(e: MouseEvent) {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest?.("[data-more-menu]")) return; // clicks inside menu
+      setMenuOpen(false);
+    }
+
+    if (menuOpen) {
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("click", onClickOutside);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("click", onClickOutside);
+    };
+  }, [menuOpen]);
+
+  // ✅ Autofocus search (nice app feel)
+  // useEffect(() => {
+  //   const id = window.setTimeout(() => {
+  //     if (shouldAvoidStealingFocus()) return;
+  //     const el = document.getElementById(
+  //       "insulin-search",
+  //     ) as HTMLInputElement | null;
+  //     el?.focus();
+  //   }, 80);
+  //   return () => window.clearTimeout(id);
+  // }, []);
+
+  // ✅ Autofocus search (desktop only – avoid iPhone keyboard pop)
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (shouldAvoidStealingFocus()) return;
+
+      // Prevent keyboard auto-open on touch devices
+      const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+      if (isTouch) return;
+
+      const el = document.getElementById(
+        "insulin-search",
+      ) as HTMLInputElement | null;
+
+      el?.focus();
+    }, 80);
+
+    return () => window.clearTimeout(id);
+  }, []);
 
   // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
   useEffect(() => {
@@ -270,6 +343,7 @@ export default function AppHome() {
     >
       <main className="min-h-screen bg-slate-950 text-slate-100">
         <div className="mx-auto max-w-2xl p-6">
+          {/* Header actions */}
           <div className="flex items-center justify-end gap-3">
             {showManageBilling ? (
               <div className="flex flex-col items-end gap-1">
@@ -294,6 +368,60 @@ export default function AppHome() {
                 Sign out
               </button>
             ) : null}
+
+            {/* ✅ More menu */}
+            <div className="relative" data-more-menu>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="More"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800`}
+              >
+                ⋯
+              </button>
+
+              {menuOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-xl"
+                >
+                  <Link
+                    href="/terms"
+                    onClick={closeMenu}
+                    role="menuitem"
+                    className={`${PRESS} block px-4 py-3 text-sm text-slate-200 hover:bg-slate-900`}
+                  >
+                    Terms
+                  </Link>
+
+                  <Link
+                    href="/privacy"
+                    onClick={closeMenu}
+                    role="menuitem"
+                    className={`${PRESS} block px-4 py-3 text-sm text-slate-200 hover:bg-slate-900`}
+                  >
+                    Privacy
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMenu();
+                      document.getElementById("disclaimer")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }}
+                    role="menuitem"
+                    className={`${PRESS} w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-slate-900`}
+                  >
+                    Disclaimer
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
 
           <h1 className="mt-3 text-2xl font-extrabold text-center">
@@ -369,6 +497,7 @@ export default function AppHome() {
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"
             />
             <input
+              id="insulin-search"
               className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-3 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               placeholder="Search insulin name..."
               value={search}
@@ -400,11 +529,11 @@ export default function AppHome() {
                   href="/app/upgrade"
                   className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800 opacity-75`}
                 >
-                  <div className="text-xl font-extrabold tracking-tight text-slate-50">
+                  <div className="text-lg font-bold tracking-tight text-white">
                     {m.name}
                   </div>
                   {m.addToName ? (
-                    <div className="mt-0.5 text-base font-semibold text-slate-200">
+                    <div className="mt-0.5 text-base font-semibold text-white">
                       {m.addToName}
                     </div>
                   ) : null}
@@ -416,7 +545,11 @@ export default function AppHome() {
             )}
           </div>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          {/* Disclaimer anchor for the menu */}
+          {/* <div
+            id="disclaimer"
+            className="mt-6 text-center text-xs text-slate-400"
+          >
             We do not sell user information.
             <p className="mt-4 text-center text-xs text-slate-500">
               For licensed pharmacy professionals only.
@@ -425,6 +558,47 @@ export default function AppHome() {
               This software tool is independently developed and is not
               affiliated with any pharmaceutical manufacturer.
             </p>
+          </div> */}
+
+          <div
+            id="disclaimer"
+            className="mt-6 text-center text-xs text-slate-400 max-w-xl mx-auto"
+          >
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <p className="font-semibold text-slate-200">
+                Professional Use Notice
+              </p>
+
+              <p className="mt-3 text-slate-400">
+                This calculator is intended for licensed healthcare
+                professionals. It provides insulin day-supply estimates based on
+                user-entered dosing information, product characteristics,
+                priming assumptions, and expiration limits.
+              </p>
+
+              <p className="mt-3 text-slate-400">
+                Results are provided for clinical support only and do not
+                replace independent professional judgment. Users must verify all
+                calculations against the prescription, manufacturer labeling,
+                payer requirements, and applicable regulations.
+              </p>
+
+              <p className="mt-3 text-slate-400">
+                By using this tool, users acknowledge that final responsibility
+                for prescription verification and documentation remains with the
+                dispensing professional.
+              </p>
+
+              <p className="mt-3 text-slate-400">
+                This software is independently developed, not affiliated with
+                any pharmaceutical manufacturer, does not provide medical
+                advice, and is not intended for patient use.
+              </p>
+
+              <p className="mt-4 text-slate-500">
+                We do not sell user information.
+              </p>
+            </div>
           </div>
         </div>
       </main>

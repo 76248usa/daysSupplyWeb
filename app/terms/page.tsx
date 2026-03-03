@@ -1,19 +1,22 @@
 import Link from "next/link";
 
+const SUPPORT_EMAIL = "elsabecrous@gmail.com";
+
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-2xl p-6">
         <Link
-          href="/pricing"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+          href="/app"
+          className="select-none active:scale-[0.97] transition-transform px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900"
         >
-          ← Back
+          Back
         </Link>
 
         <h1 className="mt-6 text-3xl font-extrabold tracking-tight">
           Terms of Use
         </h1>
+
         <p className="mt-2 text-sm text-slate-400">
           Last updated: {new Date().toLocaleDateString()}
         </p>
@@ -35,17 +38,12 @@ export default function TermsPage() {
               2. Intended Use
             </h2>
             <p>
-              The Service is intended for informational and professional support
-              purposes only. It provides calculation estimates that may assist
-              pharmacists and other healthcare professionals.
+              The Service is a professional support tool that provides
+              calculation estimates. It does not provide medical advice.
             </p>
             <p>
-              <span className="font-semibold text-amber-200">
-                No medical advice:
-              </span>{" "}
-              The Service does not provide medical advice and is not a
-              substitute for clinical judgment, professional counseling, product
-              labeling, or payer requirements.
+              You are responsible for verifying results against the
+              prescription, labeling, payer rules, and professional judgment.
             </p>
           </section>
 
@@ -54,10 +52,9 @@ export default function TermsPage() {
               3. Accuracy & Verification
             </h2>
             <p>
-              You are responsible for verifying all results against the
-              prescription directions, product labeling, and applicable payer
-              rules. You acknowledge that calculation results are estimates and
-              may not apply to all scenarios.
+              By using this tool, you acknowledge that final responsibility for
+              prescription verification and documentation remains with the
+              dispensing professional.
             </p>
           </section>
 
@@ -67,9 +64,8 @@ export default function TermsPage() {
             </h2>
             <p>
               If you purchase a subscription, billing is processed by Stripe.
-              Subscription terms shown at checkout control the trial length,
-              renewal period, and price. Subscriptions may auto-renew unless
-              canceled before the renewal date.
+              Terms shown at checkout control trial length, renewal, and price.
+              Subscriptions may auto-renew unless canceled before renewal.
             </p>
           </section>
 
@@ -78,9 +74,8 @@ export default function TermsPage() {
               5. Prohibited Uses
             </h2>
             <p>
-              You agree not to misuse the Service, attempt to disrupt it,
-              reverse engineer it, or use it in a way that violates applicable
-              laws or regulations.
+              You agree not to misuse the Service, disrupt it, reverse engineer
+              it, or use it unlawfully.
             </p>
           </section>
 
@@ -90,9 +85,8 @@ export default function TermsPage() {
             </h2>
             <p>
               To the maximum extent permitted by law, the Service is provided
-              “as is” without warranties of any kind. We are not liable for any
-              damages arising from your use of the Service, including but not
-              limited to indirect, incidental, or consequential damages.
+              “as is” without warranties of any kind. We are not liable for
+              damages arising from use of the Service.
             </p>
           </section>
 
@@ -101,8 +95,8 @@ export default function TermsPage() {
               7. Changes
             </h2>
             <p>
-              We may update these Terms from time to time. Continued use of the
-              Service after changes means you accept the updated Terms.
+              We may update these Terms from time to time. Continued use means
+              you accept the updated Terms.
             </p>
           </section>
 
@@ -111,9 +105,8 @@ export default function TermsPage() {
               8. Contact
             </h2>
             <p>
-              For support or questions, contact:{" "}
-              <span className="font-semibold">support@yourdomain.com</span>{" "}
-              (replace with your real support email).
+              For support:{" "}
+              <span className="font-semibold">{SUPPORT_EMAIL}</span>
             </p>
           </section>
         </div>

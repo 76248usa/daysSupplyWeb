@@ -16,19 +16,28 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY env var.");
 }
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY env var.");
+// For server-side auth token validation, prefer a *non-public* key.
+// Keep NEXT_PUBLIC fallback so your current setup keeps working.
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_ANON_KEY) {
+  throw new Error(
+    "Missing SUPABASE_ANON_KEY (preferred) or NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+  );
 }
 
 const supabaseAdmin = createClient(
   SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: { persistSession: false, autoRefreshToken: false },
+  },
 );
 
-const supabaseAuth = createClient(
-  SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-);
+const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 
 const PRO_STATUSES = new Set(["trialing", "active"]);
 
@@ -54,6 +63,14 @@ function calcDaysLeft(iso: string | null | undefined): number | null {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
+function jsonNoStore(body: any, status = 200) {
+  const res = NextResponse.json(body, { status });
+  res.headers.set("Cache-Control", "no-store, max-age=0");
+  // Pro status depends on Authorization; this prevents CDN/proxy mixups.
+  res.headers.set("Vary", "Authorization");
+  return res;
+}
+
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get("authorization") || "";
@@ -62,8 +79,9 @@ export async function GET(req: Request) {
       : "";
 
     if (!token) {
-      return NextResponse.json(
+      return jsonNoStore(
         {
+          ok: true,
           isPro: false,
           status: "no_user",
           effectiveStatus: "no_user",
@@ -71,7 +89,7 @@ export async function GET(req: Request) {
           trialEndsInDays: null,
           reason: "missing_token",
         },
-        { status: 200 },
+        200,
       );
     }
 
@@ -79,8 +97,9 @@ export async function GET(req: Request) {
       await supabaseAuth.auth.getUser(token);
 
     if (userErr || !userData?.user) {
-      return NextResponse.json(
+      return jsonNoStore(
         {
+          ok: true,
           isPro: false,
           status: "no_user",
           effectiveStatus: "no_user",
@@ -88,21 +107,24 @@ export async function GET(req: Request) {
           trialEndsInDays: null,
           reason: "invalid_token",
         },
-        { status: 200 },
+        200,
       );
     }
 
     const userId = userData.user.id;
 
-    const { data: row, error } = await supabaseAdmin
+    // Safer than maybeSingle() if multiple rows ever exist:
+    const { data: rows, error } = await supabaseAdmin
       .from("subscriptions")
       .select("status,current_period_end,updated_at,stripe_subscription_id")
       .eq("user_id", userId)
-      .maybeSingle();
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
     if (error) {
-      return NextResponse.json(
+      return jsonNoStore(
         {
+          ok: true,
           isPro: false,
           status: "unknown",
           effectiveStatus: "unknown",
@@ -110,13 +132,16 @@ export async function GET(req: Request) {
           trialEndsInDays: null,
           reason: "db_error",
         },
-        { status: 200 },
+        200,
       );
     }
 
+    const row = rows?.[0];
+
     if (!row) {
-      return NextResponse.json(
+      return jsonNoStore(
         {
+          ok: true,
           isPro: false,
           status: "unknown",
           effectiveStatus: "unknown",
@@ -124,7 +149,7 @@ export async function GET(req: Request) {
           trialEndsInDays: null,
           reason: "no_row",
         },
-        { status: 200 },
+        200,
       );
     }
 
@@ -135,27 +160,30 @@ export async function GET(req: Request) {
     const notExpired = isNotExpired(current_period_end);
     const isPro = PRO_STATUSES.has(status) && notExpired;
 
+    // Preserve your “treat expired pro statuses as canceled”
     const effectiveStatus =
       !notExpired && PRO_STATUSES.has(status) ? "canceled" : status;
 
     const trialEndsInDays =
       effectiveStatus === "trialing" ? calcDaysLeft(current_period_end) : null;
 
-    return NextResponse.json(
+    return jsonNoStore(
       {
+        ok: true,
         isPro,
         status,
         effectiveStatus,
         current_period_end,
         trialEndsInDays,
-        stripe_subscription_id: row.stripe_subscription_id ?? null,
         updated_at: row.updated_at ?? null,
+        // stripe_subscription_id: row.stripe_subscription_id ?? null,
       },
-      { status: 200 },
+      200,
     );
-  } catch (e: any) {
-    return NextResponse.json(
+  } catch {
+    return jsonNoStore(
       {
+        ok: true,
         isPro: false,
         status: "unknown",
         effectiveStatus: "unknown",
@@ -163,7 +191,7 @@ export async function GET(req: Request) {
         trialEndsInDays: null,
         reason: "exception",
       },
-      { status: 200 },
+      200,
     );
   }
 }
