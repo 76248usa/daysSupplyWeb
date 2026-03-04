@@ -11,6 +11,35 @@ function niceNextLabel(nextUrl: string) {
   return "Continue";
 }
 
+// Only allow internal relative paths (prevents open-redirect + weird parsing)
+function sanitizeNext(raw: string | null): string {
+  const fallback = "/app/upgrade";
+  if (!raw) return fallback;
+
+  // decode if it was encoded
+  let v = raw;
+  try {
+    v = decodeURIComponent(raw);
+  } catch {
+    v = raw;
+  }
+
+  v = v.trim();
+
+  // Must be an internal path
+  if (!v.startsWith("/")) return fallback;
+  if (v.startsWith("//")) return fallback;
+  // disallow full URLs
+  if (v.startsWith("http://") || v.startsWith("https://")) return fallback;
+
+  return v;
+}
+
+function isValidEmail(e: string) {
+  const v = e.trim().toLowerCase();
+  return v.includes("@") && v.includes(".") && v.length >= 6;
+}
+
 export default function LoginClient() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -20,24 +49,40 @@ export default function LoginClient() {
     [],
   );
 
-  const nextUrl = sp.get("next") || "/app";
+  // ✅ Default to /app/upgrade so "missing next" still drives users to subscribe path
+  //const nextUrl = sanitizeNext(sp.get("next"));
+  const nextUrl = sp.get("next") || "/app/upgrade";
 
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // If auth is disabled, just continue.
   useEffect(() => {
     if (!AUTH_DISABLED) return;
     router.replace(nextUrl);
   }, [AUTH_DISABLED, nextUrl, router]);
+
+  // ✅ If user is already signed in, skip login page
+  useEffect(() => {
+    if (AUTH_DISABLED) return;
+
+    (async () => {
+      const { data } = await supabaseBrowser.auth.getSession();
+      if (data.session?.access_token) {
+        router.replace(nextUrl);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [AUTH_DISABLED, nextUrl]);
 
   async function sendLink() {
     setError(null);
     setSent(false);
 
     const e = email.trim().toLowerCase();
-    if (!e.includes("@") || !e.includes(".")) {
+    if (!isValidEmail(e)) {
       setError("Please enter a valid email.");
       return;
     }
@@ -47,14 +92,15 @@ export default function LoginClient() {
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
-      const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(nextUrl)}`;
+      // Supabase will send the user back here. Our callback page consumes the code,
+      // creates a session, then redirects to `nextUrl`.
+      const emailRedirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(
+        nextUrl,
+      )}`;
+
       const { error } = await supabaseBrowser.auth.signInWithOtp({
         email: e,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/app")}`,
-
-          shouldCreateUser: true,
-        },
+        options: { emailRedirectTo },
       });
 
       if (error) throw error;
@@ -120,6 +166,10 @@ export default function LoginClient() {
           {sent ? (
             <div className="mt-4 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
               Link sent — check your email to sign in.
+              <div className="mt-1 text-xs text-emerald-100/80">
+                On iPhone: for best results, open the link in Safari (not an
+                in-app email browser).
+              </div>
             </div>
           ) : null}
 
