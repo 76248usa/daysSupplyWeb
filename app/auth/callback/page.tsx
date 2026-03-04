@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
@@ -10,14 +12,8 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     (async () => {
-      // If you include ?next=/app/upgrade, honor it
       const next = sp.get("next") || "/app";
-
-      // This will parse the URL (code, etc.) and set the session
-      // detectSessionInUrl=true does the heavy lifting
       await supabaseBrowser.auth.getSession();
-
-      // IMPORTANT: clean URL so refresh doesn't replay stale auth params
       router.replace(next);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
