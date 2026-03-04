@@ -93,6 +93,14 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
           return { isPro: false, status: "no_user" };
         }
 
+        // const { data: sessionData } = await supabaseBrowser.auth.getSession();
+        // const accessToken = sessionData.session?.access_token;
+
+        // if (!accessToken) {
+        //   setIsPro(false);
+        //   setStatus("no_user");
+        //   return { isPro: false, status: "no_user" };
+        // }
         const { data: sessionData } = await supabaseBrowser.auth.getSession();
         const accessToken = sessionData.session?.access_token;
 

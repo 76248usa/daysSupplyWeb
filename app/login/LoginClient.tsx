@@ -51,7 +51,7 @@ export default function LoginClient() {
       const { error } = await supabaseBrowser.auth.signInWithOtp({
         email: e,
         options: {
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/app")}`,
           shouldCreateUser: true,
         },
       });
