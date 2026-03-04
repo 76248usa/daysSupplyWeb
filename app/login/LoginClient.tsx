@@ -52,6 +52,7 @@ export default function LoginClient() {
         email: e,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/app")}`,
+
           shouldCreateUser: true,
         },
       });
