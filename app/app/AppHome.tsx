@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
 import { Bookmark } from "lucide-react";
+import InstallCalculatorCard from "@/components/InstallCalculatorCard";
 
 const TRIAL_LINE =
   "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
@@ -502,6 +503,8 @@ export default function AppHome() {
               </div>
             </div>
           </div>
+
+          <InstallCalculatorCard appName="Insulin Calculator" />
 
           <p className="text-sm font-semibold text-slate-200 flex items-center gap-2">
             <Bookmark size={16} /> Quick access on iPhone
