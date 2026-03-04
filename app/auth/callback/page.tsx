@@ -2,11 +2,11 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
-export default function AuthCallbackPage() {
+function Inner() {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -23,5 +23,19 @@ export default function AuthCallbackPage() {
     <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
       Signing you in…
     </main>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+          Signing you in…
+        </div>
+      }
+    >
+      <Inner />
+    </Suspense>
   );
 }
