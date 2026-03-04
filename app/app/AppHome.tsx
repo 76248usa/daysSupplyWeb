@@ -8,6 +8,7 @@ import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
+import { Bookmark } from "lucide-react";
 
 const TRIAL_LINE =
   "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
@@ -500,6 +501,44 @@ export default function AppHome() {
                 ) : null}
               </div>
             </div>
+          </div>
+
+          <p className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <Bookmark size={16} /> Quick access on iPhone
+          </p>
+
+          <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+            <p className="text-sm font-semibold text-slate-200">
+              Quick access on iPhone
+            </p>
+
+            <p className="mt-2 text-sm text-slate-400">
+              For the best experience, save this calculator in Safari for fast
+              access.
+            </p>
+
+            <ol className="mt-3 list-decimal list-inside space-y-1 text-sm text-slate-400">
+              <li>
+                Tap the{" "}
+                <span className="text-slate-200 font-medium">Share</span> button
+                in Safari
+              </li>
+              <li>
+                Select{" "}
+                <span className="text-slate-200 font-medium">Add Bookmark</span>
+              </li>
+              <li>
+                Name it{" "}
+                <span className="text-slate-200 font-medium">
+                  Insulin Calculator
+                </span>
+              </li>
+            </ol>
+
+            <p className="mt-3 text-xs text-slate-500">
+              This lets you open the calculator instantly while staying signed
+              in.
+            </p>
           </div>
 
           {/* Search */}
