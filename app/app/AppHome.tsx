@@ -8,6 +8,7 @@ import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const TRIAL_LINE =
   "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
@@ -479,12 +480,30 @@ export default function AppHome() {
                     Checkout disabled (dev)
                   </div>
                 ) : (
-                  <Link
-                    href="/app/upgrade"
+                  <button
+                    onClick={async () => {
+                      const AUTH_DISABLED =
+                        process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
+                      if (AUTH_DISABLED) {
+                        // In dev auth-disabled mode, just go to upgrade (or do nothing)
+                        window.location.href = "/app/upgrade";
+                        return;
+                      }
+
+                      const { data } = await supabaseBrowser.auth.getSession();
+                      const token = data.session?.access_token;
+
+                      if (!token) {
+                        window.location.href = `/login?next=${encodeURIComponent("/app/upgrade")}`;
+                        return;
+                      }
+
+                      window.location.href = "/app/upgrade";
+                    }}
                     className={`${PRESS} inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110`}
                   >
                     Start Free Trial
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
