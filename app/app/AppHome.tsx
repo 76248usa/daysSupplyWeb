@@ -51,7 +51,7 @@ function daysUntil(iso?: string | null) {
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
-// ✅ One consistent “native tap” style you can reuse everywhere
+// ✅ One consistent “native tap” style
 const PRESS =
   "select-none cursor-pointer active:scale-[0.97] transition-transform";
 
@@ -72,10 +72,10 @@ export default function AppHome() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const checkout = searchParams.get("checkout"); // success/cancel/null
 
-  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
+  const { effectiveIsPro, isLoading, status, refreshWithRetry, refresh } =
+    usePro();
 
   const [activating, setActivating] = useState(false);
 
@@ -85,12 +85,12 @@ export default function AppHome() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
-  // ✅ Subscription confidence (from /api/pro-status)
+  // Subscription confidence (from /api/pro-status)
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
   const [trialEndsInDays, setTrialEndsInDays] = useState<number | null>(null);
 
-  // ✅ App-style header menu (Terms/Privacy/Disclaimer)
+  // Header menu
   const [menuOpen, setMenuOpen] = useState(false);
   function closeMenu() {
     setMenuOpen(false);
@@ -104,7 +104,7 @@ export default function AppHome() {
     function onClickOutside(e: MouseEvent) {
       const t = e.target as HTMLElement | null;
       if (!t) return;
-      if (t.closest?.("[data-more-menu]")) return; // clicks inside menu
+      if (t.closest?.("[data-more-menu]")) return;
       setMenuOpen(false);
     }
 
@@ -119,26 +119,11 @@ export default function AppHome() {
     };
   }, [menuOpen]);
 
-  // ✅ Autofocus search (nice app feel)
-  // useEffect(() => {
-  //   const id = window.setTimeout(() => {
-  //     if (shouldAvoidStealingFocus()) return;
-  //     const el = document.getElementById(
-  //       "insulin-search",
-  //     ) as HTMLInputElement | null;
-  //     el?.focus();
-  //   }, 80);
-  //   return () => window.clearTimeout(id);
-  // }, []);
-
-  // ✅ Autofocus search (desktop only – avoid iPhone keyboard pop)
+  // Desktop-only auto focus for search
   useEffect(() => {
     const id = window.setTimeout(() => {
       if (shouldAvoidStealingFocus()) return;
-
-      // Prevent keyboard auto-open on touch devices
       const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-
       if (isTouch) return;
 
       const el = document.getElementById(
@@ -151,29 +136,32 @@ export default function AppHome() {
     return () => window.clearTimeout(id);
   }, []);
 
-  // B) If we returned from Stripe with checkout=success, persist it and retry refresh.
+  // ✅ When we return from Stripe with checkout=success:
+  // - mark recent checkout
+  // - start activation retries
+  // - clean URL (removes checkout param)
   useEffect(() => {
     if (checkout !== "success") return;
 
     setRecentCheckoutNow();
     setActivating(true);
 
-    refreshWithRetry({ attempts: 8, delayMs: 1500 }).catch(() => {});
+    // Retry harder on iOS timing
+    refreshWithRetry({ attempts: 10, delayMs: 1200 }).catch(() => {});
 
-    // ✅ Clean the URL
+    // Clean URL so refresh won't re-run Stripe logic
     router.replace("/app");
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkout]);
 
-  // C1) If Pro becomes true, stop activating + clear flag immediately
+  // If Pro becomes true, stop activation
   useEffect(() => {
     if (!effectiveIsPro) return;
     clearRecentCheckout();
     setActivating(false);
   }, [effectiveIsPro]);
 
-  // C2) If not Pro but we recently checked out, retry a few times then stop
+  // ✅ If we *recently* checked out but still not Pro, keep retrying a bit.
   useEffect(() => {
     if (effectiveIsPro) return;
 
@@ -185,14 +173,11 @@ export default function AppHome() {
     let cancelled = false;
     setActivating(true);
 
-    refreshWithRetry({ attempts: 6, delayMs: 1500 })
+    refreshWithRetry({ attempts: 8, delayMs: 1500 })
       .catch(() => {})
       .finally(() => {
         if (cancelled) return;
-
-        if (!effectiveIsPro) {
-          clearRecentCheckout();
-        }
+        if (!effectiveIsPro) clearRecentCheckout();
         setActivating(false);
       });
 
@@ -202,7 +187,7 @@ export default function AppHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveIsPro]);
 
-  // ✅ D) Fetch pro-status details (renewal date + trial countdown)
+  // ✅ Pull pro-status details (renewal date + trial countdown)
   useEffect(() => {
     let cancelled = false;
 
@@ -230,6 +215,8 @@ export default function AppHome() {
         }
 
         const res = await fetch("/api/pro-status", {
+          method: "GET",
+          cache: "no-store",
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -279,9 +266,7 @@ export default function AppHome() {
       const { data } = await supabaseBrowser.auth.getSession();
       const token = data.session?.access_token;
 
-      if (!token) {
-        throw new Error("Please sign in to manage billing.");
-      }
+      if (!token) throw new Error("Please sign in to manage billing.");
 
       const res = await fetch("/api/stripe/create-portal", {
         method: "POST",
@@ -322,7 +307,6 @@ export default function AppHome() {
 
     if (s === "trialing") {
       const d = trialEndsInDays ?? daysUntil(currentPeriodEnd);
-
       if (d == null) return "Trial active";
       if (d === 0) return "Trial ends today";
       if (d === 1) return "Trial ends in 1 day";
@@ -369,7 +353,7 @@ export default function AppHome() {
               </button>
             ) : null}
 
-            {/* ✅ More menu */}
+            {/* More menu */}
             <div className="relative" data-more-menu>
               <button
                 type="button"
@@ -433,7 +417,7 @@ export default function AppHome() {
             expiration logic.
           </p>
 
-          {/* ✅ Compact Pro banner */}
+          {/* Pro banner */}
           <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm text-slate-200 font-semibold">
@@ -458,7 +442,7 @@ export default function AppHome() {
                 ) : null}
               </div>
 
-              <div className="sm:text-right">
+              <div className="sm:text-right flex flex-col items-end gap-2">
                 {isLoading ? (
                   <div className="text-xs text-slate-400">Checking…</div>
                 ) : effectiveIsPro ? (
@@ -481,22 +465,15 @@ export default function AppHome() {
                 ) : (
                   <button
                     onClick={async () => {
-                      const AUTH_DISABLED =
-                        process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
-                      if (AUTH_DISABLED) {
-                        // In dev auth-disabled mode, just go to upgrade (or do nothing)
-                        window.location.href = "/app/upgrade";
-                        return;
-                      }
-
                       const { data } = await supabaseBrowser.auth.getSession();
                       const token = data.session?.access_token;
 
                       if (!token) {
-                        window.location.href = `/login?next=${encodeURIComponent("/app/upgrade")}`;
+                        window.location.href = `/login?next=${encodeURIComponent(
+                          "/app/upgrade",
+                        )}`;
                         return;
                       }
-
                       window.location.href = "/app/upgrade";
                     }}
                     className={`${PRESS} inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110`}
@@ -504,6 +481,23 @@ export default function AppHome() {
                     Start Free Trial
                   </button>
                 )}
+
+                {/* ✅ Manual refresh fallback (helpful on iPhone/Safari) */}
+                {!AUTH_DISABLED &&
+                status !== "no_user" &&
+                !effectiveIsPro &&
+                !activating ? (
+                  <button
+                    onClick={() =>
+                      refreshWithRetry({ attempts: 10, delayMs: 1200 }).catch(
+                        () => {},
+                      )
+                    }
+                    className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-[11px] text-slate-300 hover:bg-slate-800`}
+                  >
+                    Refresh Pro status
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -563,21 +557,7 @@ export default function AppHome() {
             )}
           </div>
 
-          {/* Disclaimer anchor for the menu */}
-          {/* <div
-            id="disclaimer"
-            className="mt-6 text-center text-xs text-slate-400"
-          >
-            We do not sell user information.
-            <p className="mt-4 text-center text-xs text-slate-500">
-              For licensed pharmacy professionals only.
-            </p>
-            <p className="mt-2 text-center text-xs text-slate-500">
-              This software tool is independently developed and is not
-              affiliated with any pharmaceutical manufacturer.
-            </p>
-          </div> */}
-
+          {/* Disclaimer */}
           <div
             id="disclaimer"
             className="mt-6 text-center text-xs text-slate-400 max-w-xl mx-auto"
