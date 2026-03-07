@@ -10,8 +10,7 @@ import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
 import InstallCalculatorCard from "@/components/InstallCalculatorCard";
 
-const TRIAL_LINE =
-  "Start a 1-month free trial. Then $10 per year. Cancel anytime.";
+const TRIAL_LINE = "Start 30-day free trial — $10/year after. Cancel anytime.";
 
 const RECENT_KEY = "ds_recent_checkout_ts";
 const RECENT_MS = 10 * 60 * 1000; // 10 minutes

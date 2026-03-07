@@ -17,7 +17,16 @@ const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!SUPABASE_ANON_KEY) throw new Error("Missing SUPABASE_ANON_KEY");
 
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+}
+
 const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
@@ -73,6 +82,28 @@ export async function POST(req: Request) {
       );
     }
 
+    // Trial only for first-time subscribers
+    const { data: existingSub, error: existingSubErr } = await supabaseAdmin
+      .from("subscriptions")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingSubErr) {
+      console.error("Subscription lookup error:", existingSubErr);
+      return jsonNoStore(
+        {
+          ok: false,
+          error: "subscription_lookup_failed",
+          detail: existingSubErr.message,
+        },
+        500,
+      );
+    }
+
+    const trialDays = existingSub ? undefined : 30;
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer_email: user.email ?? undefined,
@@ -83,7 +114,7 @@ export async function POST(req: Request) {
       metadata: { supabase_user_id: user.id },
       subscription_data: {
         metadata: { supabase_user_id: user.id },
-        trial_period_days: 30,
+        ...(trialDays ? { trial_period_days: trialDays } : {}),
       },
     });
 
