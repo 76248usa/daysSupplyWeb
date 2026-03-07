@@ -8,7 +8,6 @@ import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
-import { Bookmark } from "lucide-react";
 import InstallCalculatorCard from "@/components/InstallCalculatorCard";
 
 const TRIAL_LINE =
@@ -53,7 +52,6 @@ function daysUntil(iso?: string | null) {
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
-// ✅ One consistent “native tap” style
 const PRESS =
   "select-none cursor-pointer active:scale-[0.97] transition-transform";
 
@@ -76,8 +74,7 @@ export default function AppHome() {
   const searchParams = useSearchParams();
   const checkout = searchParams.get("checkout"); // success/cancel/null
 
-  const { effectiveIsPro, isLoading, status, refreshWithRetry, refresh } =
-    usePro();
+  const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
 
   const [activating, setActivating] = useState(false);
 
@@ -91,6 +88,7 @@ export default function AppHome() {
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
   const [trialEndsInDays, setTrialEndsInDays] = useState<number | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   // Header menu
   const [menuOpen, setMenuOpen] = useState(false);
@@ -98,7 +96,6 @@ export default function AppHome() {
     setMenuOpen(false);
   }
 
-  // Close menu on ESC + outside click
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setMenuOpen(false);
@@ -121,7 +118,6 @@ export default function AppHome() {
     };
   }, [menuOpen]);
 
-  // Desktop-only auto focus for search
   useEffect(() => {
     const id = window.setTimeout(() => {
       if (shouldAvoidStealingFocus()) return;
@@ -138,32 +134,24 @@ export default function AppHome() {
     return () => window.clearTimeout(id);
   }, []);
 
-  // ✅ When we return from Stripe with checkout=success:
-  // - mark recent checkout
-  // - start activation retries
-  // - clean URL (removes checkout param)
   useEffect(() => {
     if (checkout !== "success") return;
 
     setRecentCheckoutNow();
     setActivating(true);
 
-    // Retry harder on iOS timing
     refreshWithRetry({ attempts: 10, delayMs: 1200 }).catch(() => {});
 
-    // Clean URL so refresh won't re-run Stripe logic
     router.replace("/app");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkout]);
 
-  // If Pro becomes true, stop activation
   useEffect(() => {
     if (!effectiveIsPro) return;
     clearRecentCheckout();
     setActivating(false);
   }, [effectiveIsPro]);
 
-  // ✅ If we *recently* checked out but still not Pro, keep retrying a bit.
   useEffect(() => {
     if (effectiveIsPro) return;
 
@@ -189,7 +177,6 @@ export default function AppHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveIsPro]);
 
-  // ✅ Pull pro-status details (renewal date + trial countdown)
   useEffect(() => {
     let cancelled = false;
 
@@ -200,6 +187,7 @@ export default function AppHome() {
             setSubStatus("active");
             setCurrentPeriodEnd(null);
             setTrialEndsInDays(null);
+            setCancelAtPeriodEnd(false);
           }
           return;
         }
@@ -212,6 +200,7 @@ export default function AppHome() {
             setSubStatus(null);
             setCurrentPeriodEnd(null);
             setTrialEndsInDays(null);
+            setCancelAtPeriodEnd(false);
           }
           return;
         }
@@ -237,16 +226,20 @@ export default function AppHome() {
             ? json.trialEndsInDays
             : null;
 
+        const cape = Boolean(json?.cancel_at_period_end);
+
         if (!cancelled) {
           setSubStatus(eff);
           setCurrentPeriodEnd(cpe);
           setTrialEndsInDays(ted);
+          setCancelAtPeriodEnd(cape);
         }
       } catch {
         if (!cancelled) {
           setSubStatus(null);
           setCurrentPeriodEnd(null);
           setTrialEndsInDays(null);
+          setCancelAtPeriodEnd(false);
         }
       }
     })();
@@ -306,6 +299,12 @@ export default function AppHome() {
     if (AUTH_DISABLED) return "Pro enabled (dev mode)";
 
     const s = (subStatus ?? "").toLowerCase();
+    const dt = formatDateShort(currentPeriodEnd);
+
+    if (cancelAtPeriodEnd) {
+      if (dt) return `Ends ${dt} • Cancellation scheduled`;
+      return "Cancellation scheduled";
+    }
 
     if (s === "trialing") {
       const d = trialEndsInDays ?? daysUntil(currentPeriodEnd);
@@ -315,11 +314,16 @@ export default function AppHome() {
       return `Trial ends in ${d} days`;
     }
 
-    const dt = formatDateShort(currentPeriodEnd);
     if (dt) return `Renews ${dt}`;
 
     return "Subscription verified";
-  }, [AUTH_DISABLED, subStatus, trialEndsInDays, currentPeriodEnd]);
+  }, [
+    AUTH_DISABLED,
+    subStatus,
+    trialEndsInDays,
+    currentPeriodEnd,
+    cancelAtPeriodEnd,
+  ]);
 
   return (
     <motion.div
@@ -329,7 +333,6 @@ export default function AppHome() {
     >
       <main className="min-h-screen bg-slate-950 text-slate-100">
         <div className="mx-auto max-w-2xl p-6">
-          {/* Header actions */}
           <div className="flex items-center justify-end gap-3">
             {showManageBilling ? (
               <div className="flex flex-col items-end gap-1">
@@ -355,7 +358,6 @@ export default function AppHome() {
               </button>
             ) : null}
 
-            {/* More menu */}
             <div className="relative" data-more-menu>
               <button
                 type="button"
@@ -419,7 +421,6 @@ export default function AppHome() {
             expiration logic.
           </p>
 
-          {/* Pro banner */}
           <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm text-slate-200 font-semibold">
@@ -476,6 +477,7 @@ export default function AppHome() {
                         )}`;
                         return;
                       }
+
                       window.location.href = "/app/upgrade";
                     }}
                     className={`${PRESS} inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110`}
@@ -484,7 +486,6 @@ export default function AppHome() {
                   </button>
                 )}
 
-                {/* ✅ Manual refresh fallback (helpful on iPhone/Safari) */}
                 {!AUTH_DISABLED &&
                 status !== "no_user" &&
                 !effectiveIsPro &&
@@ -506,7 +507,6 @@ export default function AppHome() {
 
           <InstallCalculatorCard appName="Insulin Calculator" />
 
-          {/* Search */}
           <div className="mt-5 relative">
             <Search
               size={18}
@@ -521,7 +521,6 @@ export default function AppHome() {
             />
           </div>
 
-          {/* Medicines list */}
           <div className="mt-4 space-y-3">
             {filtered.map((m) =>
               canOpenDetails ? (
@@ -561,7 +560,6 @@ export default function AppHome() {
             )}
           </div>
 
-          {/* Disclaimer */}
           <div
             id="disclaimer"
             className="mt-6 text-center text-xs text-slate-400 max-w-xl mx-auto"

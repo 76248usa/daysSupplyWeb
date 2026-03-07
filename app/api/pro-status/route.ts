@@ -16,7 +16,7 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY env var.");
 }
 
-// For server-side auth token validation, prefer a *non-public* key.
+// For server-side auth token validation, prefer a non-public key.
 // Keep NEXT_PUBLIC fallback so your current setup keeps working.
 const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -66,7 +66,6 @@ function calcDaysLeft(iso: string | null | undefined): number | null {
 function jsonNoStore(body: any, status = 200) {
   const res = NextResponse.json(body, { status });
   res.headers.set("Cache-Control", "no-store, max-age=0");
-  // Pro status depends on Authorization; this prevents CDN/proxy mixups.
   res.headers.set("Vary", "Authorization");
   return res;
 }
@@ -87,6 +86,7 @@ export async function GET(req: Request) {
           effectiveStatus: "no_user",
           current_period_end: null,
           trialEndsInDays: null,
+          cancel_at_period_end: false,
           reason: "missing_token",
         },
         200,
@@ -105,6 +105,7 @@ export async function GET(req: Request) {
           effectiveStatus: "no_user",
           current_period_end: null,
           trialEndsInDays: null,
+          cancel_at_period_end: false,
           reason: "invalid_token",
         },
         200,
@@ -113,10 +114,11 @@ export async function GET(req: Request) {
 
     const userId = userData.user.id;
 
-    // Safer than maybeSingle() if multiple rows ever exist:
     const { data: rows, error } = await supabaseAdmin
       .from("subscriptions")
-      .select("status,current_period_end,updated_at,stripe_subscription_id")
+      .select(
+        "status,current_period_end,updated_at,stripe_subscription_id,cancel_at_period_end",
+      )
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
       .limit(1);
@@ -130,6 +132,7 @@ export async function GET(req: Request) {
           effectiveStatus: "unknown",
           current_period_end: null,
           trialEndsInDays: null,
+          cancel_at_period_end: false,
           reason: "db_error",
         },
         200,
@@ -147,6 +150,7 @@ export async function GET(req: Request) {
           effectiveStatus: "unknown",
           current_period_end: null,
           trialEndsInDays: null,
+          cancel_at_period_end: false,
           reason: "no_row",
         },
         200,
@@ -156,6 +160,7 @@ export async function GET(req: Request) {
     const status = String(row.status ?? "unknown");
     const current_period_end =
       (row.current_period_end as string | null) ?? null;
+    const cancel_at_period_end = Boolean(row.cancel_at_period_end);
 
     const notExpired = isNotExpired(current_period_end);
     const isPro = PRO_STATUSES.has(status) && notExpired;
@@ -175,6 +180,7 @@ export async function GET(req: Request) {
         effectiveStatus,
         current_period_end,
         trialEndsInDays,
+        cancel_at_period_end,
         updated_at: row.updated_at ?? null,
         // stripe_subscription_id: row.stripe_subscription_id ?? null,
       },
@@ -189,6 +195,7 @@ export async function GET(req: Request) {
         effectiveStatus: "unknown",
         current_period_end: null,
         trialEndsInDays: null,
+        cancel_at_period_end: false,
         reason: "exception",
       },
       200,

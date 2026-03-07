@@ -6,7 +6,6 @@ export const runtime = "nodejs";
 
 // ---------- Stripe ----------
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-// (no apiVersion)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // ---------- Supabase (service role) ----------
@@ -55,6 +54,7 @@ async function getSubInfo(subId: string): Promise<{
   status: string | null;
   user_id: string | null;
   stripe_customer_id: string | null;
+  cancel_at_period_end: boolean;
 }> {
   try {
     const sub = await stripe.subscriptions.retrieve(subId);
@@ -64,6 +64,7 @@ async function getSubInfo(subId: string): Promise<{
       subId,
       status: sub.status,
       current_period_end: anySub?.current_period_end ?? null,
+      cancel_at_period_end: Boolean(anySub?.cancel_at_period_end),
       metadata: sub.metadata,
     });
 
@@ -83,12 +84,15 @@ async function getSubInfo(subId: string): Promise<{
         ? sub.customer
         : (sub.customer?.id ?? null);
 
+    const cancel_at_period_end = Boolean(anySub?.cancel_at_period_end);
+
     return {
       current_period_end,
       price_id,
       status,
       user_id,
       stripe_customer_id,
+      cancel_at_period_end,
     };
   } catch (e: any) {
     console.warn("[webhook] getSubInfo failed:", e?.message ?? e);
@@ -98,6 +102,7 @@ async function getSubInfo(subId: string): Promise<{
       status: null,
       user_id: null,
       stripe_customer_id: null,
+      cancel_at_period_end: false,
     };
   }
 }
@@ -150,6 +155,7 @@ async function applySubscriptionUpdate(args: {
   userId: string | null;
   status: string | null;
   current_period_end: string | null;
+  cancel_at_period_end: boolean;
 }) {
   const {
     stripeSubscriptionId,
@@ -157,6 +163,7 @@ async function applySubscriptionUpdate(args: {
     userId,
     status,
     current_period_end,
+    cancel_at_period_end,
   } = args;
 
   if (userId) {
@@ -164,9 +171,9 @@ async function applySubscriptionUpdate(args: {
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
       status,
+      cancel_at_period_end,
     };
 
-    // ✅ Never overwrite a good saved date with null
     if (current_period_end) {
       row.current_period_end = current_period_end;
     }
@@ -183,9 +190,9 @@ async function applySubscriptionUpdate(args: {
   const patch: any = {
     stripe_customer_id: stripeCustomerId,
     status,
+    cancel_at_period_end,
   };
 
-  // ✅ Never overwrite a good saved date with null
   if (current_period_end) {
     patch.current_period_end = current_period_end;
   }
@@ -193,11 +200,6 @@ async function applySubscriptionUpdate(args: {
   await updateByStripeSubscriptionId(stripeSubscriptionId, patch);
 }
 
-/**
- * ✅ Idempotency guard: insert Stripe event id into stripe_webhook_events.
- * - First time: insert succeeds => process event.
- * - Duplicate delivery: unique violation => skip processing.
- */
 async function assertNotProcessed(eventId: string): Promise<boolean> {
   const { error } = await supabaseAdmin
     .from("stripe_webhook_events")
@@ -214,7 +216,6 @@ async function assertNotProcessed(eventId: string): Promise<boolean> {
 
 // ---------- Handler ----------
 export async function GET() {
-  console.log("🔥 WEBHOOK GET HIT");
   return NextResponse.json(
     { ok: true, route: "stripe-webhook" },
     { status: 200 },
@@ -222,10 +223,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  console.log("🔥 WEBHOOK POST HIT", new Date().toISOString());
-
   const sig = req.headers.get("stripe-signature");
-  console.log("🔥 stripe-signature present?", Boolean(sig));
 
   if (!sig) {
     return NextResponse.json({ error: "missing_signature" }, { status: 400 });
@@ -241,12 +239,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
-  console.log("[webhook] ✅ HIT:", event.type, event.id);
-
   try {
     const firstTime = await assertNotProcessed(event.id);
     if (!firstTime) {
-      console.log("[webhook] ↩️ duplicate event ignored:", event.id);
       return NextResponse.json(
         { received: true, duplicate: true },
         { status: 200 },
@@ -276,19 +271,7 @@ export async function POST(req: Request) {
           (session.metadata?.supabase_user_id as string | undefined) ||
           null;
 
-        console.log("[webhook] checkout.session.completed fields:", {
-          stripeSubscriptionId,
-          stripeCustomerId,
-          client_reference_id: session.client_reference_id,
-          metadata: session.metadata,
-        });
-
-        if (!stripeSubscriptionId) {
-          console.warn(
-            "[webhook] checkout.session.completed: missing subscription id",
-          );
-          break;
-        }
+        if (!stripeSubscriptionId) break;
 
         const subInfo = await getSubInfo(stripeSubscriptionId);
         const effectiveUserId = userId || subInfo.user_id;
@@ -299,6 +282,7 @@ export async function POST(req: Request) {
           userId: effectiveUserId,
           status: subInfo.status ?? "trialing",
           current_period_end: subInfo.current_period_end,
+          cancel_at_period_end: subInfo.cancel_at_period_end,
         });
 
         break;
@@ -309,14 +293,7 @@ export async function POST(req: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         const stripeSubscriptionId = subscriptionIdFromInvoice(invoice);
 
-        console.log(`[webhook] ${event.type} fields:`, {
-          stripeSubscriptionId,
-        });
-
-        if (!stripeSubscriptionId) {
-          console.warn(`[webhook] ${event.type}: missing subscription id`);
-          break;
-        }
+        if (!stripeSubscriptionId) break;
 
         const subInfo = await getSubInfo(stripeSubscriptionId);
 
@@ -326,6 +303,7 @@ export async function POST(req: Request) {
           userId: subInfo.user_id,
           status: "active",
           current_period_end: subInfo.current_period_end,
+          cancel_at_period_end: subInfo.cancel_at_period_end,
         });
 
         break;
@@ -335,16 +313,7 @@ export async function POST(req: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         const stripeSubscriptionId = subscriptionIdFromInvoice(invoice);
 
-        console.log("[webhook] invoice.payment_failed fields:", {
-          stripeSubscriptionId,
-        });
-
-        if (!stripeSubscriptionId) {
-          console.warn(
-            "[webhook] invoice.payment_failed: missing subscription",
-          );
-          break;
-        }
+        if (!stripeSubscriptionId) break;
 
         const subInfo = await getSubInfo(stripeSubscriptionId);
 
@@ -354,6 +323,7 @@ export async function POST(req: Request) {
           userId: subInfo.user_id,
           status: subInfo.status ?? "past_due",
           current_period_end: subInfo.current_period_end,
+          cancel_at_period_end: subInfo.cancel_at_period_end,
         });
 
         break;
@@ -383,16 +353,7 @@ export async function POST(req: Request) {
             ? isoFromUnixSeconds(anySub.current_period_end)
             : null;
 
-        const price_id = getPriceIdFromSubscription(sub);
-
-        console.log(`[webhook] ${event.type} fields:`, {
-          stripeSubscriptionId,
-          userId,
-          stripeCustomerId,
-          status,
-          current_period_end,
-          price_id,
-        });
+        const cancel_at_period_end = Boolean(anySub?.cancel_at_period_end);
 
         await applySubscriptionUpdate({
           stripeSubscriptionId,
@@ -400,6 +361,7 @@ export async function POST(req: Request) {
           userId,
           status,
           current_period_end,
+          cancel_at_period_end,
         });
 
         break;
