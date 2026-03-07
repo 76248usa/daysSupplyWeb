@@ -107,18 +107,38 @@ async function getSubInfo(subId: string): Promise<{
   }
 }
 
-async function upsertByUserId(userId: string, row: any) {
+// async function upsertByUserId(userId: string, row: any) {
+//   const payload = {
+//     user_id: userId,
+//     ...row,
+//     updated_at: new Date().toISOString(),
+//   };
+
+  
+
+  // const { error } = await supabaseAdmin
+  //   .from("subscriptions")
+  //   .upsert(payload, { onConflict: "user_id" });
+  async function upsertByUserId(userId: string, row: any) {
   const payload = {
     user_id: userId,
     ...row,
     updated_at: new Date().toISOString(),
   };
 
-  console.log("[webhook] upsert payload:", payload);
+  console.log("[webhook] upsert payload:", payload);   // 👈 ADD HERE
 
   const { error } = await supabaseAdmin
     .from("subscriptions")
     .upsert(payload, { onConflict: "user_id" });
+
+  if (error) {
+    console.error("[webhook] Supabase upsert error:", error, payload);
+    throw error;
+  }
+
+  console.log("[webhook] ✅ upserted subscriptions row for user:", userId);
+}
 
   if (error) {
     console.error("[webhook] Supabase upsert error:", error, payload);
