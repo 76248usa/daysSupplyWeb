@@ -55,46 +55,21 @@ export async function POST(req: Request) {
     const origin = new URL(req.url).origin;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
 
-    // const priceId = process.env.STRIPE_PRICE_YEARLY_PRO;
-    // if (!priceId || !priceId.startsWith("price_")) {
-    //   return jsonNoStore(
-    //     {
-    //       ok: false,
-    //       error: "missing_or_invalid_price",
-    //       detail: "Missing or invalid STRIPE_PRICE_YEARLY_PRO",
-    //       priceId: priceId ?? null,
-    //     },
-    //     500,
-    //   );
-    // }
-
-    // const session = await stripe.checkout.sessions.create({
-    //   mode: "subscription",
-    //   customer_email: user.email ?? undefined,
-    //   line_items: [{ price: priceId, quantity: 1 }],
-    //   success_url: `${appUrl}/app?checkout=success`,
-    //   cancel_url: `${appUrl}/app?checkout=cancel`,
-    //   client_reference_id: user.id,
-    //   metadata: { supabase_user_id: user.id },
-    //   subscription_data: { metadata: { supabase_user_id: user.id } },
-    // });
-
     const priceId = process.env.STRIPE_PRICE_YEARLY_PRO;
-
-    console.log("STRIPE_PRICE_YEARLY_PRO =", JSON.stringify(priceId));
-    console.log(
-      "STRIPE_SECRET_KEY prefix =",
-      process.env.STRIPE_SECRET_KEY?.slice(0, 8),
-    );
 
     if (
       !priceId ||
       typeof priceId !== "string" ||
       !priceId.startsWith("price_")
     ) {
-      return NextResponse.json(
-        { error: "missing_or_invalid_price", priceId: priceId ?? null },
-        { status: 500 },
+      return jsonNoStore(
+        {
+          ok: false,
+          error: "missing_or_invalid_price",
+          detail: "Missing or invalid STRIPE_PRICE_YEARLY_PRO",
+          priceId: priceId ?? null,
+        },
+        500,
       );
     }
 
@@ -106,7 +81,10 @@ export async function POST(req: Request) {
       cancel_url: `${appUrl}/app?checkout=cancel`,
       client_reference_id: user.id,
       metadata: { supabase_user_id: user.id },
-      subscription_data: { metadata: { supabase_user_id: user.id } },
+      subscription_data: {
+        metadata: { supabase_user_id: user.id },
+        trial_period_days: 30,
+      },
     });
 
     return jsonNoStore({ ok: true, url: session.url }, 200);
