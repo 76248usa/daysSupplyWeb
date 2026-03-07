@@ -152,6 +152,15 @@ async function updateByStripeSubscriptionId(subId: string, patch: any) {
   console.log("[webhook] ✅ updated by stripe_subscription_id:", subId);
 }
 
+console.log("[webhook] subscription event raw flags:", {
+  status,
+  cancel_at_period_end: anySub?.cancel_at_period_end ?? null,
+  cancel_at: anySub?.cancel_at ?? null,
+  canceled_at: anySub?.canceled_at ?? null,
+  ended_at: anySub?.ended_at ?? null,
+  current_period_end: anySub?.current_period_end ?? null,
+});
+
 async function applySubscriptionUpdate(args: {
   stripeSubscriptionId: string;
   stripeCustomerId: string | null;
