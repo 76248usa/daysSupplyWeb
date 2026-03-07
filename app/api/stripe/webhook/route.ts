@@ -109,6 +109,8 @@ async function upsertByUserId(userId: string, row: any) {
     updated_at: new Date().toISOString(),
   };
 
+  console.log("[webhook] upsert payload:", payload);
+
   const { error } = await supabaseAdmin
     .from("subscriptions")
     .upsert(payload, { onConflict: "user_id" });
@@ -123,6 +125,11 @@ async function upsertByUserId(userId: string, row: any) {
 
 async function updateByStripeSubscriptionId(subId: string, patch: any) {
   const payload = { ...patch, updated_at: new Date().toISOString() };
+
+  console.log("[webhook] update-by-sub-id payload:", {
+    stripe_subscription_id: subId,
+    ...payload,
+  });
 
   const { error } = await supabaseAdmin
     .from("subscriptions")
@@ -153,12 +160,18 @@ async function applySubscriptionUpdate(args: {
   } = args;
 
   if (userId) {
-    await upsertByUserId(userId, {
+    const row: any = {
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
       status,
-      current_period_end,
-    });
+    };
+
+    // ✅ Never overwrite a good saved date with null
+    if (current_period_end) {
+      row.current_period_end = current_period_end;
+    }
+
+    await upsertByUserId(userId, row);
     return;
   }
 
@@ -167,11 +180,17 @@ async function applySubscriptionUpdate(args: {
     { stripeSubscriptionId },
   );
 
-  await updateByStripeSubscriptionId(stripeSubscriptionId, {
+  const patch: any = {
     stripe_customer_id: stripeCustomerId,
     status,
-    current_period_end,
-  });
+  };
+
+  // ✅ Never overwrite a good saved date with null
+  if (current_period_end) {
+    patch.current_period_end = current_period_end;
+  }
+
+  await updateByStripeSubscriptionId(stripeSubscriptionId, patch);
 }
 
 /**
