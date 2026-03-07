@@ -60,17 +60,6 @@ async function getSubInfo(subId: string): Promise<{
     const sub = await stripe.subscriptions.retrieve(subId);
     const anySub: any = sub as any;
 
-    console.log("[webhook] sub retrieve:", {
-      subId,
-      status: sub.status,
-      current_period_end: anySub?.current_period_end ?? null,
-      cancel_at_period_end: Boolean(anySub?.cancel_at_period_end),
-      cancel_at: anySub?.cancel_at ?? null,
-      canceled_at: anySub?.canceled_at ?? null,
-      ended_at: anySub?.ended_at ?? null,
-      metadata: sub.metadata,
-    });
-
     const current_period_end =
       typeof anySub?.current_period_end === "number"
         ? isoFromUnixSeconds(anySub.current_period_end)
@@ -118,8 +107,6 @@ async function upsertByUserId(userId: string, row: any) {
     updated_at: new Date().toISOString(),
   };
 
-  console.log("[webhook] upsert payload:", payload);
-
   const { error } = await supabaseAdmin
     .from("subscriptions")
     .upsert(payload, { onConflict: "user_id" });
@@ -128,17 +115,10 @@ async function upsertByUserId(userId: string, row: any) {
     console.error("[webhook] Supabase upsert error:", error, payload);
     throw error;
   }
-
-  console.log("[webhook] ✅ upserted subscriptions row for user:", userId);
 }
 
 async function updateByStripeSubscriptionId(subId: string, patch: any) {
   const payload = { ...patch, updated_at: new Date().toISOString() };
-
-  console.log("[webhook] update-by-sub-id payload:", {
-    stripe_subscription_id: subId,
-    ...payload,
-  });
 
   const { error } = await supabaseAdmin
     .from("subscriptions")
@@ -149,8 +129,6 @@ async function updateByStripeSubscriptionId(subId: string, patch: any) {
     console.error("[webhook] Supabase update-by-sub-id error:", error, payload);
     throw error;
   }
-
-  console.log("[webhook] ✅ updated by stripe_subscription_id:", subId);
 }
 
 async function applySubscriptionUpdate(args: {
@@ -185,11 +163,6 @@ async function applySubscriptionUpdate(args: {
     await upsertByUserId(userId, row);
     return;
   }
-
-  console.warn(
-    "[webhook] Missing supabase user id; falling back to updateByStripeSubscriptionId",
-    { stripeSubscriptionId },
-  );
 
   const patch: any = {
     stripe_customer_id: stripeCustomerId,
@@ -239,7 +212,7 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: any) {
-    console.error("[webhook] ❌ Invalid signature:", err?.message ?? err);
+    console.error("[webhook] Invalid signature:", err?.message ?? err);
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
@@ -252,7 +225,7 @@ export async function POST(req: Request) {
       );
     }
   } catch (e: any) {
-    console.error("[webhook] ❌ idempotency check failed:", e?.message ?? e);
+    console.error("[webhook] Idempotency check failed:", e?.message ?? e);
     return NextResponse.json({ error: "idempotency_failed" }, { status: 500 });
   }
 
@@ -353,15 +326,6 @@ export async function POST(req: Request) {
 
         const anySub: any = sub as any;
 
-        console.log("[webhook] subscription event raw flags:", {
-          status,
-          cancel_at_period_end: anySub?.cancel_at_period_end ?? null,
-          cancel_at: anySub?.cancel_at ?? null,
-          canceled_at: anySub?.canceled_at ?? null,
-          ended_at: anySub?.ended_at ?? null,
-          current_period_end: anySub?.current_period_end ?? null,
-        });
-
         const current_period_end =
           typeof anySub?.current_period_end === "number"
             ? isoFromUnixSeconds(anySub.current_period_end)
@@ -388,7 +352,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err: any) {
-    console.error("[webhook] ❌ handler failed:", err?.message ?? err);
+    console.error("[webhook] Handler failed:", err?.message ?? err);
     return NextResponse.json(
       { error: "webhook_handler_failed" },
       { status: 500 },

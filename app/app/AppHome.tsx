@@ -568,36 +568,32 @@ export default function AppHome() {
               <p className="font-semibold text-slate-200">
                 Professional Use Notice
               </p>
-
               <p className="mt-3 text-slate-400">
                 This calculator is intended for licensed healthcare
                 professionals. It provides insulin day-supply estimates based on
                 user-entered dosing information, product characteristics,
                 priming assumptions, and expiration limits.
               </p>
-
               <p className="mt-3 text-slate-400">
                 Results are provided for clinical support only and do not
                 replace independent professional judgment. Users must verify all
                 calculations against the prescription, manufacturer labeling,
                 payer requirements, and applicable regulations.
               </p>
-
               <p className="mt-3 text-slate-400">
                 By using this tool, users acknowledge that final responsibility
                 for prescription verification and documentation remains with the
                 dispensing professional.
               </p>
-
               <p className="mt-3 text-slate-400">
                 This software is independently developed, not affiliated with
                 any pharmaceutical manufacturer, does not provide medical
                 advice, and is not intended for patient use.
               </p>
-
               <p className="mt-4 text-slate-500">
                 We do not sell user information.
               </p>
+              Support: support@insulinprimingdayssupply.com
             </div>
           </div>
         </div>
