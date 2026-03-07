@@ -65,6 +65,9 @@ async function getSubInfo(subId: string): Promise<{
       status: sub.status,
       current_period_end: anySub?.current_period_end ?? null,
       cancel_at_period_end: Boolean(anySub?.cancel_at_period_end),
+      cancel_at: anySub?.cancel_at ?? null,
+      canceled_at: anySub?.canceled_at ?? null,
+      ended_at: anySub?.ended_at ?? null,
       metadata: sub.metadata,
     });
 
