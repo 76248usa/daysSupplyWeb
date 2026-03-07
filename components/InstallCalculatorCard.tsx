@@ -49,7 +49,7 @@ export default function InstallCalculatorCard({
   if (!shouldShow || dismissed) return null;
 
   return (
-    <div className="mt-6 rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 shadow-lg">
+    <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl ring-1 ring-white/5">
       <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
@@ -59,7 +59,7 @@ export default function InstallCalculatorCard({
 
             <div>
               <div className="text-sm font-extrabold text-slate-100">
-                Install {appName}
+                Install Calculator for Quick Access
               </div>
               <div className="mt-1 text-sm text-slate-300">
                 Save this calculator in Safari for fast access while staying

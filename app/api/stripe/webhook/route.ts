@@ -60,8 +60,15 @@ async function getSubInfo(subId: string): Promise<{
     const sub = await stripe.subscriptions.retrieve(subId);
     const anySub: any = sub as any;
 
+    console.log("[webhook] sub retrieve:", {
+      subId,
+      status: sub.status,
+      current_period_end: anySub?.current_period_end ?? null,
+      metadata: sub.metadata,
+    });
+
     const current_period_end =
-      typeof anySub.current_period_end === "number"
+      typeof anySub?.current_period_end === "number"
         ? isoFromUnixSeconds(anySub.current_period_end)
         : null;
 
@@ -179,7 +186,6 @@ async function assertNotProcessed(eventId: string): Promise<boolean> {
 
   if (!error) return true;
 
-  // Postgres unique violation
   const code = (error as any).code;
   if (code === "23505") return false;
 
@@ -218,7 +224,6 @@ export async function POST(req: Request) {
 
   console.log("[webhook] ✅ HIT:", event.type, event.id);
 
-  // ✅ Idempotency: ignore duplicates BEFORE doing any work
   try {
     const firstTime = await assertNotProcessed(event.id);
     if (!firstTime) {
@@ -229,7 +234,6 @@ export async function POST(req: Request) {
       );
     }
   } catch (e: any) {
-    // If idempotency table insert fails for unexpected reasons, fail loudly so Stripe retries.
     console.error("[webhook] ❌ idempotency check failed:", e?.message ?? e);
     return NextResponse.json({ error: "idempotency_failed" }, { status: 500 });
   }
@@ -281,7 +285,6 @@ export async function POST(req: Request) {
         break;
       }
 
-      // Treat both events the same. Enable BOTH in Stripe.
       case "invoice.paid":
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
@@ -357,7 +360,7 @@ export async function POST(req: Request) {
 
         const anySub: any = sub as any;
         const current_period_end =
-          typeof anySub.current_period_end === "number"
+          typeof anySub?.current_period_end === "number"
             ? isoFromUnixSeconds(anySub.current_period_end)
             : null;
 
@@ -390,9 +393,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err: any) {
     console.error("[webhook] ❌ handler failed:", err?.message ?? err);
-
-    // IMPORTANT: because we inserted the event id already, Stripe retry won't re-run it.
-    // If you want "retryable" behavior, we can upgrade this to a processing/processed state table.
     return NextResponse.json(
       { error: "webhook_handler_failed" },
       { status: 500 },
