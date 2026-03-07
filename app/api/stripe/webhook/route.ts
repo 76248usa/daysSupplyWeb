@@ -87,7 +87,8 @@ async function getSubInfo(subId: string): Promise<{
         ? sub.customer
         : (sub.customer?.id ?? null);
 
-    const cancel_at_period_end = Boolean(anySub?.cancel_at_period_end);
+    const cancel_at_period_end =
+      Boolean(anySub?.cancel_at_period_end) || Boolean(anySub?.cancel_at);
 
     return {
       current_period_end,
@@ -151,15 +152,6 @@ async function updateByStripeSubscriptionId(subId: string, patch: any) {
 
   console.log("[webhook] ✅ updated by stripe_subscription_id:", subId);
 }
-
-console.log("[webhook] subscription event raw flags:", {
-  status,
-  cancel_at_period_end: anySub?.cancel_at_period_end ?? null,
-  cancel_at: anySub?.cancel_at ?? null,
-  canceled_at: anySub?.canceled_at ?? null,
-  ended_at: anySub?.ended_at ?? null,
-  current_period_end: anySub?.current_period_end ?? null,
-});
 
 async function applySubscriptionUpdate(args: {
   stripeSubscriptionId: string;
@@ -360,12 +352,23 @@ export async function POST(req: Request) {
         const status = (sub.status ?? "unknown") as string;
 
         const anySub: any = sub as any;
+
+        console.log("[webhook] subscription event raw flags:", {
+          status,
+          cancel_at_period_end: anySub?.cancel_at_period_end ?? null,
+          cancel_at: anySub?.cancel_at ?? null,
+          canceled_at: anySub?.canceled_at ?? null,
+          ended_at: anySub?.ended_at ?? null,
+          current_period_end: anySub?.current_period_end ?? null,
+        });
+
         const current_period_end =
           typeof anySub?.current_period_end === "number"
             ? isoFromUnixSeconds(anySub.current_period_end)
             : null;
 
-        const cancel_at_period_end = Boolean(anySub?.cancel_at_period_end);
+        const cancel_at_period_end =
+          Boolean(anySub?.cancel_at_period_end) || Boolean(anySub?.cancel_at);
 
         await applySubscriptionUpdate({
           stripeSubscriptionId,
