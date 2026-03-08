@@ -4,19 +4,42 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+if (!STRIPE_SECRET_KEY) throw new Error("Missing STRIPE_SECRET_KEY");
 
-// Service role for DB lookup
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 
-// Public client only to validate JWT -> user
-const supabaseAuth = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+if (!SUPABASE_URL) throw new Error("Missing SUPABASE_URL");
+
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if (!SUPABASE_ANON_KEY) throw new Error("Missing SUPABASE_ANON_KEY");
+
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+}
+
+const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+function jsonNoStore(body: any, status = 200) {
+  const res = NextResponse.json(body, { status });
+  res.headers.set("Cache-Control", "no-store, max-age=0");
+  res.headers.set("Vary", "Authorization");
+  return res;
+}
+
+export async function GET() {
+  return new Response("create-portal OK", { status: 200 });
+}
 
 export async function POST(req: Request) {
   try {
@@ -26,53 +49,83 @@ export async function POST(req: Request) {
       : "";
 
     if (!token) {
-      return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
+      return jsonNoStore({ ok: false, error: "not_authenticated" }, 401);
     }
 
     const { data: userData, error: userErr } =
       await supabaseAuth.auth.getUser(token);
 
     if (userErr || !userData?.user) {
-      return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
+      return jsonNoStore({ ok: false, error: "not_authenticated" }, 401);
     }
 
-    const userId = userData.user.id;
+    const user = userData.user;
 
-    // Look up the Stripe customer id for this user
-    const { data: subRow, error: subErr } = await supabaseAdmin
+    const { data: rows, error: subErr } = await supabaseAdmin
       .from("subscriptions")
-      .select("stripe_customer_id")
-      .eq("user_id", userId)
-      .maybeSingle();
+      .select("stripe_customer_id,status,updated_at")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
     if (subErr) {
-      console.error("[portal] subscriptions lookup error:", subErr);
-      return NextResponse.json({ error: "db_error" }, { status: 500 });
+      console.error("Portal subscription lookup error:", subErr);
+      return jsonNoStore(
+        {
+          ok: false,
+          error: "subscription_lookup_failed",
+          detail: subErr.message,
+        },
+        500,
+      );
     }
 
-    const customerId = subRow?.stripe_customer_id;
+    const row = rows?.[0];
+
+    if (!row) {
+      return jsonNoStore(
+        {
+          ok: false,
+          error: "no_subscription_row",
+        },
+        404,
+      );
+    }
+
+    const customerId =
+      typeof row.stripe_customer_id === "string" &&
+      row.stripe_customer_id.startsWith("cus_")
+        ? row.stripe_customer_id
+        : null;
+
     if (!customerId) {
-      return NextResponse.json(
-        { error: "no_subscription", detail: "No Stripe customer found." },
-        { status: 400 },
+      return jsonNoStore(
+        {
+          ok: false,
+          error: "missing_customer_id",
+        },
+        400,
       );
     }
 
     const origin = new URL(req.url).origin;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
 
-    // Create Stripe Billing Portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${appUrl}/app`,
     });
 
-    return NextResponse.json({ url: session.url }, { status: 200 });
+    return jsonNoStore({ ok: true, url: session.url }, 200);
   } catch (err: any) {
-    console.error("[portal] error:", err);
-    return NextResponse.json(
-      { error: "portal_failed", detail: err?.message ?? String(err) },
-      { status: 500 },
+    console.error("Stripe portal error:", err);
+    return jsonNoStore(
+      {
+        ok: false,
+        error: "portal_failed",
+        detail: err?.message ?? String(err),
+      },
+      500,
     );
   }
 }
