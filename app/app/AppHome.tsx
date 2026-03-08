@@ -412,7 +412,7 @@ export default function AppHome() {
           </div>
 
           <h1 className="mt-3 text-2xl font-extrabold text-center">
-            Insulin Days’ Supply Calculator with Priming
+            Insulin Days Supply Calculator with Priming
           </h1>
 
           <p className="text-center text-slate-300 mt-2">
