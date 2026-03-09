@@ -140,14 +140,13 @@ export async function GET(req: Request) {
     }
 
     const row = rows?.[0];
-
     if (!row) {
       return jsonNoStore(
         {
           ok: true,
           isPro: false,
-          status: "unknown",
-          effectiveStatus: "unknown",
+          status: "none",
+          effectiveStatus: "none",
           current_period_end: null,
           trialEndsInDays: null,
           cancel_at_period_end: false,

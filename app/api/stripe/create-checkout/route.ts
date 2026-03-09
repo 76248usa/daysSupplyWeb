@@ -82,10 +82,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Trial only for first-time subscribers
+    // If this user already has any subscription history row,
+    // do not grant another free trial.
+    // Also reuse the existing Stripe customer when available.
     const { data: existingSub, error: existingSubErr } = await supabaseAdmin
       .from("subscriptions")
-      .select("user_id")
+      .select("user_id,stripe_customer_id,status,current_period_end")
       .eq("user_id", user.id)
       .limit(1)
       .maybeSingle();
@@ -102,18 +104,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const trialDays = existingSub ? undefined : 30;
+    const hasPriorSubscriptionHistory = Boolean(existingSub);
+    const trialDays = hasPriorSubscriptionHistory ? undefined : 30;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      customer_email: user.email ?? undefined,
+      ...(existingSub?.stripe_customer_id
+        ? { customer: existingSub.stripe_customer_id }
+        : { customer_email: user.email ?? undefined }),
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${appUrl}/app?checkout=success`,
       cancel_url: `${appUrl}/app?checkout=cancel`,
       client_reference_id: user.id,
-      metadata: { supabase_user_id: user.id },
+      metadata: {
+        supabase_user_id: user.id,
+      },
       subscription_data: {
-        metadata: { supabase_user_id: user.id },
+        metadata: {
+          supabase_user_id: user.id,
+        },
         ...(trialDays ? { trial_period_days: trialDays } : {}),
       },
     });
