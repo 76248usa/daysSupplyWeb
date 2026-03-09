@@ -7,8 +7,8 @@ export const supabaseBrowser = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true, // REQUIRED for magic links
-      flowType: "pkce", // recommended for web magic links
+      detectSessionInUrl: false, // callback page handles auth URL manually
+      flowType: "pkce",
     },
   },
 );
