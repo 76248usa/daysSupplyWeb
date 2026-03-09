@@ -3,9 +3,12 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 function safeNextPath(nextParam: string | null | undefined): string {
-  // Only allow internal redirects to avoid open-redirect vulnerabilities
   if (!nextParam) return "/app";
-  if (nextParam.startsWith("/")) return nextParam;
+
+  if (nextParam.startsWith("/")) {
+    return nextParam;
+  }
+
   return "/app";
 }
 
@@ -14,7 +17,6 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const nextParam = url.searchParams.get("next");
 
-  // ✅ Next.js: cookies() may be async depending on version/runtime
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -29,7 +31,6 @@ export async function GET(request: Request) {
           cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: any) {
-          // ✅ Expire the cookie
           cookieStore.set({ name, value: "", ...options, maxAge: 0 });
         },
       },
@@ -42,6 +43,13 @@ export async function GET(request: Request) {
 
   const nextPath = safeNextPath(nextParam);
 
-  // ✅ Redirect back to where the user wanted to go (ex: /app/upgrade)
-  return NextResponse.redirect(new URL(nextPath, url.origin));
+  // 🔑 KEY CHANGE:
+  // If the redirect target is upgrade/login related,
+  // always send user to the main app first.
+  const finalPath =
+    nextPath.startsWith("/app/upgrade") || nextPath.startsWith("/login")
+      ? "/app"
+      : nextPath;
+
+  return NextResponse.redirect(new URL(finalPath, url.origin));
 }
