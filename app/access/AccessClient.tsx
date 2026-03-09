@@ -219,7 +219,7 @@ export default function AccessClient() {
 
               {sent ? (
                 <div className="mt-3 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
-                  Link sent! Check your email to sign in.
+                  Code sent — check your email and enter the 6-digit code.
                 </div>
               ) : null}
 
@@ -228,7 +228,7 @@ export default function AccessClient() {
                 disabled={sending}
                 className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
               >
-                {sending ? "Sending…" : "Email me a sign-in link"}
+                {sending ? "Sending…" : "Send sign-in code"}
               </button>
 
               <div className="mt-3 text-xs text-slate-400">

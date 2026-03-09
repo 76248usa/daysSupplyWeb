@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
@@ -12,7 +12,6 @@ function niceNextLabel(nextUrl: string) {
   return "Continue";
 }
 
-// Only allow internal relative paths
 function sanitizeNext(raw: string | null): string {
   const fallback = "/app/upgrade";
   if (!raw) return fallback;
@@ -38,6 +37,10 @@ function isValidEmail(e: string) {
   return v.includes("@") && v.includes(".") && v.length >= 6;
 }
 
+function isValidCode(code: string) {
+  return /^\d{6}$/.test(code.trim());
+}
+
 export default function LoginClient() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -51,18 +54,87 @@ export default function LoginClient() {
   const nextUrl = sanitizeNext(sp.get("next"));
 
   const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [checkedSession, setCheckedSession] = useState(false);
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  // Auth disabled: just continue.
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [checkedSession, setCheckedSession] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function joinedCode() {
+    return code.join("");
+  }
+
+  function updateCodeDigit(index: number, value: string) {
+    const digit = value.replace(/\D/g, "").slice(0, 1);
+    const next = [...code];
+    next[index] = digit;
+    setCode(next);
+
+    if (digit && index < 5) {
+      codeRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleCodeKeyDown(
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (e.key === "Backspace") {
+      if (code[index]) {
+        const next = [...code];
+        next[index] = "";
+        setCode(next);
+        return;
+      }
+
+      if (index > 0) {
+        codeRefs.current[index - 1]?.focus();
+        const next = [...code];
+        next[index - 1] = "";
+        setCode(next);
+      }
+    }
+
+    if (e.key === "ArrowLeft" && index > 0) {
+      codeRefs.current[index - 1]?.focus();
+    }
+
+    if (e.key === "ArrowRight" && index < 5) {
+      codeRefs.current[index + 1]?.focus();
+    }
+
+    if (e.key === "Enter") {
+      verifyCode();
+    }
+  }
+
+  function handleCodePaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+
+    e.preventDefault();
+
+    const next = ["", "", "", "", "", ""];
+    pasted.split("").forEach((digit, i) => {
+      next[i] = digit;
+    });
+    setCode(next);
+
+    const nextIndex = Math.min(pasted.length, 5);
+    codeRefs.current[nextIndex]?.focus();
+  }
+
   useEffect(() => {
     if (!AUTH_DISABLED) return;
     router.replace(nextUrl);
   }, [AUTH_DISABLED, nextUrl, router]);
 
-  // On mount, if already signed in, refresh pro status first.
   useEffect(() => {
     if (AUTH_DISABLED) return;
 
@@ -84,7 +156,6 @@ export default function LoginClient() {
     })();
   }, [AUTH_DISABLED, nextUrl, refreshWithRetry, router]);
 
-  // If pro flips true after auth settles, always send to app.
   useEffect(() => {
     if (AUTH_DISABLED) return;
     if (isLoading) return;
@@ -94,9 +165,8 @@ export default function LoginClient() {
     }
   }, [AUTH_DISABLED, effectiveIsPro, isLoading, router]);
 
-  async function sendLink() {
+  async function sendCode() {
     setError(null);
-    setSent(false);
 
     const e = email.trim().toLowerCase();
     if (!isValidEmail(e)) {
@@ -106,24 +176,66 @@ export default function LoginClient() {
 
     setSending(true);
     try {
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-
-      const emailRedirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(
-        nextUrl,
-      )}`;
-
       const { error } = await supabaseBrowser.auth.signInWithOtp({
         email: e,
-        options: { emailRedirectTo },
+        options: {
+          shouldCreateUser: true,
+        },
       });
 
       if (error) throw error;
-      setSent(true);
+
+      setCode(["", "", "", "", "", ""]);
+      setCodeSent(true);
+
+      // helpful on mobile
+      setTimeout(() => {
+        codeRefs.current[0]?.focus();
+      }, 50);
     } catch (err: any) {
       setError(err?.message ?? String(err));
     } finally {
       setSending(false);
+    }
+  }
+
+  async function verifyCode() {
+    setError(null);
+
+    const e = email.trim().toLowerCase();
+    const c = joinedCode();
+
+    if (!isValidEmail(e)) {
+      setError("Please enter a valid email.");
+      return;
+    }
+
+    if (!isValidCode(c)) {
+      setError("Please enter the 6-digit code.");
+      return;
+    }
+
+    setVerifying(true);
+    try {
+      const { error } = await supabaseBrowser.auth.verifyOtp({
+        email: e,
+        token: c,
+        type: "email",
+      });
+
+      if (error) throw error;
+
+      const result = await refreshWithRetry({ attempts: 6, delayMs: 800 });
+
+      if (result.isPro) {
+        router.replace("/app");
+      } else {
+        router.replace(nextUrl);
+      }
+    } catch (err: any) {
+      setError(err?.message ?? String(err));
+    } finally {
+      setVerifying(false);
     }
   }
 
@@ -137,7 +249,6 @@ export default function LoginClient() {
     );
   }
 
-  // Prevent showing login UI to users who are already Pro
   if (!isLoading && effectiveIsPro) {
     return null;
   }
@@ -147,9 +258,11 @@ export default function LoginClient() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-md p-6">
-        <h1 className="text-2xl font-extrabold text-center">Sign in</h1>
+        <h1 className="text-2xl font-extrabold text-center">
+          Sign in with email code
+        </h1>
         <p className="text-center text-slate-300 mt-2 text-sm">
-          We’ll email you a sign-in link.
+          Enter your email and we’ll send you a 6-digit sign-in code.
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
@@ -162,34 +275,78 @@ export default function LoginClient() {
             placeholder="you@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendLink();
-            }}
             autoComplete="email"
             inputMode="email"
-            disabled={sending}
+            disabled={sending || verifying || codeSent}
           />
 
-          <button
-            onClick={sendLink}
-            disabled={sending}
-            className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
-          >
-            {sending ? "Sending…" : "Email me a sign-in link"}
-          </button>
+          {!codeSent ? (
+            <button
+              onClick={sendCode}
+              disabled={sending}
+              className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
+            >
+              {sending ? "Sending…" : "Send sign-in code"}
+            </button>
+          ) : (
+            <>
+              <label className="block text-xs font-semibold text-slate-300 mt-5 mb-2">
+                6-digit code
+              </label>
+
+              <div
+                className="mt-1 flex justify-between gap-2"
+                onPaste={handleCodePaste}
+              >
+                {code.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => {
+                      codeRefs.current[index] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? "one-time-code" : "off"}
+                    maxLength={1}
+                    value={digit}
+                    disabled={verifying}
+                    onChange={(e) => updateCodeDigit(index, e.target.value)}
+                    onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                    className="h-14 w-12 rounded-xl border border-slate-800 bg-slate-950 text-center text-xl font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={verifyCode}
+                disabled={verifying}
+                className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
+              >
+                {verifying ? "Signing in…" : "Verify code and sign in"}
+              </button>
+
+              <button
+                onClick={() => {
+                  setCode(["", "", "", "", "", ""]);
+                  setCodeSent(false);
+                  setError(null);
+                }}
+                disabled={verifying}
+                className="mt-3 w-full rounded-xl border border-slate-700 px-4 py-3 text-center font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-60"
+              >
+                Use a different email
+              </button>
+            </>
+          )}
 
           <div className="mt-3 text-center text-xs text-slate-400">
             Continue to <span className="text-slate-200">{nextLabel}</span>{" "}
             after signing in.
           </div>
 
-          {sent ? (
+          {codeSent ? (
             <div className="mt-4 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
-              Link sent — check your email to sign in.
-              <div className="mt-1 text-xs text-emerald-100/80">
-                On iPhone: for best results, open the link in Safari (not an
-                in-app email browser).
-              </div>
+              Code sent — check your email and enter the 6-digit code above.
             </div>
           ) : null}
 

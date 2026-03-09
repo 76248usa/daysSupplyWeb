@@ -4,14 +4,14 @@ import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function safeNextPath(nextParam: string | null | undefined): string {
   if (!nextParam) return "/app";
   if (nextParam.startsWith("/")) return nextParam;
   return "/app";
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function AuthCallbackInner() {
@@ -23,9 +23,9 @@ function AuthCallbackInner() {
       const nextPath = safeNextPath(nextParam);
 
       try {
-        // In implicit flow, Supabase reads tokens from the URL automatically.
-        // We only wait for the session to become available.
-        for (let i = 0; i < 8; i++) {
+        // For any leftover auth redirects, just wait briefly
+        // to see whether Supabase already has a session.
+        for (let i = 0; i < 6; i++) {
           const { data } = await supabaseBrowser.auth.getSession();
 
           if (data.session?.access_token) {
@@ -39,7 +39,7 @@ function AuthCallbackInner() {
             return;
           }
 
-          await sleep(700);
+          await sleep(500);
         }
 
         window.location.replace("/login?next=/app");
