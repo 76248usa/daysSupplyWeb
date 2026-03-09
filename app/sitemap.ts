@@ -1,36 +1,18 @@
 import { MetadataRoute } from "next";
+import { medicineData } from "@/lib/medicineData";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://www.insulinprimingdayssupply.com";
   const now = new Date();
 
-  const medicines = [
-    "tresiba",
-    "toujeo",
-    "lantus",
-    "basaglar",
-    "levemir",
-    "humalog",
-    "admelog",
-    "novolog",
-    "fiasp",
-    "humulin-r",
-    "humulin-n",
-    "humulin-70-30",
-    "novolin-r",
-    "novolin-n",
-    "novolin-70-30",
-    "humalog-75-25",
-    "humalog-50-50",
-    "novolog-70-30",
-  ];
-
-  const medicinePages = medicines.map((m) => ({
-    url: `${base}/app/medicine/${m}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: 0.9,
-  }));
+  const medicinePages = medicineData
+    .filter((m) => m.seoSlug)
+    .map((m) => ({
+      url: `${base}/${m.seoSlug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    }));
 
   return [
     {
@@ -40,10 +22,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${base}/app`,
+      url: `${base}/insulin-days-supply-calculator`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
+    },
+    {
+      url: `${base}/app`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: `${base}/pricing`,

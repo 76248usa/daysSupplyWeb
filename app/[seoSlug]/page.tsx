@@ -82,33 +82,32 @@ export default async function SeoMedicinePage({ params }: Props) {
   const schema = {
     "@context": "https://schema.org",
     "@type": ["MedicalWebPage", "FAQPage"],
-    name: "Insulin Days Supply Calculator with Priming",
-    url: "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
-    description:
-      "Professional insulin days supply calculator for pharmacists. Includes insulin pen priming doses and pharmacy workflow support.",
-    audience: {
+    name: title,
+    url: `https://www.insulinprimingdayssupply.com/${medicine.seoSlug}`,
+    description,
+    medicalAudience: {
       "@type": "MedicalAudience",
       audienceType: "Pharmacists",
     },
     about: {
-      "@type": "DrugClass",
-      name: "Insulin",
+      "@type": "Drug",
+      name: medicine.name,
     },
     mainEntity: [
       {
         "@type": "Question",
-        name: "How do you calculate insulin days supply?",
+        name: `How do you calculate ${medicine.name} days supply?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Insulin days supply is calculated by dividing total insulin units dispensed by the patient's daily dose.",
+          text: `Days supply for ${medicine.name} is generally calculated by dividing total insulin units dispensed by the patient's total daily dose. For pen products, priming can reduce the effective insulin available for therapeutic dosing.`,
         },
       },
       {
         "@type": "Question",
-        name: "Why does insulin pen priming affect days supply?",
+        name: `Why does priming matter for ${medicine.name}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Priming removes air from insulin pens but uses insulin units that cannot be delivered therapeutically.",
+          text: `Priming uses insulin units before injection, which can reduce the effective amount of ${medicine.name} available for actual patient dosing.`,
         },
       },
     ],
@@ -144,13 +143,14 @@ export default async function SeoMedicinePage({ params }: Props) {
         This page is designed to help pharmacists and pharmacy technicians
         estimate insulin days supply more consistently and quickly.
       </p>
+
       <div
         style={{
-          marginBottom: 32,
+          marginBottom: 24,
         }}
       >
         <Link
-          href="/app"
+          href={calculatorHref}
           style={{
             display: "inline-block",
             padding: "14px 24px",
@@ -162,9 +162,16 @@ export default async function SeoMedicinePage({ params }: Props) {
             fontSize: "1.05rem",
           }}
         >
-          Open Main Calculator
+          Open {medicine.name} Calculator
         </Link>
       </div>
+
+      <p style={{ marginBottom: 32 }}>
+        <Link href="/insulin-days-supply-calculator">
+          View all insulin days supply calculators
+        </Link>
+      </p>
+
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>
           How {medicine.name} days supply is calculated
@@ -240,7 +247,7 @@ export default async function SeoMedicinePage({ params }: Props) {
         </p>
       </section>
 
-      <section>
+      <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Fast access</h2>
 
         <p>
@@ -252,19 +259,22 @@ export default async function SeoMedicinePage({ params }: Props) {
         </p>
       </section>
 
-      <h2>Frequently Asked Questions</h2>
+      <section style={{ marginBottom: 32 }}>
+        <h2 style={{ marginBottom: 12 }}>Frequently Asked Questions</h2>
 
-      <h3>How do you calculate insulin days supply?</h3>
-      <p>
-        Days supply equals total insulin units dispensed divided by the
-        patient’s total daily dose.
-      </p>
+        <h3>How do you calculate {medicine.name} days supply?</h3>
+        <p>
+          Days supply equals total insulin units dispensed divided by the
+          patient&apos;s total daily dose. For pen products, priming may reduce
+          the effective insulin available for dosing.
+        </p>
 
-      <h3>Why does priming matter?</h3>
-      <p>
-        Priming uses insulin units before injection and can reduce the effective
-        insulin available for dosing.
-      </p>
+        <h3>Why does priming matter?</h3>
+        <p>
+          Priming uses insulin units before injection and can reduce the
+          effective insulin available for therapeutic dosing.
+        </p>
+      </section>
     </main>
   );
 }
