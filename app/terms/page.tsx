@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const SUPPORT_EMAIL = "elsabecrous@gmail.com";
+const SUPPORT_EMAIL = "support@insulinprimingdayssupply.com";
 
 export default function TermsPage() {
   return (

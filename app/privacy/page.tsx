@@ -119,8 +119,9 @@ export default function PrivacyPage() {
             </h2>
             <p>
               Questions about this policy? Email:{" "}
-              <span className="font-semibold">support@yourdomain.com</span>{" "}
-              (replace with your real support email).
+              <span className="font-semibold">
+                support@insulinprimingdayssupply.com
+              </span>{" "}
             </p>
           </section>
         </div>
