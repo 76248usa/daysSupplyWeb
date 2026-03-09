@@ -62,13 +62,11 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
   const SCREENSHOT_MODE = process.env.NEXT_PUBLIC_SCREENSHOT_MODE === "1";
   const AUTH_DISABLED = process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
 
-  // ✅ In Plan A (AUTH_DISABLED), treat everyone as Pro.
   const effectiveIsPro = SCREENSHOT_MODE ? true : AUTH_DISABLED ? true : isPro;
 
   const inFlight = useRef<Promise<RefreshResult> | null>(null);
 
   const refresh = async (): Promise<RefreshResult> => {
-    // ✅ Plan A bypass: no auth, no network calls, no loading spinner loops
     if (AUTH_DISABLED) {
       setIsPro(true);
       setStatus("active");
@@ -83,28 +81,23 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
 
       try {
-        // ✅ Only check if user exists (no email needed)
-        const { data } = await supabaseBrowser.auth.getUser();
-        const user = data.user;
+        // Prefer session first because mobile browsers can have a valid session
+        // before getUser() settles.
+        const { data: sessionData } = await supabaseBrowser.auth.getSession();
+        let accessToken = sessionData.session?.access_token ?? null;
+        let user = sessionData.session?.user ?? null;
 
-        if (!user) {
-          setIsPro(false);
-          setStatus("no_user");
-          return { isPro: false, status: "no_user" };
+        // Fallback: if session is not ready yet, try getUser once.
+        if (!accessToken || !user) {
+          const { data: userData } = await supabaseBrowser.auth.getUser();
+          user = userData.user ?? null;
+
+          const { data: sessionRetry } =
+            await supabaseBrowser.auth.getSession();
+          accessToken = sessionRetry.session?.access_token ?? null;
         }
 
-        // const { data: sessionData } = await supabaseBrowser.auth.getSession();
-        // const accessToken = sessionData.session?.access_token;
-
-        // if (!accessToken) {
-        //   setIsPro(false);
-        //   setStatus("no_user");
-        //   return { isPro: false, status: "no_user" };
-        // }
-        const { data: sessionData } = await supabaseBrowser.auth.getSession();
-        const accessToken = sessionData.session?.access_token;
-
-        if (!accessToken) {
+        if (!user || !accessToken) {
           setIsPro(false);
           setStatus("no_user");
           return { isPro: false, status: "no_user" };
@@ -132,7 +125,7 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
         }
 
         const nextIsPro = Boolean(j?.isPro);
-        const nextStatus = toProStatus(j?.status);
+        const nextStatus = toProStatus(j?.effectiveStatus ?? j?.status);
 
         setIsPro(nextIsPro);
         setStatus(nextStatus);
@@ -156,11 +149,10 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     attempts?: number;
     delayMs?: number;
   }): Promise<RefreshResult> => {
-    // ✅ Plan A bypass
     if (AUTH_DISABLED) return { isPro: true, status: "active" };
 
-    const attempts = Math.max(1, opts?.attempts ?? 3);
-    const delayMs = Math.max(0, opts?.delayMs ?? 1200);
+    const attempts = Math.max(1, opts?.attempts ?? 6);
+    const delayMs = Math.max(0, opts?.delayMs ?? 800);
 
     let last: RefreshResult = { isPro: effectiveIsPro, status };
 
@@ -173,27 +165,39 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     return last;
   };
 
-  // ✅ Only wire Supabase listeners when auth is enabled
   useEffect(() => {
     if (AUTH_DISABLED) return;
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    refreshWithRetry({ attempts: 3, delayMs: 500 }).catch(() => {});
   }, [AUTH_DISABLED]);
 
   useEffect(() => {
     if (AUTH_DISABLED) return;
 
-    const onVis = () => {
-      if (document.visibilityState === "visible") refresh();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refreshWithRetry({ attempts: 3, delayMs: 500 }).catch(() => {});
+      }
     };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const onFocus = () => {
+      refreshWithRetry({ attempts: 3, delayMs: 500 }).catch(() => {});
+    };
+
+    const onPageShow = () => {
+      refreshWithRetry({ attempts: 3, delayMs: 500 }).catch(() => {});
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pageshow", onPageShow);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, [AUTH_DISABLED]);
 
-  // ✅ Key fix for magic-link login:
-  // When auth changes, the session can take a beat to become queryable.
-  // Use retry to reliably flip to Pro after login.
   useEffect(() => {
     if (AUTH_DISABLED) return;
 
@@ -202,7 +206,6 @@ export function ProProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => sub.subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [AUTH_DISABLED]);
 
   const value = useMemo(
