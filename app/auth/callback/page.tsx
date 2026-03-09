@@ -1,70 +1,70 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
-function sanitizeNext(raw: string | null): string | null {
-  if (!raw) return null;
-
-  let v = raw;
-  try {
-    v = decodeURIComponent(raw);
-  } catch {
-    v = raw;
-  }
-
-  v = v.trim();
-  if (!v.startsWith("/")) return null;
-  if (v.startsWith("//")) return null;
-  if (v.startsWith("http://") || v.startsWith("https://")) return null;
-  return v;
+function safeNextPath(nextParam: string | null | undefined): string {
+  if (!nextParam) return "/app";
+  if (nextParam.startsWith("/")) return nextParam;
+  return "/app";
 }
 
-function Inner() {
-  const router = useRouter();
+function AuthCallbackInner() {
   const sp = useSearchParams();
 
   useEffect(() => {
     (async () => {
-      // 1) Exchange code for session (magic link)
-      await supabaseBrowser.auth.getSession();
+      const code = sp.get("code");
+      const nextParam = sp.get("next");
+      const nextPath = safeNextPath(nextParam);
 
-      // 2) If next is present, honor it
-      const nextFromUrl = sanitizeNext(sp.get("next"));
-      if (nextFromUrl) {
-        router.replace(nextFromUrl);
-        return;
+      try {
+        if (code) {
+          const { error } =
+            await supabaseBrowser.auth.exchangeCodeForSession(code);
+
+          if (error) {
+            window.location.replace("/login?next=/app");
+            return;
+          }
+        }
+
+        await new Promise((r) => setTimeout(r, 700));
+
+        const { data } = await supabaseBrowser.auth.getSession();
+
+        if (!data.session?.access_token) {
+          window.location.replace("/login?next=/app");
+          return;
+        }
+
+        const finalPath =
+          nextPath.startsWith("/app/upgrade") || nextPath.startsWith("/login")
+            ? "/app"
+            : nextPath;
+
+        window.location.replace(finalPath);
+      } catch {
+        window.location.replace("/login?next=/app");
       }
-
-      // 3) Otherwise decide based on Pro status
-      const { data } = await supabaseBrowser.auth.getSession();
-      const token = data.session?.access_token;
-
-      if (!token) {
-        router.replace("/login?next=%2Fapp%2Fupgrade");
-        return;
-      }
-
-      const res = await fetch("/api/pro-status", {
-        method: "GET",
-        cache: "no-store",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const j = await res.json().catch(() => ({}));
-      const isPro = Boolean(j?.isPro);
-
-      router.replace(isPro ? "/app" : "/app/upgrade");
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sp]);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-      Signing you in…
+    <main
+      style={{ minHeight: "100vh", background: "#020617", color: "#e2e8f0" }}
+    >
+      <div
+        style={{
+          maxWidth: 400,
+          margin: "0 auto",
+          padding: 24,
+          textAlign: "center",
+        }}
+      >
+        Signing you in…
+      </div>
     </main>
   );
 }
@@ -73,12 +73,27 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-          Signing you in…
-        </div>
+        <main
+          style={{
+            minHeight: "100vh",
+            background: "#020617",
+            color: "#e2e8f0",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 400,
+              margin: "0 auto",
+              padding: 24,
+              textAlign: "center",
+            }}
+          >
+            Signing you in…
+          </div>
+        </main>
       }
     >
-      <Inner />
+      <AuthCallbackInner />
     </Suspense>
   );
 }
