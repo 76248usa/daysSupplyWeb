@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
+import { usePro } from "@/context/ProContext";
 
 function niceNextLabel(nextUrl: string) {
   if (nextUrl.startsWith("/app/upgrade")) return "Upgrade";
@@ -11,12 +12,11 @@ function niceNextLabel(nextUrl: string) {
   return "Continue";
 }
 
-// Only allow internal relative paths (prevents open-redirect + weird parsing)
+// Only allow internal relative paths
 function sanitizeNext(raw: string | null): string {
   const fallback = "/app/upgrade";
   if (!raw) return fallback;
 
-  // decode if it was encoded
   let v = raw;
   try {
     v = decodeURIComponent(raw);
@@ -26,10 +26,8 @@ function sanitizeNext(raw: string | null): string {
 
   v = v.trim();
 
-  // Must be an internal path
   if (!v.startsWith("/")) return fallback;
   if (v.startsWith("//")) return fallback;
-  // disallow full URLs
   if (v.startsWith("http://") || v.startsWith("https://")) return fallback;
 
   return v;
@@ -43,39 +41,58 @@ function isValidEmail(e: string) {
 export default function LoginClient() {
   const router = useRouter();
   const sp = useSearchParams();
+  const { effectiveIsPro, isLoading, refreshWithRetry } = usePro();
 
   const AUTH_DISABLED = useMemo(
     () => process.env.NEXT_PUBLIC_AUTH_DISABLED === "1",
     [],
   );
 
-  // ✅ Default to /app/upgrade so "missing next" still drives users to subscribe path
-  //const nextUrl = sanitizeNext(sp.get("next"));
-  const nextUrl = sp.get("next") || "/app/upgrade";
+  const nextUrl = sanitizeNext(sp.get("next"));
 
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkedSession, setCheckedSession] = useState(false);
 
-  // If auth is disabled, just continue.
+  // Auth disabled: just continue.
   useEffect(() => {
     if (!AUTH_DISABLED) return;
     router.replace(nextUrl);
   }, [AUTH_DISABLED, nextUrl, router]);
 
-  // ✅ If user is already signed in, skip login page
+  // On mount, if already signed in, refresh pro status first.
   useEffect(() => {
     if (AUTH_DISABLED) return;
 
     (async () => {
       const { data } = await supabaseBrowser.auth.getSession();
+
       if (data.session?.access_token) {
-        router.replace(nextUrl);
+        const result = await refreshWithRetry({ attempts: 6, delayMs: 800 });
+
+        if (result.isPro) {
+          router.replace("/app");
+        } else {
+          router.replace(nextUrl);
+        }
+        return;
       }
+
+      setCheckedSession(true);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [AUTH_DISABLED, nextUrl]);
+  }, [AUTH_DISABLED, nextUrl, refreshWithRetry, router]);
+
+  // If pro flips true after auth settles, always send to app.
+  useEffect(() => {
+    if (AUTH_DISABLED) return;
+    if (isLoading) return;
+
+    if (effectiveIsPro) {
+      router.replace("/app");
+    }
+  }, [AUTH_DISABLED, effectiveIsPro, isLoading, router]);
 
   async function sendLink() {
     setError(null);
@@ -92,8 +109,6 @@ export default function LoginClient() {
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
-      // Supabase will send the user back here. Our callback page consumes the code,
-      // creates a session, then redirects to `nextUrl`.
       const emailRedirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(
         nextUrl,
       )}`;
@@ -112,7 +127,7 @@ export default function LoginClient() {
     }
   }
 
-  if (AUTH_DISABLED) {
+  if (AUTH_DISABLED || !checkedSession) {
     return (
       <main className="min-h-screen bg-slate-950 text-slate-100">
         <div className="mx-auto max-w-md p-6 text-center text-slate-300">
@@ -120,6 +135,11 @@ export default function LoginClient() {
         </div>
       </main>
     );
+  }
+
+  // Prevent showing login UI to users who are already Pro
+  if (!isLoading && effectiveIsPro) {
+    return null;
   }
 
   const nextLabel = niceNextLabel(nextUrl);
