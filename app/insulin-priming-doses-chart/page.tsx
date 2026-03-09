@@ -63,6 +63,7 @@ function buildPrimingRows(): PrimingItem[] {
     } else {
       const existing = map.get(key)!;
       const detail = detailParts.join(" • ");
+
       if (detail && !existing.details.includes(detail)) {
         existing.details.push(detail);
       }
@@ -113,6 +114,7 @@ export default function InsulinPrimingDosesChartPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+
       <p style={{ marginBottom: 12 }}>
         <Link href="/">Home</Link> /{" "}
         <Link href="/insulin-days-supply-calculator">
@@ -120,6 +122,7 @@ export default function InsulinPrimingDosesChartPage() {
         </Link>{" "}
         / <span>Insulin Priming Doses Chart</span>
       </p>
+
       <h1
         style={{
           fontSize: "2rem",
@@ -129,6 +132,22 @@ export default function InsulinPrimingDosesChartPage() {
       >
         Insulin Priming Doses Chart
       </h1>
+
+      <p style={{ fontSize: "1.05rem", marginBottom: 12 }}>
+        This reference chart shows priming doses for common insulin pens and
+        related products. It is designed to help pharmacists and pharmacy
+        technicians quickly review priming amounts that may affect effective
+        insulin available for dosing and days supply calculations.
+      </p>
+
+      <p style={{ marginBottom: 24 }}>
+        Need to calculate insulin days supply? Use the{" "}
+        <Link href="/insulin-days-supply-calculator">
+          insulin days supply calculator
+        </Link>
+        .
+      </p>
+
       <section
         style={{
           marginBottom: 32,
@@ -147,41 +166,7 @@ export default function InsulinPrimingDosesChartPage() {
           before calculating billed days supply.
         </p>
       </section>
-      Why this helps: gives Google a short, direct answer improves
-      featured-snippet chances adds strong keyword relevance for: insulin
-      priming dose insulin pen priming units Toujeo priming dose U-500 priming
-      dose Two very good additions after that: Add one FAQ block near the
-      bottom:
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Frequently Asked Questions</h2>
 
-        <h3>What is the usual insulin pen priming dose?</h3>
-        <p>
-          Many insulin pens use a 2-unit priming dose, but some products use a
-          different amount.
-        </p>
-
-        <h3>Does priming affect days supply?</h3>
-        <p>
-          Yes. Priming uses insulin that is not part of the therapeutic dose, so
-          it can reduce the effective insulin available for patient use.
-        </p>
-      </section>
-      And add matching FAQ schema to that page later. The next strongest move is
-      adding an insulin expiration chart page beside the priming chart.
-      <p style={{ fontSize: "1.05rem", marginBottom: 12 }}>
-        This reference chart shows priming doses for common insulin pens and
-        related products. It is designed to help pharmacists and pharmacy
-        technicians quickly review priming amounts that may affect effective
-        insulin available for dosing and days supply calculations.
-      </p>
-      <p style={{ marginBottom: 24 }}>
-        Need to calculate insulin days supply? Use the{" "}
-        <Link href="/insulin-days-supply-calculator">
-          insulin days supply calculator
-        </Link>
-        .
-      </p>
       <div style={{ marginBottom: 32 }}>
         <Link
           href="/app"
@@ -199,6 +184,7 @@ export default function InsulinPrimingDosesChartPage() {
           Open Main Calculator
         </Link>
       </div>
+
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Priming dose reference table</h2>
 
@@ -230,7 +216,7 @@ export default function InsulinPrimingDosesChartPage() {
                 <th
                   style={{ padding: "12px", borderBottom: "1px solid #e5e7eb" }}
                 >
-                  Calculator
+                  Calculate Days Supply
                 </th>
               </tr>
             </thead>
@@ -280,16 +266,6 @@ export default function InsulinPrimingDosesChartPage() {
                       verticalAlign: "top",
                     }}
                   >
-                    {/* {row.seoSlug ? (
-                      <Link href={`/${row.seoSlug}`}>View calculator page</Link>
-                    ) : row.medicineId ? (
-                      <Link href={`/app/medicine/${row.medicineId}`}>
-                        Open calculator
-                      </Link>
-                    ) : (
-                      "—"
-                    )} */}
-
                     {row.seoSlug ? (
                       <Link
                         href={`/${row.seoSlug}`}
@@ -332,6 +308,7 @@ export default function InsulinPrimingDosesChartPage() {
           </table>
         </div>
       </section>
+
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Why priming matters</h2>
 
@@ -347,6 +324,7 @@ export default function InsulinPrimingDosesChartPage() {
           refill timing, and documentation during billing or audit review.
         </p>
       </section>
+
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Related tools</h2>
 
@@ -378,14 +356,7 @@ export default function InsulinPrimingDosesChartPage() {
           </li>
         </ul>
       </section>
-      <section>
-        <h2 style={{ marginBottom: 12 }}>Important note</h2>
-        <p>
-          Always use professional judgment and follow product labeling, payer
-          requirements, and store workflow requirements when determining billed
-          days supply.
-        </p>
-      </section>
+
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Frequently Asked Questions</h2>
 
@@ -399,6 +370,15 @@ export default function InsulinPrimingDosesChartPage() {
         <p>
           Yes. Priming uses insulin that is not part of the therapeutic dose, so
           it can reduce the effective insulin available for patient use.
+        </p>
+      </section>
+
+      <section>
+        <h2 style={{ marginBottom: 12 }}>Important note</h2>
+        <p>
+          Always use professional judgment and follow product labeling, payer
+          requirements, and store workflow requirements when determining billed
+          days supply.
         </p>
       </section>
     </main>
