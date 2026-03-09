@@ -10,6 +10,10 @@ function safeNextPath(nextParam: string | null | undefined): string {
   return "/app";
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function AuthCallbackInner() {
   const sp = useSearchParams();
 
@@ -30,12 +34,25 @@ function AuthCallbackInner() {
           }
         }
 
-        await new Promise((r) => setTimeout(r, 700));
+        // Retry a few times because mobile browsers can lag before
+        // the session becomes readable.
+        let hasSession = false;
 
-        const { data } = await supabaseBrowser.auth.getSession();
+        for (let i = 0; i < 6; i++) {
+          const { data } = await supabaseBrowser.auth.getSession();
 
-        if (!data.session?.access_token) {
-          window.location.replace("/login?next=/app");
+          if (data.session?.access_token) {
+            hasSession = true;
+            break;
+          }
+
+          await sleep(700);
+        }
+
+        if (!hasSession) {
+          // Still no readable session; send them into the app anyway.
+          // ProContext/LoginClient can re-check and route from there.
+          window.location.replace("/app");
           return;
         }
 
@@ -46,7 +63,7 @@ function AuthCallbackInner() {
 
         window.location.replace(finalPath);
       } catch {
-        window.location.replace("/login?next=/app");
+        window.location.replace("/app");
       }
     })();
   }, [sp]);
