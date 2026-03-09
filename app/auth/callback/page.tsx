@@ -20,25 +20,49 @@ function AuthCallbackInner() {
   useEffect(() => {
     (async () => {
       const code = sp.get("code");
+      const tokenHash = sp.get("token_hash");
+      const type = sp.get("type");
       const nextParam = sp.get("next");
       const nextPath = safeNextPath(nextParam);
 
       try {
+        // Support both Supabase callback styles
         if (code) {
           const { error } =
             await supabaseBrowser.auth.exchangeCodeForSession(code);
 
           if (error) {
+            console.error("exchangeCodeForSession error:", error.message);
             window.location.replace("/login?next=/app");
             return;
           }
+        } else if (tokenHash && type) {
+          const { error } = await supabaseBrowser.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as
+              | "signup"
+              | "magiclink"
+              | "recovery"
+              | "invite"
+              | "email"
+              | "email_change",
+          });
+
+          if (error) {
+            console.error("verifyOtp error:", error.message);
+            window.location.replace("/login?next=/app");
+            return;
+          }
+        } else {
+          // No recognizable auth params
+          window.location.replace("/login?next=/app");
+          return;
         }
 
-        // Retry a few times because mobile browsers can lag before
-        // the session becomes readable.
+        // Mobile browsers can lag before session becomes readable
         let hasSession = false;
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 8; i++) {
           const { data } = await supabaseBrowser.auth.getSession();
 
           if (data.session?.access_token) {
@@ -50,8 +74,6 @@ function AuthCallbackInner() {
         }
 
         if (!hasSession) {
-          // Still no readable session; send them into the app anyway.
-          // ProContext/LoginClient can re-check and route from there.
           window.location.replace("/app");
           return;
         }
@@ -62,8 +84,9 @@ function AuthCallbackInner() {
             : nextPath;
 
         window.location.replace(finalPath);
-      } catch {
-        window.location.replace("/app");
+      } catch (err) {
+        console.error("auth callback error:", err);
+        window.location.replace("/login?next=/app");
       }
     })();
   }, [sp]);
