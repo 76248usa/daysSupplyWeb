@@ -8,9 +8,15 @@ export type Medicine = {
   prime?: number;
   pensAmount?: number;
   dosage?: string;
+
+  // SEO landing-page fields
+  seoSlug?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoIntro?: string;
 };
 
-export const medicineData: Medicine[] = [
+export const rawMedicineData: Medicine[] = [
   {
     id: 1,
     name: "Admelog U-100 Vial 10ml",
@@ -28,6 +34,12 @@ export const medicineData: Medicine[] = [
     prime: 2,
     unitsInPen: 300,
     pensAmount: 5,
+    seoSlug: "admelog-days-supply-calculator",
+    seoTitle: "Admelog Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Admelog insulin pen days supply including priming doses. Designed for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this Admelog days supply calculator to estimate insulin pen days supply while accounting for priming and real-world dispensing workflow.",
   },
   {
     id: 3,
@@ -46,6 +58,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 28,
     pensAmount: 5,
+    seoSlug: "basaglar-days-supply-calculator",
+    seoTitle: "Basaglar Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Basaglar insulin pen days supply including priming doses for pharmacist audit-safe dispensing.",
+    seoIntro:
+      "Use this Basaglar calculator to determine accurate insulin days supply for pen dispensing, insurance billing, and pharmacy workflow.",
   },
   {
     id: 5,
@@ -66,7 +84,6 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     pensAmount: 5,
   },
-
   {
     id: 7,
     name: "Apidra 100 U/mL Vial",
@@ -84,6 +101,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     prime: 2,
     pensAmount: 5,
+    seoSlug: "apidra-days-supply-calculator",
+    seoTitle: "Apidra Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Apidra insulin pen days supply including priming doses. Built for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this Apidra calculator to estimate insulin pen days supply quickly and consistently while accounting for priming.",
   },
   {
     id: 9,
@@ -102,6 +125,12 @@ export const medicineData: Medicine[] = [
     expire: 28,
     prime: 2,
     unitsInPen: 300,
+    seoSlug: "fiasp-days-supply-calculator",
+    seoTitle: "Fiasp Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Fiasp insulin pen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Fiasp days supply calculator to estimate insulin pen days supply for dispensing, billing, and audit review.",
   },
   {
     id: 11,
@@ -131,7 +160,6 @@ export const medicineData: Medicine[] = [
     unitsInPen: 1000,
     expire: 28,
   },
-
   {
     id: 15,
     name: "Humalog Cartridge U-100 5 Cartridges",
@@ -161,6 +189,12 @@ export const medicineData: Medicine[] = [
     expire: 28,
     unitsInPen: 300,
     pensAmount: 5,
+    seoSlug: "humalog-days-supply-calculator",
+    seoTitle: "Humalog Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Humalog insulin pen days supply including priming doses. Designed for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this Humalog days supply calculator to estimate insulin pen days supply while accounting for priming, package size, and pharmacy workflow.",
   },
   {
     id: 18,
@@ -191,6 +225,12 @@ export const medicineData: Medicine[] = [
     expire: 10,
     unitsInPen: 300,
     pensAmount: 5,
+    seoSlug: "humalog-75-25-days-supply-calculator",
+    seoTitle: "Humalog Mix 75/25 Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Humalog Mix 75/25 insulin pen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Humalog Mix 75/25 calculator to determine accurate insulin pen days supply for dispensing and insurance billing.",
   },
   {
     id: 21,
@@ -209,6 +249,12 @@ export const medicineData: Medicine[] = [
     prime: 2,
     unitsInPen: 300,
     pensAmount: 5,
+    seoSlug: "humalog-50-50-days-supply-calculator",
+    seoTitle: "Humalog Mix 50/50 Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Humalog Mix 50/50 insulin pen days supply including priming doses.",
+    seoIntro:
+      "Use this Humalog Mix 50/50 days supply calculator to estimate insulin pen days supply quickly and consistently.",
   },
   {
     id: 23,
@@ -244,8 +290,13 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     prime: 2,
     pensAmount: 5,
+    seoSlug: "humulin-n-days-supply-calculator",
+    seoTitle: "Humulin N Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Humulin N insulin pen days supply including priming doses for pharmacist audit-safe dispensing.",
+    seoIntro:
+      "Use this Humulin N calculator to determine accurate insulin days supply for pen dispensing, insurance billing, and fast pharmacy workflow.",
   },
-
   {
     id: 27,
     name: "Humulin® R U-100 3ml Vial",
@@ -279,6 +330,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 1500,
     prime: 5,
     pensAmount: 2,
+    seoSlug: "humulin-r-u500-days-supply-calculator",
+    seoTitle: "Humulin R U-500 Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Humulin R U-500 KwikPen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Humulin R U-500 calculator to estimate days supply accurately for high-concentration insulin pen dispensing.",
   },
   {
     id: 31,
@@ -297,6 +354,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     prime: 2,
     pensAmount: 5,
+    seoSlug: "humulin-70-30-days-supply-calculator",
+    seoTitle: "Humulin 70/30 Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Humulin 70/30 insulin pen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Humulin 70/30 calculator to estimate insulin pen days supply for dispensing, billing, and audit review.",
   },
   {
     id: 33,
@@ -354,7 +417,6 @@ export const medicineData: Medicine[] = [
     prime: 3,
     expire: 56,
   },
-
   {
     id: 38,
     name: "Insulin Glargine-YFGN U-100 Vial 10 mL",
@@ -373,7 +435,6 @@ export const medicineData: Medicine[] = [
     expire: 28,
     prime: 2,
   },
-
   {
     id: 40,
     name: "Lantus® 10ml Vial U-100",
@@ -391,6 +452,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     prime: 2,
     pensAmount: 5,
+    seoSlug: "lantus-days-supply-calculator",
+    seoTitle: "Lantus Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Lantus SoloStar insulin pen days supply including priming doses. Built for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this Lantus calculator to estimate insulin pen days supply while accounting for priming, package size, and pharmacy workflow.",
   },
   {
     id: 42,
@@ -419,6 +486,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     pensAmount: 5,
     prime: 2,
+    seoSlug: "levemir-days-supply-calculator",
+    seoTitle: "Levemir Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Levemir FlexTouch insulin pen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Levemir calculator to determine insulin pen days supply accurately for dispensing and billing workflow.",
   },
   {
     id: 45,
@@ -448,7 +521,6 @@ export const medicineData: Medicine[] = [
     unitsInPen: 1000,
     expire: 42,
   },
-
   {
     id: 48,
     name: "Novolin® N Vial U-100 10ml",
@@ -466,6 +538,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 28,
     pensAmount: 5,
+    seoSlug: "novolin-n-days-supply-calculator",
+    seoTitle: "Novolin N Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Novolin N FlexPen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Novolin N calculator to estimate insulin pen days supply quickly and consistently while accounting for priming.",
   },
   {
     id: 50,
@@ -484,6 +562,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 28,
     pensAmount: 5,
+    seoSlug: "novolin-r-days-supply-calculator",
+    seoTitle: "Novolin R Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Novolin R FlexPen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Novolin R calculator to determine accurate insulin pen days supply for dispensing and billing workflow.",
   },
   {
     id: 52,
@@ -502,6 +586,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 28,
     pensAmount: 5,
+    seoSlug: "novolin-70-30-days-supply-calculator",
+    seoTitle: "Novolin 70/30 Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Novolin 70/30 FlexPen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Novolin 70/30 calculator to estimate insulin pen days supply for pharmacy workflow, insurance billing, and audit review.",
   },
   {
     id: 54,
@@ -520,6 +610,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 28,
     pensAmount: 5,
+    seoSlug: "novolog-days-supply-calculator",
+    seoTitle: "NovoLog Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate NovoLog FlexPen insulin days supply including priming doses. Designed for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this NovoLog days supply calculator to estimate insulin pen days supply while accounting for priming and real-world dispensing workflow.",
   },
   {
     id: 56,
@@ -548,6 +644,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 14,
     pensAmount: 5,
+    seoSlug: "novolog-70-30-days-supply-calculator",
+    seoTitle: "NovoLog Mix 70/30 Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate NovoLog Mix 70/30 insulin pen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this NovoLog Mix 70/30 calculator to determine accurate insulin pen days supply for dispensing, billing, and audit review.",
   },
   {
     id: 59,
@@ -566,8 +668,13 @@ export const medicineData: Medicine[] = [
     pensAmount: 5,
     expire: 28,
     prime: 2,
+    seoSlug: "semglee-days-supply-calculator",
+    seoTitle: "Semglee Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Semglee insulin pen days supply including priming doses for pharmacists.",
+    seoIntro:
+      "Use this Semglee calculator to estimate insulin pen days supply quickly and consistently for dispensing and billing workflow.",
   },
-
   {
     id: 61,
     name: "Toujeo® SoloStar 3 Pens U-300",
@@ -577,6 +684,12 @@ export const medicineData: Medicine[] = [
     unitsInPen: 450,
     expire: 56,
     pensAmount: 3,
+    seoSlug: "toujeo-days-supply-calculator",
+    seoTitle: "Toujeo Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Toujeo SoloStar insulin pen days supply including priming doses. Designed for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this Toujeo days supply calculator to estimate insulin pen days supply while accounting for priming, package size, and pharmacy workflow.",
   },
   {
     id: 62,
@@ -588,7 +701,6 @@ export const medicineData: Medicine[] = [
     expire: 56,
     pensAmount: 2,
   },
-
   {
     id: 63,
     name: "Tresiba FlexTouch 5 Pens U-100",
@@ -598,8 +710,13 @@ export const medicineData: Medicine[] = [
     unitsInPen: 300,
     expire: 56,
     pensAmount: 5,
+    seoSlug: "tresiba-days-supply-calculator",
+    seoTitle: "Tresiba Days Supply Calculator with Priming",
+    seoDescription:
+      "Calculate Tresiba FlexTouch insulin pen days supply including priming doses. Designed for pharmacists and pharmacy technicians.",
+    seoIntro:
+      "Use this Tresiba days supply calculator to estimate insulin pen days supply while accounting for priming, package size, and real-world dispensing workflow.",
   },
-
   {
     id: 64,
     name: "Tresiba FlexTouch 3 Pens U-200",
@@ -620,3 +737,14 @@ export const medicineData: Medicine[] = [
     expire: 28,
   },
 ];
+
+export const medicineData: Medicine[] = rawMedicineData.map((m) => ({
+  ...m,
+  seoSlug:
+    m.seoSlug ??
+    m.name
+      .toLowerCase()
+      .replace(/®|™/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") + "-days-supply-calculator",
+}));

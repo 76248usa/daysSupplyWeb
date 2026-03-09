@@ -21,6 +21,19 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <Suspense fallback={<AppLoading />}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Insulin Days Supply Calculator",
+            url: "https://www.insulinprimingdayssupply.com",
+            description:
+              "Professional insulin days supply calculator for pharmacists including priming doses.",
+          }),
+        }}
+      />
       <AppHome />
     </Suspense>
   );
