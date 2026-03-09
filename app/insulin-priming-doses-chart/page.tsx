@@ -246,11 +246,47 @@ export default function InsulinPrimingDosesChartPage() {
                       verticalAlign: "top",
                     }}
                   >
-                    {row.seoSlug ? (
+                    {/* {row.seoSlug ? (
                       <Link href={`/${row.seoSlug}`}>View calculator page</Link>
                     ) : row.medicineId ? (
                       <Link href={`/app/medicine/${row.medicineId}`}>
                         Open calculator
+                      </Link>
+                    ) : (
+                      "—"
+                    )} */}
+
+                    {row.seoSlug ? (
+                      <Link
+                        href={`/${row.seoSlug}`}
+                        style={{
+                          display: "inline-block",
+                          padding: "8px 14px",
+                          borderRadius: 8,
+                          background: "#2563eb",
+                          color: "#ffffff",
+                          textDecoration: "none",
+                          fontWeight: 600,
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        Open Calculator
+                      </Link>
+                    ) : row.medicineId ? (
+                      <Link
+                        href={`/app/medicine/${row.medicineId}`}
+                        style={{
+                          display: "inline-block",
+                          padding: "8px 14px",
+                          borderRadius: 8,
+                          background: "#2563eb",
+                          color: "#ffffff",
+                          textDecoration: "none",
+                          fontWeight: 600,
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        Open Calculator
                       </Link>
                     ) : (
                       "—"
