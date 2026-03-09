@@ -54,6 +54,7 @@ export default function LoginClient() {
   const nextUrl = sanitizeNext(sp.get("next"));
 
   const [email, setEmail] = useState("");
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -116,6 +117,7 @@ export default function LoginClient() {
       .getData("text")
       .replace(/\D/g, "")
       .slice(0, 6);
+
     if (!pasted) return;
 
     e.preventDefault();
@@ -141,20 +143,26 @@ export default function LoginClient() {
     (async () => {
       const { data } = await supabaseBrowser.auth.getSession();
 
+      if (data.session?.user?.email) {
+        setCurrentEmail(data.session.user.email);
+      } else {
+        setCurrentEmail(null);
+      }
+
       if (data.session?.access_token) {
         const result = await refreshWithRetry({ attempts: 6, delayMs: 800 });
 
+        // Only auto-redirect if already Pro.
+        // If signed in but not Pro, stay on this page so the user can switch accounts.
         if (result.isPro) {
           router.replace("/app");
-        } else {
-          router.replace(nextUrl);
+          return;
         }
-        return;
       }
 
       setCheckedSession(true);
     })();
-  }, [AUTH_DISABLED, nextUrl, refreshWithRetry, router]);
+  }, [AUTH_DISABLED, refreshWithRetry, router]);
 
   useEffect(() => {
     if (AUTH_DISABLED) return;
@@ -164,6 +172,16 @@ export default function LoginClient() {
       router.replace("/app");
     }
   }, [AUTH_DISABLED, effectiveIsPro, isLoading, router]);
+
+  async function signOutCurrentUser() {
+    await supabaseBrowser.auth.signOut();
+    setCurrentEmail(null);
+    setEmail("");
+    setCode(["", "", "", "", "", ""]);
+    setCodeSent(false);
+    setError(null);
+    setCheckedSession(true);
+  }
 
   async function sendCode() {
     setError(null);
@@ -188,7 +206,6 @@ export default function LoginClient() {
       setCode(["", "", "", "", "", ""]);
       setCodeSent(true);
 
-      // helpful on mobile
       setTimeout(() => {
         codeRefs.current[0]?.focus();
       }, 50);
@@ -224,6 +241,11 @@ export default function LoginClient() {
       });
 
       if (error) throw error;
+
+      setCode(["", "", "", "", "", ""]);
+
+      const { data } = await supabaseBrowser.auth.getSession();
+      setCurrentEmail(data.session?.user?.email ?? e);
 
       const result = await refreshWithRetry({ attempts: 6, delayMs: 800 });
 
@@ -266,6 +288,20 @@ export default function LoginClient() {
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          {currentEmail && !effectiveIsPro ? (
+            <div className="mb-4 rounded-xl border border-amber-900/40 bg-amber-900/20 p-3 text-sm text-amber-200">
+              Signed in as <strong>{currentEmail}</strong>.
+              <div className="mt-2">
+                <button
+                  onClick={signOutCurrentUser}
+                  className="rounded-lg border border-amber-700 px-3 py-2 text-xs font-semibold hover:bg-amber-900/30"
+                >
+                  Sign out and use a different email
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <label className="block text-xs font-semibold text-slate-300 mb-2">
             Email
           </label>
@@ -277,13 +313,13 @@ export default function LoginClient() {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             inputMode="email"
-            disabled={sending || verifying || codeSent}
+            disabled={sending || verifying || codeSent || Boolean(currentEmail)}
           />
 
           {!codeSent ? (
             <button
               onClick={sendCode}
-              disabled={sending}
+              disabled={sending || Boolean(currentEmail)}
               className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
             >
               {sending ? "Sending…" : "Send sign-in code"}
