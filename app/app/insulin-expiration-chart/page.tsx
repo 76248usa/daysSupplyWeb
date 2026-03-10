@@ -3,27 +3,27 @@ import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
 
 export const metadata: Metadata = {
-  title: "Insulin Priming Doses Chart | Pharmacist Reference",
+  title: "Insulin Expiration Chart (After Opening) | Pharmacist Reference",
   description:
-    "Reference chart showing priming doses for common insulin pens and related products used in pharmacy practice.",
+    "Reference chart showing in-use insulin expiration after opening for common insulin pens and vials used in pharmacy practice.",
   alternates: {
     canonical:
-      "https://www.insulinprimingdayssupply.com/insulin-priming-doses-chart",
+      "https://www.insulinprimingdayssupply.com/insulin-expiration-chart",
   },
   openGraph: {
-    title: "Insulin Priming Doses Chart",
+    title: "Insulin Expiration Chart (After Opening)",
     description:
-      "Reference chart showing priming doses for common insulin pens and related products.",
-    url: "https://www.insulinprimingdayssupply.com/insulin-priming-doses-chart",
+      "Reference chart showing in-use insulin expiration after opening for common insulin pens and vials.",
+    url: "https://www.insulinprimingdayssupply.com/insulin-expiration-chart",
     siteName: "Insulin Days' Supply",
     type: "website",
   },
 };
 
-type PrimingItem = {
+type ExpirationItem = {
   key: string;
   displayName: string;
-  prime: number;
+  expire: number;
   seoSlug?: string;
   medicineId?: number;
   details: string[];
@@ -33,29 +33,29 @@ function normalizeDisplayName(name: string) {
   return name.replace(/®|™/g, "").replace(/\s+/g, " ").trim();
 }
 
-function buildPrimingRows(): PrimingItem[] {
-  const withPrime = medicineData.filter(
-    (m) => typeof m.prime === "number" && m.prime > 0,
+function buildExpirationRows(): ExpirationItem[] {
+  const withExpire = medicineData.filter(
+    (m) => typeof m.expire === "number" && m.expire > 0,
   );
 
-  const map = new Map<string, PrimingItem>();
+  const map = new Map<string, ExpirationItem>();
 
-  for (const med of withPrime) {
+  for (const med of withExpire) {
     const displayName = normalizeDisplayName(med.name);
-    const key = `${displayName}__${med.prime}`;
+    const key = `${displayName}__${med.expire}`;
 
     const detailParts = [
       med.addToName,
+      typeof med.prime === "number" ? `${med.prime} unit priming dose` : null,
       med.unitsInPen ? `${med.unitsInPen} units/container` : null,
       med.pensAmount ? `${med.pensAmount} pens/cartridges per box` : null,
-      med.expire ? `${med.expire} day in-use expiration` : null,
     ].filter(Boolean) as string[];
 
     if (!map.has(key)) {
       map.set(key, {
         key,
         displayName,
-        prime: med.prime!,
+        expire: med.expire!,
         seoSlug: med.seoSlug,
         medicineId: med.id,
         details: detailParts.length ? [detailParts.join(" • ")] : [],
@@ -81,16 +81,16 @@ function buildPrimingRows(): PrimingItem[] {
   );
 }
 
-export default function InsulinPrimingDosesChartPage() {
-  const rows = buildPrimingRows();
+export default function InsulinExpirationChartPage() {
+  const rows = buildExpirationRows();
 
   const schema = {
     "@context": "https://schema.org",
     "@type": "MedicalWebPage",
-    name: "Insulin Priming Doses Chart",
-    url: "https://www.insulinprimingdayssupply.com/insulin-priming-doses-chart",
+    name: "Insulin Expiration Chart (After Opening)",
+    url: "https://www.insulinprimingdayssupply.com/insulin-expiration-chart",
     description:
-      "Reference chart showing priming doses for common insulin pens and related products used in pharmacy practice.",
+      "Reference chart showing in-use insulin expiration after opening for common insulin pens and vials used in pharmacy practice.",
     medicalAudience: {
       "@type": "MedicalAudience",
       audienceType: "Pharmacists",
@@ -120,7 +120,7 @@ export default function InsulinPrimingDosesChartPage() {
         <Link href="/insulin-days-supply-calculator">
           Insulin Days Supply Calculator
         </Link>{" "}
-        / <span>Insulin Priming Doses Chart</span>
+        / <span>Insulin Expiration Chart</span>
       </p>
 
       <h1
@@ -130,7 +130,7 @@ export default function InsulinPrimingDosesChartPage() {
           marginBottom: 12,
         }}
       >
-        Insulin Priming Doses Chart
+        Insulin Expiration Chart (After Opening)
       </h1>
 
       <p
@@ -143,20 +143,19 @@ export default function InsulinPrimingDosesChartPage() {
           marginBottom: "20px",
         }}
       >
-        <strong>Insulin pen priming doses</strong> are the number of units
-        injected before each dose to remove air and ensure accurate delivery.
-        Most insulin pens use a <strong>2-unit priming dose</strong>, although
-        some products such as <strong>Toujeo SoloStar</strong> require{" "}
-        <strong>3 units</strong> and
-        <strong>Humulin R U-500 KwikPen</strong> requires{" "}
-        <strong>5 units</strong>.
+        <strong>In-use insulin expiration</strong> is the number of days an
+        insulin product remains usable after opening or first use. Many common
+        insulin products expire after <strong>28 days</strong>, while some such
+        as <strong>Tresiba</strong> and <strong>Toujeo</strong> remain usable
+        for <strong>56 days</strong>. Always verify product-specific in-use
+        stability before dispensing or calculating days supply.
       </p>
 
       <p style={{ fontSize: "1.05rem", marginBottom: 12 }}>
-        This reference chart shows priming doses for common insulin pens and
-        related products. It is designed to help pharmacists and pharmacy
-        technicians quickly review priming amounts that may affect effective
-        insulin available for dosing and days supply calculations.
+        This reference chart shows in-use expiration after opening for common
+        insulin pens and vials. It is designed to help pharmacists and pharmacy
+        technicians quickly review product stability that may affect patient
+        counseling, refill timing, and days supply calculations.
       </p>
 
       <p style={{ marginBottom: 24 }}>
@@ -166,25 +165,6 @@ export default function InsulinPrimingDosesChartPage() {
         </Link>
         .
       </p>
-
-      <section
-        style={{
-          marginBottom: 32,
-          padding: 16,
-          borderRadius: 10,
-          background: "#f8fafc",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <h2 style={{ marginTop: 0, marginBottom: 12 }}>Quick answer</h2>
-        <p style={{ margin: 0 }}>
-          Most common insulin pen priming doses are <strong>2 units</strong>,
-          while some products such as <strong>Toujeo SoloStar</strong> use{" "}
-          <strong>3 units</strong> and <strong>Humulin R U-500 KwikPen</strong>{" "}
-          uses <strong>5 units</strong>. Always verify product-specific priming
-          before calculating billed days supply.
-        </p>
-      </section>
 
       <div style={{ marginBottom: 32 }}>
         <Link
@@ -205,7 +185,7 @@ export default function InsulinPrimingDosesChartPage() {
       </div>
 
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Priming dose reference table</h2>
+        <h2 style={{ marginBottom: 12 }}>Insulin expiration reference table</h2>
 
         <div style={{ overflowX: "auto" }}>
           <table
@@ -215,7 +195,6 @@ export default function InsulinPrimingDosesChartPage() {
               border: "1px solid #e5e7eb",
             }}
           >
-            <h2>Insulin Priming Doses Reference Table</h2>
             <thead>
               <tr style={{ background: "#f8fafc", textAlign: "left" }}>
                 <th
@@ -226,7 +205,7 @@ export default function InsulinPrimingDosesChartPage() {
                 <th
                   style={{ padding: "12px", borderBottom: "1px solid #e5e7eb" }}
                 >
-                  Priming Dose
+                  In-Use Expiration (Days)
                 </th>
                 <th
                   style={{ padding: "12px", borderBottom: "1px solid #e5e7eb" }}
@@ -260,7 +239,7 @@ export default function InsulinPrimingDosesChartPage() {
                       fontWeight: 700,
                     }}
                   >
-                    {row.prime} unit{row.prime === 1 ? "" : "s"}
+                    {row.expire} days
                   </td>
                   <td
                     style={{
@@ -330,18 +309,18 @@ export default function InsulinPrimingDosesChartPage() {
       </section>
 
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Why priming matters</h2>
+        <h2 style={{ marginBottom: 12 }}>Why expiration matters</h2>
 
         <p>
-          Priming removes air from insulin pens before injection and helps
-          ensure accurate dose delivery. However, those priming units are not
-          part of the therapeutic dose. Repeated priming can reduce the
-          effective insulin available for patient use.
+          Once opened or put into use, insulin products have specific stability
+          limits. Using the correct in-use expiration helps support safe patient
+          counseling and accurate dispensing decisions.
         </p>
 
         <p>
-          For pharmacists, this can affect insulin days supply calculations,
-          refill timing, and documentation during billing or audit review.
+          For pharmacists, in-use expiration can affect refill timing, product
+          waste, and practical days supply calculations, especially when pen
+          products are opened but not fully used.
         </p>
       </section>
 
@@ -352,6 +331,11 @@ export default function InsulinPrimingDosesChartPage() {
           <li>
             <Link href="/insulin-days-supply-calculator">
               Insulin Days Supply Calculator
+            </Link>
+          </li>
+          <li>
+            <Link href="/insulin-priming-doses-chart">
+              Insulin Priming Doses Chart
             </Link>
           </li>
           <li>
@@ -369,27 +353,28 @@ export default function InsulinPrimingDosesChartPage() {
               NovoLog Days Supply Calculator
             </Link>
           </li>
-          <li>
-            <Link href="/toujeo-days-supply-calculator">
-              Toujeo Days Supply Calculator
-            </Link>
-          </li>
         </ul>
       </section>
 
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Frequently Asked Questions</h2>
 
-        <h3>What is the usual insulin pen priming dose?</h3>
+        <h3>What is in-use insulin expiration?</h3>
         <p>
-          Many insulin pens use a 2-unit priming dose, but some products use a
-          different amount.
+          In-use insulin expiration is the number of days an insulin product
+          remains usable after opening or first use.
         </p>
 
-        <h3>Does priming affect days supply?</h3>
+        <h3>Do all insulin pens expire after 28 days?</h3>
         <p>
-          Yes. Priming uses insulin that is not part of the therapeutic dose, so
-          it can reduce the effective insulin available for patient use.
+          No. Many do, but some products have different in-use expiration
+          periods, such as 10, 14, 31, 42, or 56 days depending on the product.
+        </p>
+
+        <h3>Does insulin expiration affect days supply?</h3>
+        <p>
+          Yes. Even if insulin remains in the pen or vial, the product may no
+          longer be considered usable after its in-use expiration period.
         </p>
       </section>
 
@@ -398,7 +383,7 @@ export default function InsulinPrimingDosesChartPage() {
         <p>
           Always use professional judgment and follow product labeling, payer
           requirements, and store workflow requirements when determining billed
-          days supply.
+          days supply or counseling on insulin stability.
         </p>
       </section>
     </main>
