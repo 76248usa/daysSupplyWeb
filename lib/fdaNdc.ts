@@ -27,6 +27,7 @@ export type EyeDropItem = {
   route: string;
   marketingStatus: string;
   packageDescription: string;
+  bottleSizeMl: number | null;
 };
 
 export type EyeDropDrugGroup = {
@@ -41,25 +42,40 @@ function normalizeText(value?: string): string {
   return (value ?? "").trim();
 }
 
+export function extractBottleSizeMl(description: string): number | null {
+  if (!description) return null;
+
+  const match = description.match(/(\d+(?:\.\d+)?)\s*m\s*l/i);
+  if (!match) return null;
+
+  const value = Number.parseFloat(match[1]);
+  return Number.isFinite(value) ? value : null;
+}
+
 function normalizeItem(r: OpenFdaNdcResult): EyeDropItem[] {
   const packages = r.packaging ?? [];
 
-  return packages.map((pkg) => ({
-    productNdc: normalizeText(r.product_ndc),
-    packageNdc: normalizeText(pkg.package_ndc),
-    brandName: normalizeText(r.brand_name),
-    genericName: normalizeText(r.generic_name),
-    labelerName: normalizeText(r.labeler_name),
-    dosageForm: normalizeText(r.dosage_form),
-    route: Array.isArray(r.route)
-      ? r.route
-          .map((part) => normalizeText(part))
-          .filter(Boolean)
-          .join(", ")
-      : "",
-    marketingStatus: normalizeText(r.marketing_status),
-    packageDescription: normalizeText(pkg.description),
-  }));
+  return packages.map((pkg) => {
+    const packageDescription = normalizeText(pkg.description);
+
+    return {
+      productNdc: normalizeText(r.product_ndc),
+      packageNdc: normalizeText(pkg.package_ndc),
+      brandName: normalizeText(r.brand_name),
+      genericName: normalizeText(r.generic_name),
+      labelerName: normalizeText(r.labeler_name),
+      dosageForm: normalizeText(r.dosage_form),
+      route: Array.isArray(r.route)
+        ? r.route
+            .map((part) => normalizeText(part))
+            .filter(Boolean)
+            .join(", ")
+        : "",
+      marketingStatus: normalizeText(r.marketing_status),
+      packageDescription,
+      bottleSizeMl: extractBottleSizeMl(packageDescription),
+    };
+  });
 }
 
 export function slugifyDrugName(name: string): string {
@@ -116,7 +132,7 @@ export async function getEyeDropNdcData(): Promise<EyeDropItem[]> {
   const url = `https://api.fda.gov/drug/ndc.json?${params.toString()}`;
 
   const res = await fetch(url, {
-    next: { revalidate: 60 * 60 * 24 },
+    next: { revalidate: 86400 },
   });
 
   if (!res.ok) {
