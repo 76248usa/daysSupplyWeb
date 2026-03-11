@@ -115,13 +115,13 @@ export default function InsulinPrimingDosesChartPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <p style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12 }}>
         <Link href="/">Home</Link> /{" "}
         <Link href="/insulin-days-supply-calculator">
           Insulin Days Supply Calculator
         </Link>{" "}
         / <span>Insulin Priming Doses Chart</span>
-      </p>
+      </div>
 
       <h1
         style={{
@@ -133,7 +133,7 @@ export default function InsulinPrimingDosesChartPage() {
         Insulin Priming Doses Chart
       </h1>
 
-      <p
+      <div
         style={{
           fontSize: "1.05rem",
           background: "#f8fafc",
@@ -147,10 +147,9 @@ export default function InsulinPrimingDosesChartPage() {
         injected before each dose to remove air and ensure accurate delivery.
         Most insulin pens use a <strong>2-unit priming dose</strong>, although
         some products such as <strong>Toujeo SoloStar</strong> require{" "}
-        <strong>3 units</strong> and
-        <strong>Humulin R U-500 KwikPen</strong> requires{" "}
-        <strong>5 units</strong>.
-      </p>
+        <strong>3 units</strong> and <strong>Humulin R U-500 KwikPen</strong>{" "}
+        requires <strong>5 units</strong>.
+      </div>
 
       <p style={{ fontSize: "1.05rem", marginBottom: 12 }}>
         This reference chart shows priming doses for common insulin pens and
@@ -205,17 +204,27 @@ export default function InsulinPrimingDosesChartPage() {
       </div>
 
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Priming dose reference table</h2>
-
         <div style={{ overflowX: "auto" }}>
           <table
             style={{
               width: "100%",
               borderCollapse: "collapse",
-              border: "1px solid #e5e7eb",
+              border: "1px solid #ddd",
             }}
           >
-            <h2>Insulin Priming Doses Reference Table</h2>
+            <caption
+              style={{
+                captionSide: "top",
+                textAlign: "left",
+                fontSize: "1.5rem",
+                fontWeight: 700,
+                marginBottom: "16px",
+                padding: "0 0 12px 0",
+              }}
+            >
+              Insulin Priming Doses Reference Table
+            </caption>
+
             <thead>
               <tr style={{ background: "#f8fafc", textAlign: "left" }}>
                 <th
@@ -240,6 +249,7 @@ export default function InsulinPrimingDosesChartPage() {
                 </th>
               </tr>
             </thead>
+
             <tbody>
               {rows.map((row) => (
                 <tr key={row.key}>
