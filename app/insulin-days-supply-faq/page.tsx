@@ -25,6 +25,26 @@ export default function InsulinDaysSupplyFAQPage() {
         supply calculations.
       </p>
 
+      <section className="mt-12 rounded-2xl bg-slate-50 border border-slate-200 p-6">
+        <h2 className="text-xl font-semibold text-slate-900">
+          Use the insulin days supply calculator
+        </h2>
+
+        <p className="mt-2 text-slate-700">
+          Use the pharmacist-focused calculator to determine insulin days supply
+          quickly.
+        </p>
+
+        <div className="mt-4">
+          <Link
+            href="/insulin-days-supply-calculator"
+            className="inline-flex items-center rounded-xl bg-cyan-600 px-5 py-3 text-white font-semibold hover:bg-cyan-700"
+          >
+            Open Insulin Calculator
+          </Link>
+        </div>
+      </section>
+
       <section className="mt-10 space-y-8">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">
@@ -102,26 +122,6 @@ export default function InsulinDaysSupplyFAQPage() {
             </Link>
             .
           </p>
-        </div>
-      </section>
-
-      <section className="mt-12 rounded-2xl bg-slate-50 border border-slate-200 p-6">
-        <h2 className="text-xl font-semibold text-slate-900">
-          Use the insulin days supply calculator
-        </h2>
-
-        <p className="mt-2 text-slate-700">
-          Use the pharmacist-focused calculator to determine insulin days supply
-          quickly.
-        </p>
-
-        <div className="mt-4">
-          <Link
-            href="/insulin-days-supply-calculator"
-            className="inline-flex items-center rounded-xl bg-cyan-600 px-5 py-3 text-white font-semibold hover:bg-cyan-700"
-          >
-            Open Insulin Calculator
-          </Link>
         </div>
       </section>
     </main>
