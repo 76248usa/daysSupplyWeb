@@ -71,6 +71,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${base}/insulin-days-supply-faq`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
       url: `${base}/how-to-calculate-insulin-days-supply`,
       lastModified: now,
       changeFrequency: "monthly",
