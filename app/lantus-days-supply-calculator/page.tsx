@@ -253,6 +253,92 @@ export default function LantusDaysSupplyCalculatorPage() {
           ))}
         </div>
       </section>
+
+      <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Insulin Days Supply Calculators by Insulin Type
+        </h2>
+
+        <p className="mt-3 text-slate-700">
+          These pharmacist-focused pages explain how to calculate days supply
+          for specific insulin products including dosing considerations,
+          priming, and expiration limits.
+        </p>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/tresiba-days-supply-calculator"
+            className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+          >
+            <h3 className="font-semibold text-slate-900">
+              Tresiba Days Supply Calculator
+            </h3>
+            <p className="text-sm text-slate-600">
+              How to calculate Tresiba pen days supply.
+            </p>
+          </Link>
+
+          <Link
+            href="/humalog-days-supply-calculator"
+            className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+          >
+            <h3 className="font-semibold text-slate-900">
+              Humalog Days Supply Calculator
+            </h3>
+            <p className="text-sm text-slate-600">
+              Step-by-step guide for Humalog dosing calculations.
+            </p>
+          </Link>
+
+          <Link
+            href="/novolog-days-supply-calculator"
+            className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+          >
+            <h3 className="font-semibold text-slate-900">
+              NovoLog Days Supply Calculator
+            </h3>
+            <p className="text-sm text-slate-600">
+              Calculate NovoLog insulin pen days supply.
+            </p>
+          </Link>
+
+          <Link
+            href="/lantus-days-supply-calculator"
+            className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+          >
+            <h3 className="font-semibold text-slate-900">
+              Lantus Days Supply Calculator
+            </h3>
+            <p className="text-sm text-slate-600">
+              Lantus insulin dosing and days supply math.
+            </p>
+          </Link>
+
+          <Link
+            href="/toujeo-days-supply-calculator"
+            className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+          >
+            <h3 className="font-semibold text-slate-900">
+              Toujeo Days Supply Calculator
+            </h3>
+            <p className="text-sm text-slate-600">
+              Toujeo pen dosing and days supply calculation.
+            </p>
+          </Link>
+
+          <Link
+            href="/admelog-days-supply-calculator"
+            className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+          >
+            <h3 className="font-semibold text-slate-900">
+              Admelog Days Supply Calculator
+            </h3>
+            <p className="text-sm text-slate-600">
+              Calculate Admelog insulin pen days supply.
+            </p>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

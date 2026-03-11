@@ -159,6 +159,17 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </ul>
       </section>
 
+      <p className="mt-4 text-slate-700">
+        Looking for calculators for specific insulin types? Visit the{" "}
+        <Link
+          href="/insulin-calculators"
+          className="font-semibold text-cyan-700 underline underline-offset-4"
+        >
+          insulin calculators hub
+        </Link>
+        .
+      </p>
+
       <section>
         <h2 style={{ marginBottom: 12 }}>Important note</h2>
 
