@@ -94,6 +94,64 @@ export default async function EyeDropGuidePage({ params }: Props) {
           size, estimated drops per mL, and prescribed daily use.
         </p>
 
+        {group.items.length > 0 && (
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <h2 className="text-xl font-semibold text-slate-900">
+              {group.genericName} ophthalmic product overview
+            </h2>
+
+            <div className="mt-4 space-y-2 text-slate-700">
+              <p>
+                <strong>Package NDCs found:</strong> {group.items.length}
+              </p>
+
+              {group.brandNames.length > 0 && (
+                <p>
+                  <strong>Brand names:</strong> {group.brandNames.join(", ")}
+                </p>
+              )}
+
+              {group.labelerNames.length > 0 && (
+                <p>
+                  <strong>Labelers:</strong>{" "}
+                  {group.labelerNames.slice(0, 5).join(", ")}
+                  {group.labelerNames.length > 5 ? "..." : ""}
+                </p>
+              )}
+
+              <p>
+                <strong>Common bottle sizes:</strong>{" "}
+                {[
+                  ...new Set(
+                    group.items
+                      .map((item) => item.bottleSizeMl)
+                      .filter((value): value is number => value != null),
+                  ),
+                ]
+                  .sort((a, b) => a - b)
+                  .map((value) => `${value} mL`)
+                  .join(", ") || "Not available"}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={`/eye-drops-ndc-reference/${group.slug}`}
+            className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
+          >
+            {group.genericName} NDC Reference
+          </Link>
+
+          <Link
+            href="/how-to-calculate-eye-drop-days-supply"
+            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            General Eye Drop Guide
+          </Link>
+        </div> */}
+
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href={`/eye-drops-ndc-reference/${group.slug}`}
@@ -107,6 +165,13 @@ export default async function EyeDropGuidePage({ params }: Props) {
             className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             General Eye Drop Guide
+          </Link>
+
+          <Link
+            href="/eye-drops-days-supply-calculator"
+            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Eye Drops Calculator
           </Link>
         </div>
       </section>
