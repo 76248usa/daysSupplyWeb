@@ -106,7 +106,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
           marginBottom: 12,
         }}
       >
-        Insulin Days Supply Calculator
+        Insulin Days Supply Calculator | Includes Priming & Expiration
       </h1>
 
       <p style={{ fontSize: "1.05rem", marginBottom: 12 }}>
@@ -214,6 +214,19 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </Link>
         .
       </p>
+
+      <section style={{ marginTop: 40 }}>
+        <h2>More Pharmacy Calculators</h2>
+
+        <p>
+          Looking for additional dispensing tools? Visit the{" "}
+          <Link href="/days-supply-calculators">
+            pharmacy days supply calculators hub
+          </Link>{" "}
+          to explore insulin calculators, ophthalmic calculators, and dispensing
+          guides.
+        </p>
+      </section>
 
       <section style={{ marginTop: 32, marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Important note</h2>
