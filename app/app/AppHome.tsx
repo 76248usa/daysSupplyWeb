@@ -15,6 +15,13 @@ const TRIAL_LINE = "Start 30-day free trial — $10/year after. Cancel anytime."
 const RECENT_KEY = "ds_recent_checkout_ts";
 const RECENT_MS = 10 * 60 * 1000; // 10 minutes
 
+export const metadata = {
+  alternates: {
+    canonical:
+      "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
+  },
+};
+
 function hasRecentCheckout(): boolean {
   if (typeof window === "undefined") return false;
   const raw = window.sessionStorage.getItem(RECENT_KEY);

@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Insulin Calculators for Pharmacists",
+  title: "Insulin Days Supply Calculator | Includes Priming & Expiration",
   description:
-    "Collection of pharmacist-focused insulin days supply calculators including Tresiba, Humalog, NovoLog, Lantus, Toujeo, and Admelog.",
+    "Professional insulin days supply calculator for pharmacists. Calculate insulin pen and vial days supply including priming doses and expiration limits for accurate dispensing and billing.",
   alternates: {
-    canonical: "https://www.insulinprimingdayssupply.com/insulin-calculators",
+    canonical:
+      "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
   },
 };
 
