@@ -123,7 +123,7 @@ export async function getEyeDropNdcData(): Promise<EyeDropItem[]> {
   const params = new URLSearchParams();
 
   params.set("search", 'route:"OPHTHALMIC"');
-  params.set("limit", "100");
+  params.set("limit", "500");
 
   if (apiKey) {
     params.set("api_key", apiKey);
