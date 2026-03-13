@@ -34,6 +34,25 @@ export default function Page() {
           }),
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "Insulin Days Supply Calculator",
+            applicationCategory: "MedicalApplication",
+            operatingSystem: "Web",
+            url: "https://www.insulinprimingdayssupply.com",
+            description:
+              "Professional insulin days supply calculator for pharmacists including priming doses.",
+            creator: {
+              "@type": "Organization",
+              name: "Insulin Days Supply Tools",
+            },
+          }),
+        }}
+      />
       <AppHome />
     </Suspense>
   );
