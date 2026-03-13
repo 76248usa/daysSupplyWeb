@@ -120,29 +120,43 @@ function dedupeEyeDropItems(items: EyeDropItem[]): EyeDropItem[] {
 
 export async function getEyeDropNdcData(): Promise<EyeDropItem[]> {
   const apiKey = process.env.OPENFDA_API_KEY;
-  const params = new URLSearchParams();
 
-  params.set("search", 'route:"OPHTHALMIC"');
-  params.set("limit", "500");
+  // Smaller chunk size keeps each cached response under Next.js cache limits.
+  const limit = 200;
+  const maxPages = 5; // 200 x 5 = up to 1000 records total
 
-  if (apiKey) {
-    params.set("api_key", apiKey);
+  async function fetchPage(skip: number): Promise<OpenFdaNdcResult[]> {
+    const params = new URLSearchParams();
+
+    params.set("search", 'route:"OPHTHALMIC"');
+    params.set("limit", String(limit));
+    params.set("skip", String(skip));
+
+    if (apiKey) {
+      params.set("api_key", apiKey);
+    }
+
+    const url = `https://api.fda.gov/drug/ndc.json?${params.toString()}`;
+
+    const res = await fetch(url, {
+      next: { revalidate: 86400 },
+    });
+
+    if (!res.ok) {
+      throw new Error(`openFDA request failed: ${res.status}`);
+    }
+
+    const json = (await res.json()) as { results?: OpenFdaNdcResult[] };
+    return json.results ?? [];
   }
 
-  const url = `https://api.fda.gov/drug/ndc.json?${params.toString()}`;
+  const pageResults = await Promise.all(
+    Array.from({ length: maxPages }, (_, i) => fetchPage(i * limit)),
+  );
 
-  const res = await fetch(url, {
-    next: { revalidate: 86400 },
-  });
-
-  if (!res.ok) {
-    throw new Error(`openFDA request failed: ${res.status}`);
-  }
-
-  const json = (await res.json()) as { results?: OpenFdaNdcResult[] };
-  const results = json.results ?? [];
-
-  const flattened = dedupeEyeDropItems(results.flatMap(normalizeItem));
+  const flattened = dedupeEyeDropItems(
+    pageResults.flat().flatMap(normalizeItem),
+  );
 
   return flattened
     .filter((item) => {
