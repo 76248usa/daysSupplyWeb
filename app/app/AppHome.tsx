@@ -563,42 +563,23 @@ export default function AppHome() {
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {filtered.map((m) =>
-                canOpenDetails ? (
-                  <Link
-                    key={m.id}
-                    href={`/app/medicine/${m.id}`}
-                    className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800`}
-                  >
-                    <div className="text-lg font-bold tracking-tight text-slate-900">
-                      {m.name}
+              {filtered.map((m) => (
+                <Link
+                  key={m.id}
+                  href={`/app/medicine/${m.id}`}
+                  className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800`}
+                >
+                  <div className="text-lg font-bold tracking-tight text-slate-900">
+                    {m.name}
+                  </div>
+
+                  {m.addToName ? (
+                    <div className="mt-0.5 text-sm font-medium text-slate-600">
+                      {m.addToName}
                     </div>
-                    {m.addToName ? (
-                      <div className="mt-0.5 text-sm font-medium text-slate-600">
-                        {m.addToName}
-                      </div>
-                    ) : null}
-                  </Link>
-                // ) : (
-                //   <Link
-                //     key={m.id}
-                //     href="/app/upgrade"
-                //     className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
-                //   >
-                //     <div className="text-lg font-bold tracking-tight text-slate-900">
-                //       {m.name}
-                //     </div>
-                //     {m.addToName ? (
-                //       <div className="mt-0.5 text-sm font-medium text-slate-600">
-                //         {m.addToName}
-                //       </div>
-                //     ) : null}
-                //     <div className="mt-2 text-xs text-amber-700">
-                //       Start trial to calculate
-                //     </div>
-                //   </Link>
-                // ),
-              )}
+                  ) : null}
+                </Link>
+              ))}
             </div>
           </section>
 
