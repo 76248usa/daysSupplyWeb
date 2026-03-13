@@ -9,18 +9,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
 import InstallCalculatorCard from "@/components/InstallCalculatorCard";
+import { ShieldCheck } from "lucide-react";
 
 const TRIAL_LINE = "Start 30-day free trial — $10/year after. Cancel anytime.";
 
 const RECENT_KEY = "ds_recent_checkout_ts";
 const RECENT_MS = 10 * 60 * 1000; // 10 minutes
-
-export const metadata = {
-  alternates: {
-    canonical:
-      "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
-  },
-};
 
 function hasRecentCheckout(): boolean {
   if (typeof window === "undefined") return false;
@@ -78,7 +72,7 @@ export default function AppHome() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const checkout = searchParams.get("checkout"); // success/cancel/null
+  const checkout = searchParams.get("checkout");
 
   const { effectiveIsPro, isLoading, status, refreshWithRetry } = usePro();
 
@@ -86,18 +80,16 @@ export default function AppHome() {
 
   const AUTH_DISABLED = process.env.NEXT_PUBLIC_AUTH_DISABLED === "1";
 
-  // Stripe billing portal
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
-  // Subscription confidence (from /api/pro-status)
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
   const [trialEndsInDays, setTrialEndsInDays] = useState<number | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
-  // Header menu
   const [menuOpen, setMenuOpen] = useState(false);
+
   function closeMenu() {
     setMenuOpen(false);
   }
@@ -106,6 +98,7 @@ export default function AppHome() {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setMenuOpen(false);
     }
+
     function onClickOutside(e: MouseEvent) {
       const t = e.target as HTMLElement | null;
       if (!t) return;
@@ -337,20 +330,20 @@ export default function AppHome() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
     >
-      <main className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto max-w-2xl p-6">
+      <main className="min-h-screen bg-white text-slate-900">
+        <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="flex items-center justify-end gap-3">
             {showManageBilling ? (
               <div className="flex flex-col items-end gap-1">
                 <button
                   onClick={openBillingPortal}
                   disabled={portalLoading}
-                  className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-60 disabled:hover:bg-slate-900`}
+                  className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60`}
                 >
                   {portalLoading ? "Opening billing…" : "Manage billing"}
                 </button>
                 {portalError ? (
-                  <div className="text-[11px] text-rose-300">{portalError}</div>
+                  <div className="text-[11px] text-rose-700">{portalError}</div>
                 ) : null}
               </div>
             ) : null}
@@ -358,7 +351,7 @@ export default function AppHome() {
             {!AUTH_DISABLED && status !== "no_user" ? (
               <button
                 onClick={signOut}
-                className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800`}
+                className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50`}
               >
                 Sign out
               </button>
@@ -371,7 +364,7 @@ export default function AppHome() {
                 aria-label="More"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
-                className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800`}
+                className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50`}
               >
                 ⋯
               </button>
@@ -379,13 +372,13 @@ export default function AppHome() {
               {menuOpen ? (
                 <div
                   role="menu"
-                  className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-xl"
+                  className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg"
                 >
                   <Link
                     href="/terms"
                     onClick={closeMenu}
                     role="menuitem"
-                    className={`${PRESS} block px-4 py-3 text-sm text-slate-200 hover:bg-slate-900`}
+                    className={`${PRESS} block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50`}
                   >
                     Terms
                   </Link>
@@ -394,7 +387,7 @@ export default function AppHome() {
                     href="/privacy"
                     onClick={closeMenu}
                     role="menuitem"
-                    className={`${PRESS} block px-4 py-3 text-sm text-slate-200 hover:bg-slate-900`}
+                    className={`${PRESS} block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50`}
                   >
                     Privacy
                   </Link>
@@ -409,7 +402,7 @@ export default function AppHome() {
                       });
                     }}
                     role="menuitem"
-                    className={`${PRESS} w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-slate-900`}
+                    className={`${PRESS} w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50`}
                   >
                     Disclaimer
                   </button>
@@ -418,189 +411,232 @@ export default function AppHome() {
             </div>
           </div>
 
-          <h1 className="mt-3 text-2xl font-extrabold text-center">
-            Insulin Days Supply Calculator with Priming
-          </h1>
+          <section className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+              Pharmacist Tool
+            </p>
 
-          <p className="text-center text-slate-300 mt-2">
-            Professional insulin day-supply calculations with priming and
-            expiration logic.
-          </p>
+            <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+              Insulin Days Supply Calculator with Priming
+            </h1>
 
-          <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="text-sm text-slate-200 font-semibold">
-                {AUTH_DISABLED
-                  ? "Pro is enabled in development mode."
-                  : TRIAL_LINE}
-                <div className="text-xs text-slate-400 mt-1">
-                  {AUTH_DISABLED
-                    ? "Checkout is disabled while auth is disabled."
-                    : "Secure checkout via Stripe • Cancel anytime"}
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
+              Professional insulin day-supply calculations with priming and
+              expiration logic.
+            </p>
+
+            {/* Professional Access Banner */}
+            <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <div className="flex items-start gap-3">
+                {/* <div className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500"></div> */}
+                <ShieldCheck className="h-5 w-5 text-emerald-600 mt-0.5" />
+
+                <div className="text-sm text-slate-700 leading-relaxed">
+                  <span className="font-semibold text-slate-900">
+                    Free for Pharmacists, Pharmacy Technicians and other
+                    Healthcare Professionals.
+                  </span>{" "}
+                  {/* during the launch period while additional pharmacy workflow
+                  tools are being developed. */}
+                  <div className="text-xs text-slate-500 mt-1">
+                    Designed to support accurate day-supply calculations in
+                    pharmacy workflow.
+                  </div>
                 </div>
-
-                {showAlreadyProSignIn ? (
-                  <div className="mt-2 text-xs">
-                    <Link
-                      href={`/login?next=${encodeURIComponent("/app")}`}
-                      className={`${PRESS} inline-flex text-cyan-400 hover:brightness-110 text-sm font-semibold underline underline-offset-4`}
-                    >
-                      Already Pro? Sign in
-                    </Link>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="sm:text-right flex flex-col items-end gap-2">
-                {isLoading ? (
-                  <div className="text-xs text-slate-400">Checking…</div>
-                ) : effectiveIsPro ? (
-                  <div className="inline-flex flex-col items-start rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2">
-                    <div className="text-emerald-200 text-xs font-semibold">
-                      Pro active ✓
-                    </div>
-                    <div className="mt-0.5 text-[11px] text-emerald-100/80">
-                      {proConfidenceLine}
-                    </div>
-                  </div>
-                ) : activating ? (
-                  <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
-                    Activating…
-                  </div>
-                ) : AUTH_DISABLED ? (
-                  <div className="inline-flex items-center rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-slate-200 text-xs font-semibold">
-                    Checkout disabled (dev)
-                  </div>
-                ) : (
-                  <button
-                    onClick={async () => {
-                      const { data } = await supabaseBrowser.auth.getSession();
-                      const token = data.session?.access_token;
-
-                      if (!token) {
-                        window.location.href = `/login?next=${encodeURIComponent(
-                          "/app/upgrade",
-                        )}`;
-                        return;
-                      }
-
-                      window.location.href = "/app/upgrade";
-                    }}
-                    className={`${PRESS} inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2 text-sm font-extrabold text-slate-900 hover:brightness-110`}
-                  >
-                    Start Free Trial
-                  </button>
-                )}
-
-                {!AUTH_DISABLED &&
-                status !== "no_user" &&
-                !effectiveIsPro &&
-                !activating ? (
-                  <button
-                    onClick={() =>
-                      refreshWithRetry({ attempts: 10, delayMs: 1200 }).catch(
-                        () => {},
-                      )
-                    }
-                    className={`${PRESS} rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-[11px] text-slate-300 hover:bg-slate-800`}
-                  >
-                    Refresh Pro status
-                  </button>
-                ) : null}
               </div>
             </div>
-          </div>
 
-          <InstallCalculatorCard appName="Insulin Calculator" />
+            {/*             
 
-          <div className="mt-5 relative">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"
-            />
-            <input
-              id="insulin-search"
-              className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-3 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="Search insulin name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {filtered.map((m) =>
-              canOpenDetails ? (
-                <Link
-                  key={m.id}
-                  href={`/app/medicine/${m.id}`}
-                  className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800`}
-                >
-                  <div className="text-lg font-bold tracking-tight text-white">
-                    {m.name}
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm font-semibold text-slate-900">
+                  {AUTH_DISABLED
+                    ? "Pro is enabled in development mode."
+                    : TRIAL_LINE}
+                  <div className="mt-1 text-xs text-slate-500">
+                    {AUTH_DISABLED
+                      ? "Checkout is disabled while auth is disabled."
+                      : "Secure checkout via Stripe • Cancel anytime"}
                   </div>
-                  {m.addToName ? (
-                    <div className="mt-0.5 text-base font-semibold text-white">
-                      {m.addToName}
+
+                  {showAlreadyProSignIn ? (
+                    <div className="mt-2 text-xs">
+                      <Link
+                        href={`/login?next=${encodeURIComponent("/app")}`}
+                        className={`${PRESS} inline-flex text-sm font-semibold text-cyan-700 underline underline-offset-4 hover:text-cyan-800`}
+                      >
+                        Already Pro? Sign in
+                      </Link>
                     </div>
                   ) : null}
-                </Link>
-              ) : (
-                <Link
-                  key={m.id}
-                  href="/app/upgrade"
-                  className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800 opacity-75`}
-                >
-                  <div className="text-lg font-bold tracking-tight text-white">
-                    {m.name}
-                  </div>
-                  {m.addToName ? (
-                    <div className="mt-0.5 text-base font-semibold text-white">
-                      {m.addToName}
+                </div>
+
+                <div className="flex flex-col items-start gap-2 sm:items-end">
+                  {isLoading ? (
+                    <div className="text-xs text-slate-500">Checking…</div>
+                  ) : effectiveIsPro ? (
+                    <div className="inline-flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                      <div className="text-xs font-semibold text-emerald-800">
+                        Pro active ✓
+                      </div>
+                      <div className="mt-0.5 text-[11px] text-emerald-700">
+                        {proConfidenceLine}
+                      </div>
                     </div>
+                  ) : activating ? (
+                    <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                      Activating…
+                    </div>
+                  ) : AUTH_DISABLED ? (
+                    <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                      Checkout disabled (dev)
+                    </div>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const { data } =
+                          await supabaseBrowser.auth.getSession();
+                        const token = data.session?.access_token;
+
+                        if (!token) {
+                          window.location.href = `/login?next=${encodeURIComponent(
+                            "/app/upgrade",
+                          )}`;
+                          return;
+                        }
+
+                        window.location.href = "/app/upgrade";
+                      }}
+                      className={`${PRESS} inline-flex items-center justify-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700`}
+                    >
+                      Start Free Trial
+                    </button>
+                  )}
+
+                  {!AUTH_DISABLED &&
+                  status !== "no_user" &&
+                  !effectiveIsPro &&
+                  !activating ? (
+                    <button
+                      onClick={() =>
+                        refreshWithRetry({ attempts: 10, delayMs: 1200 }).catch(
+                          () => {},
+                        )
+                      }
+                      className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50`}
+                    >
+                      Refresh Pro status
+                    </button>
                   ) : null}
-                  <div className="mt-2 text-xs text-amber-200">
-                    Start trial to calculate
-                  </div>
-                </Link>
-              ),
-            )}
+                </div>
+              </div>
+            </div> */}
+          </section>
+
+          <div className="mt-6">
+            <InstallCalculatorCard appName="Insulin Calculator" />
           </div>
+
+          <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Search insulin products
+            </h2>
+
+            <p className="mt-3 text-slate-700">
+              Select an insulin product to open the calculator and estimate days
+              supply using product-specific priming and expiration logic.
+            </p>
+
+            <div className="mt-5 relative">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                id="insulin-search"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                placeholder="Search insulin name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {filtered.map((m) =>
+                canOpenDetails ? (
+                  <Link
+                    key={m.id}
+                    href={`/app/medicine/${m.id}`}
+                    className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
+                  >
+                    <div className="text-lg font-bold tracking-tight text-slate-900">
+                      {m.name}
+                    </div>
+                    {m.addToName ? (
+                      <div className="mt-0.5 text-sm font-medium text-slate-600">
+                        {m.addToName}
+                      </div>
+                    ) : null}
+                  </Link>
+                ) : (
+                  <Link
+                    key={m.id}
+                    href="/app/upgrade"
+                    className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
+                  >
+                    <div className="text-lg font-bold tracking-tight text-slate-900">
+                      {m.name}
+                    </div>
+                    {m.addToName ? (
+                      <div className="mt-0.5 text-sm font-medium text-slate-600">
+                        {m.addToName}
+                      </div>
+                    ) : null}
+                    <div className="mt-2 text-xs text-amber-700">
+                      Start trial to calculate
+                    </div>
+                  </Link>
+                ),
+              )}
+            </div>
+          </section>
 
           <div
             id="disclaimer"
-            className="mt-6 text-center text-xs text-slate-400 max-w-xl mx-auto"
+            className="mx-auto mt-8 max-w-3xl rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800 shadow-sm"
           >
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-              <p className="font-semibold text-slate-200">
-                Professional Use Notice
-              </p>
-              <p className="mt-3 text-slate-400">
-                This calculator is intended for licensed healthcare
-                professionals. It provides insulin day-supply estimates based on
-                user-entered dosing information, product characteristics,
-                priming assumptions, and expiration limits.
-              </p>
-              <p className="mt-3 text-slate-400">
-                Results are provided for clinical support only and do not
-                replace independent professional judgment. Users must verify all
-                calculations against the prescription, manufacturer labeling,
-                payer requirements, and applicable regulations.
-              </p>
-              <p className="mt-3 text-slate-400">
-                By using this tool, users acknowledge that final responsibility
-                for prescription verification and documentation remains with the
-                dispensing professional.
-              </p>
-              <p className="mt-3 text-slate-400">
-                This software is independently developed, not affiliated with
-                any pharmaceutical manufacturer, does not provide medical
-                advice, and is not intended for patient use.
-              </p>
-              <p className="mt-4 text-slate-500">
-                We do not sell user information.
-              </p>
+            <p className="font-semibold text-amber-900">
+              Professional Use Notice
+            </p>
+            <p className="mt-3">
+              This calculator is intended for licensed healthcare professionals.
+              It provides insulin day-supply estimates based on user-entered
+              dosing information, product characteristics, priming assumptions,
+              and expiration limits.
+            </p>
+            <p className="mt-3">
+              Results are provided for clinical support only and do not replace
+              independent professional judgment. Users must verify all
+              calculations against the prescription, manufacturer labeling,
+              payer requirements, and applicable regulations.
+            </p>
+            <p className="mt-3">
+              By using this tool, users acknowledge that final responsibility
+              for prescription verification and documentation remains with the
+              dispensing professional.
+            </p>
+            <p className="mt-3">
+              This software is independently developed, not affiliated with any
+              pharmaceutical manufacturer, does not provide medical advice, and
+              is not intended for patient use.
+            </p>
+            <p className="mt-4 text-amber-700">
+              We do not sell user information.
+            </p>
+            <p className="mt-2 text-amber-700">
               Support: support@insulinprimingdayssupply.com
-            </div>
+            </p>
           </div>
         </div>
       </main>

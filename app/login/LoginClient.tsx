@@ -152,8 +152,6 @@ export default function LoginClient() {
       if (data.session?.access_token) {
         const result = await refreshWithRetry({ attempts: 6, delayMs: 800 });
 
-        // Only auto-redirect if already Pro.
-        // If signed in but not Pro, stay on this page so the user can switch accounts.
         if (result.isPro) {
           router.replace("/app");
           return;
@@ -263,9 +261,14 @@ export default function LoginClient() {
 
   if (AUTH_DISABLED || !checkedSession) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto max-w-md p-6 text-center text-slate-300">
-          Redirecting…
+      <main className="min-h-screen bg-white text-slate-900">
+        <div className="mx-auto max-w-3xl px-4 py-10 text-center sm:px-6 lg:px-8">
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h1 className="text-2xl font-bold text-slate-900">Redirecting…</h1>
+            <p className="mt-3 text-slate-600">
+              Please wait while we continue.
+            </p>
+          </section>
         </div>
       </main>
     );
@@ -278,129 +281,172 @@ export default function LoginClient() {
   const nextLabel = niceNextLabel(nextUrl);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-md p-6">
-        <h1 className="text-2xl font-extrabold text-center">
-          Sign in with email code
-        </h1>
-        <p className="text-center text-slate-300 mt-2 text-sm">
-          Enter your email and we’ll send you a 6-digit sign-in code.
-        </p>
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+            Pharmacist Sign In
+          </p>
 
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          {currentEmail && !effectiveIsPro ? (
-            <div className="mb-4 rounded-xl border border-amber-900/40 bg-amber-900/20 p-3 text-sm text-amber-200">
-              Signed in as <strong>{currentEmail}</strong>.
-              <div className="mt-2">
-                <button
-                  onClick={signOutCurrentUser}
-                  className="rounded-lg border border-amber-700 px-3 py-2 text-xs font-semibold hover:bg-amber-900/30"
+          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            Sign in with email code
+          </h1>
+
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
+            Enter your email and we’ll send you a 6-digit sign-in code.
+          </p>
+        </section>
+
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            {currentEmail && !effectiveIsPro ? (
+              <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Signed in as <strong>{currentEmail}</strong>.
+                <div className="mt-3">
+                  <button
+                    onClick={signOutCurrentUser}
+                    className="rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
+                  >
+                    Sign out and use a different email
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <label className="block text-sm font-semibold text-slate-900">
+              Email
+            </label>
+
+            <input
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              placeholder="you@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+              disabled={
+                sending || verifying || codeSent || Boolean(currentEmail)
+              }
+            />
+
+            {!codeSent ? (
+              <button
+                onClick={sendCode}
+                disabled={sending || Boolean(currentEmail)}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white transition hover:bg-cyan-700 disabled:opacity-60"
+              >
+                {sending ? "Sending…" : "Send sign-in code"}
+              </button>
+            ) : (
+              <>
+                <label className="mt-6 block text-sm font-semibold text-slate-900">
+                  6-digit code
+                </label>
+
+                <div
+                  className="mt-3 flex justify-between gap-2"
+                  onPaste={handleCodePaste}
                 >
-                  Sign out and use a different email
+                  {code.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => {
+                        codeRefs.current[index] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete={index === 0 ? "one-time-code" : "off"}
+                      maxLength={1}
+                      value={digit}
+                      disabled={verifying}
+                      onChange={(e) => updateCodeDigit(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                      className="h-14 w-12 rounded-xl border border-slate-300 bg-white text-center text-xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={verifyCode}
+                  disabled={verifying}
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white transition hover:bg-cyan-700 disabled:opacity-60"
+                >
+                  {verifying ? "Signing in…" : "Verify code and sign in"}
                 </button>
-              </div>
+
+                <button
+                  onClick={() => {
+                    setCode(["", "", "", "", "", ""]);
+                    setCodeSent(false);
+                    setError(null);
+                  }}
+                  disabled={verifying}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Use a different email
+                </button>
+              </>
+            )}
+
+            <div className="mt-4 text-center text-sm text-slate-600">
+              Continue to{" "}
+              <span className="font-semibold text-slate-900">{nextLabel}</span>{" "}
+              after signing in.
             </div>
-          ) : null}
 
-          <label className="block text-xs font-semibold text-slate-300 mb-2">
-            Email
-          </label>
-
-          <input
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            placeholder="you@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            inputMode="email"
-            disabled={sending || verifying || codeSent || Boolean(currentEmail)}
-          />
-
-          {!codeSent ? (
-            <button
-              onClick={sendCode}
-              disabled={sending || Boolean(currentEmail)}
-              className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
-            >
-              {sending ? "Sending…" : "Send sign-in code"}
-            </button>
-          ) : (
-            <>
-              <label className="block text-xs font-semibold text-slate-300 mt-5 mb-2">
-                6-digit code
-              </label>
-
-              <div
-                className="mt-1 flex justify-between gap-2"
-                onPaste={handleCodePaste}
-              >
-                {code.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={(el) => {
-                      codeRefs.current[index] = el;
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete={index === 0 ? "one-time-code" : "off"}
-                    maxLength={1}
-                    value={digit}
-                    disabled={verifying}
-                    onChange={(e) => updateCodeDigit(index, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                    className="h-14 w-12 rounded-xl border border-slate-800 bg-slate-950 text-center text-xl font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                  />
-                ))}
+            {codeSent ? (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                Code sent — check your email and enter the 6-digit code above.
               </div>
+            ) : null}
 
-              <button
-                onClick={verifyCode}
-                disabled={verifying}
-                className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
+            {error ? (
+              <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="mt-5 text-center">
+              <Link
+                href="/app"
+                className="text-sm font-semibold text-cyan-700 underline underline-offset-4 hover:text-cyan-800"
               >
-                {verifying ? "Signing in…" : "Verify code and sign in"}
-              </button>
-
-              <button
-                onClick={() => {
-                  setCode(["", "", "", "", "", ""]);
-                  setCodeSent(false);
-                  setError(null);
-                }}
-                disabled={verifying}
-                className="mt-3 w-full rounded-xl border border-slate-700 px-4 py-3 text-center font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-60"
-              >
-                Use a different email
-              </button>
-            </>
-          )}
-
-          <div className="mt-3 text-center text-xs text-slate-400">
-            Continue to <span className="text-slate-200">{nextLabel}</span>{" "}
-            after signing in.
+                Back to App
+              </Link>
+            </div>
           </div>
 
-          {codeSent ? (
-            <div className="mt-4 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
-              Code sent — check your email and enter the 6-digit code above.
-            </div>
-          ) : null}
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <h2 className="text-xl font-bold text-slate-900">
+                Why email-code sign in?
+              </h2>
 
-          {error ? (
-            <div className="mt-4 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
-              {error}
-            </div>
-          ) : null}
+              <div className="mt-4 space-y-3 text-sm text-slate-700">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  No password to remember
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  Better mobile workflow
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  Faster access to calculators
+                </div>
+              </div>
+            </section>
 
-          <div className="mt-4 text-center">
-            <Link
-              href="/app"
-              className="text-xs text-slate-400 hover:text-slate-200 underline underline-offset-4"
-            >
-              Back to App
-            </Link>
+            <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6">
+              <h2 className="text-xl font-bold text-amber-900">
+                Professional access note
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-amber-800">
+                Sign in is used to connect your subscription status to your
+                account so you can access pharmacist tools consistently across
+                sessions.
+              </p>
+            </section>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );

@@ -16,7 +16,6 @@ export default function PricingPage() {
   }
 
   function isValidEmail(e: string) {
-    // lightweight validation (enough for UI)
     return e.includes("@") && e.includes(".") && e.length >= 6;
   }
 
@@ -45,7 +44,6 @@ export default function PricingPage() {
       }
 
       if (json?.url) {
-        // ✅ MUST be client-side (browser)
         localStorage.setItem("ds_email", e);
         localStorage.setItem(
           "ds_last_checkout_started_at",
@@ -63,63 +61,89 @@ export default function PricingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-lg p-6">
-        <div className="flex items-center justify-between">
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-3">
           <Link
             href="/app"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             ← Back
           </Link>
 
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-500">
             Secure checkout via Stripe
           </div>
         </div>
 
-        <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-center">
-          Professional Access
-        </h1>
-        <p className="mt-2 text-center text-slate-300">
-          Unlimited calculations for insulin day-supply (including priming and
-          expiration), plus eye and ear drops tools.
-        </p>
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+            Pharmacist Subscription
+          </p>
 
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-slate-300">
-              🔒
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Professional Access
+          </h1>
+
+          <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
+            Unlimited calculations for insulin day-supply, including priming and
+            expiration logic, plus eye and ear drops tools.
+          </p>
+        </section>
+
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Pro Subscription
+            </h2>
+
+            <p className="mt-3 text-slate-700">{PLAN_LINE}</p>
+
+            <div className="mt-6 rounded-2xl border border-cyan-100 bg-cyan-50 p-5">
+              <div className="text-sm font-medium text-slate-600">Price</div>
+              <div className="mt-1 text-4xl font-black text-slate-900">
+                $10
+                <span className="text-base font-semibold text-slate-500">
+                  {" "}
+                  / year
+                </span>
+              </div>
+              <div className="mt-2 text-sm text-slate-600">
+                1-month free trial • Cancel anytime
+              </div>
             </div>
 
-            <div className="flex-1">
-              <div className="text-lg font-extrabold text-slate-100">
-                Pro Subscription
-              </div>
-              <div className="mt-1 text-sm text-slate-300">{PLAN_LINE}</div>
-
-              <div className="mt-4">
-                <div className="text-4xl font-black text-center">
-                  $10
-                  <span className="text-base font-semibold text-slate-400">
-                    {" "}
-                    / year
-                  </span>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[
+                "Unlimited insulin calculations",
+                "Priming-aware dose adjustments",
+                "Expiration-based day caps",
+                "Supports consistent, audit-ready documentation",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700"
+                >
+                  {item}
                 </div>
-                <div className="text-center text-xs text-slate-400 mt-2">
-                  1-month free trial • Cancel anytime
-                </div>
-              </div>
+              ))}
+            </div>
 
-              <ul className="mt-6 space-y-2 text-sm text-slate-300">
-                <li>• Unlimited insulin calculations</li>
-                <li>• Priming-aware dose adjustments</li>
-                <li>• Expiration-based day caps</li>
-                <li>• Supports consistent, audit-ready documentation</li>
-              </ul>
+            <div className="mt-6 grid grid-cols-1 gap-2 text-sm text-slate-600">
+              <div>• Trial: 1 month</div>
+              <div>• Then: $10/year auto-renewing</div>
+              <div>• Cancel anytime</div>
+            </div>
+          </div>
 
-              <div className="mt-6 grid gap-3">
-                <label className="text-xs font-semibold text-slate-300">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <h2 className="text-xl font-bold text-slate-900">
+                Start your trial
+              </h2>
+
+              <div className="mt-5 grid gap-3">
+                <label className="text-sm font-semibold text-slate-900">
                   Email address
                 </label>
 
@@ -128,7 +152,7 @@ export default function PricingPage() {
                     ✉️
                   </span>
                   <input
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-11 pr-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     placeholder="you@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -141,7 +165,7 @@ export default function PricingPage() {
                 </div>
 
                 {error ? (
-                  <div className="rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                     {error}
                   </div>
                 ) : null}
@@ -150,10 +174,10 @@ export default function PricingPage() {
                   onClick={startTrial}
                   disabled={loading}
                   className={[
-                    "w-full rounded-xl px-4 py-3 text-center font-extrabold transition",
+                    "inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-base font-bold transition",
                     loading
-                      ? "bg-slate-700 text-slate-200 cursor-not-allowed"
-                      : "bg-cyan-400 text-slate-900 hover:brightness-110",
+                      ? "cursor-not-allowed bg-slate-200 text-slate-500"
+                      : "bg-cyan-600 text-white hover:bg-cyan-700",
                   ].join(" ")}
                 >
                   {loading
@@ -161,57 +185,51 @@ export default function PricingPage() {
                     : "Start Professional Trial"}
                 </button>
 
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   A payment method is required to start the trial. You won’t be
                   charged until the trial ends. Cancel anytime in the Stripe
                   billing portal.
                 </p>
-
-                <div className="mt-3 rounded-xl border border-amber-700/40 bg-amber-900/20 p-3 text-xs text-amber-200">
-                  <div className="font-semibold">Professional Use Notice</div>
-                  <div className="mt-1">
-                    This calculator is intended for licensed healthcare
-                    professionals. Results are provided as a clinical support
-                    tool only and do not replace professional judgment. Users
-                    are responsible for verifying calculations against the
-                    prescription, manufacturer labeling, payer requirements, and
-                    applicable regulations. This service does not sell,
-                    dispense, or distribute medication.
-                  </div>
-                </div>
-
-                <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/30 p-3 text-xs text-slate-300">
-                  <div className="font-semibold text-slate-200">
-                    Credibility
-                  </div>
-                  <div className="mt-1 text-slate-400">
-                    Built to standardize priming calculations and reduce manual
-                    math errors in day-supply documentation.
-                  </div>
-                  <div className="mt-2 space-y-1 text-slate-400">
-                    <div>• Priming + expiration logic included</div>
-                    <div>• Designed for pharmacy workflows</div>
-                    <div>• No user data is sold</div>
-                  </div>
-                </div>
               </div>
-            </div>
-          </div>
+            </section>
 
-          <div className="mt-5 grid grid-cols-1 gap-2 text-xs text-slate-400">
-            <div>• Trial: 1 month</div>
-            <div>• Then: $10/year auto-renewing</div>
-            <div>• Cancel anytime</div>
-          </div>
-        </div>
+            <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6">
+              <h2 className="text-xl font-bold text-amber-900">
+                Professional Use Notice
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-amber-800">
+                This calculator is intended for licensed healthcare
+                professionals. Results are provided as a clinical support tool
+                only and do not replace professional judgment. Users are
+                responsible for verifying calculations against the prescription,
+                manufacturer labeling, payer requirements, and applicable
+                regulations. This service does not sell, dispense, or distribute
+                medication.
+              </p>
+            </section>
 
-        <div className="mt-6 text-center text-xs text-slate-500">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-900">Credibility</h2>
+              <div className="mt-3 text-sm text-slate-700">
+                Built to standardize priming calculations and reduce manual math
+                errors in day-supply documentation.
+              </div>
+              <div className="mt-4 space-y-2 text-sm text-slate-600">
+                <div>• Priming + expiration logic included</div>
+                <div>• Designed for pharmacy workflows</div>
+                <div>• No user data is sold</div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <div className="mt-8 text-center text-xs text-slate-500">
           By continuing, you agree to our{" "}
-          <Link className="underline hover:text-slate-300" href="/terms">
+          <Link className="underline hover:text-slate-700" href="/terms">
             Terms
           </Link>{" "}
           and{" "}
-          <Link className="underline hover:text-slate-300" href="/privacy">
+          <Link className="underline hover:text-slate-700" href="/privacy">
             Privacy Policy
           </Link>
           .

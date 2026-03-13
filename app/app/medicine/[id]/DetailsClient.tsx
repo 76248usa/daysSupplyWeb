@@ -36,7 +36,6 @@ function shouldAvoidStealingFocus() {
   );
 }
 
-// ✅ Same native-tap style as AppHome
 const PRESS =
   "select-none cursor-pointer active:scale-[0.97] transition-transform";
 
@@ -48,16 +47,11 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
 
   const prime = Number(medicine?.prime ?? 0);
 
-  // ✅ Autofocus ref for "Units per dose"
   const unitsRef = useRef<HTMLInputElement | null>(null);
 
-  // ✅ Validation / error UI
   const [attempted, setAttempted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* ---------------------------------------------------
-     ✅ Subscription confidence state
-  --------------------------------------------------- */
   const [effectiveIsPro, setEffectiveIsPro] = useState(false);
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
@@ -122,9 +116,6 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     return null;
   }, [subStatus, trialEndsInDays, currentPeriodEnd, effectiveIsPro]);
 
-  /* ---------------------------------------------------
-     ✅ Autofocus "Units per dose" on mount
-  --------------------------------------------------- */
   useEffect(() => {
     const id = window.setTimeout(() => {
       if (shouldAvoidStealingFocus()) return;
@@ -133,9 +124,6 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  /* ---------------------------------------------------
-     Calculator logic
-  --------------------------------------------------- */
   const parsed = useMemo(() => {
     const u = Number(units);
     const t = Number(times);
@@ -152,7 +140,6 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     };
   }, [units, times]);
 
-  // Clear error as user types
   useEffect(() => {
     if (!attempted) return;
     if (parsed.valid) setError(null);
@@ -163,14 +150,18 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     setError(null);
 
     if (!parsed.valid) {
-      if (!parsed.unitsValid && !parsed.timesValid)
-        return setError(
-          "Enter valid numbers for Units per dose and Times per day.",
-        );
-      if (!parsed.unitsValid)
-        return setError("Enter a valid Units per dose value.");
-      if (!parsed.timesValid)
-        return setError("Enter a valid Times per day value.");
+      if (!parsed.unitsValid && !parsed.timesValid) {
+        setError("Enter valid numbers for Units per dose and Times per day.");
+        return;
+      }
+      if (!parsed.unitsValid) {
+        setError("Enter a valid Units per dose value.");
+        return;
+      }
+      if (!parsed.timesValid) {
+        setError("Enter a valid Times per day value.");
+        return;
+      }
       return;
     }
 
@@ -222,146 +213,203 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     if (e.key === "Enter") calculate();
   };
 
-  /* ---------------------------------------------------
-     UI
-  --------------------------------------------------- */
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/app"
-          className={`${PRESS} px-4 py-2 rounded border border-slate-600 text-slate-100 hover:bg-slate-900 inline-flex items-center`}
-        >
-          Home
-        </Link>
+    <div className="bg-white text-slate-900">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/app"
+            className={`${PRESS} inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50`}
+          >
+            Home
+          </Link>
 
-        {/* ✅ Pro Badge */}
-        {effectiveIsPro && (
-          <div className="inline-flex flex-col items-start rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2">
-            <div className="text-emerald-200 text-xs font-semibold">
-              Pro active ✓
+          {effectiveIsPro && (
+            <div className="inline-flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+              <div className="text-xs font-semibold text-emerald-800">
+                Pro active ✓
+              </div>
+              {proConfidenceLine ? (
+                <div className="text-[11px] text-emerald-700">
+                  {proConfidenceLine}
+                </div>
+              ) : null}
             </div>
-            {proConfidenceLine ? (
-              <div className="text-[11px] text-emerald-100/80">
-                {proConfidenceLine}
-              </div>
-            ) : null}
-          </div>
+          )}
+        </div>
+
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            {medicine.name}
+          </h1>
+
+          {medicine.addToName ? (
+            <p className="mt-2 text-lg text-slate-600">{medicine.addToName}</p>
+          ) : null}
+
+          {medicine.ndc ? (
+            <p className="mt-2 text-sm text-slate-500">{medicine.ndc}</p>
+          ) : null}
+
+          {medicine.dosage ? (
+            <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800">
+              {medicine.dosage}
+            </p>
+          ) : null}
+        </section>
+
+        {(answer !== null || boxAnswer !== null) && (
+          <section className="mt-6 rounded-3xl border border-cyan-100 bg-cyan-50 p-6 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-900">Results</h2>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {answer !== null && (
+                <div className="rounded-2xl bg-white p-5 text-center">
+                  <div className="text-sm font-medium text-slate-600">
+                    Days&apos; supply
+                  </div>
+                  <div className="mt-1 text-4xl font-bold text-cyan-700">
+                    {answer}
+                  </div>
+                </div>
+              )}
+
+              {boxAnswer !== null && (
+                <div className="rounded-2xl bg-white p-5 text-center">
+                  <div className="text-sm font-medium text-slate-600">
+                    Days&apos; supply per box
+                  </div>
+                  <div className="mt-1 text-4xl font-bold text-cyan-700">
+                    {boxAnswer}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
         )}
-      </div>
 
-      {/* Title */}
-      <h1 className="text-2xl font-extrabold text-center mt-5">
-        {medicine.name}
-      </h1>
+        <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Calculator inputs
+            </h2>
 
-      {medicine.addToName && (
-        <p className="text-center text-slate-400 mt-1">{medicine.addToName}</p>
-      )}
+            <div className="mt-6 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-900">
+                  Units per dose
+                </label>
+                <input
+                  ref={unitsRef}
+                  value={units}
+                  onChange={(e) =>
+                    setUnits(e.target.value.replace(/[^0-9.]/g, ""))
+                  }
+                  onKeyDown={onKeyDown}
+                  inputMode="decimal"
+                  className={[
+                    "mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2",
+                    attempted && !parsed.unitsValid
+                      ? "border-rose-300 focus:ring-rose-300"
+                      : "border-slate-300 focus:ring-cyan-400",
+                  ].join(" ")}
+                  placeholder="e.g. 20"
+                />
+              </div>
 
-      {medicine.ndc && (
-        <p className="text-center text-slate-500 mt-1">{medicine.ndc}</p>
-      )}
+              <div>
+                <label className="block text-sm font-semibold text-slate-900">
+                  Times per day
+                </label>
+                <input
+                  value={times}
+                  onChange={(e) =>
+                    setTimes(e.target.value.replace(/[^0-9.]/g, ""))
+                  }
+                  onKeyDown={onKeyDown}
+                  inputMode="decimal"
+                  className={[
+                    "mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2",
+                    attempted && !parsed.timesValid
+                      ? "border-rose-300 focus:ring-rose-300"
+                      : "border-slate-300 focus:ring-cyan-400",
+                  ].join(" ")}
+                  placeholder="e.g. 1"
+                />
+              </div>
 
-      {medicine.dosage && (
-        <p className="text-center text-orange-400 italic mt-3">
-          {medicine.dosage}
-        </p>
-      )}
+              {error ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  {error}
+                </div>
+              ) : null}
 
-      {/* Results */}
-      {(answer !== null || boxAnswer !== null) && (
-        <div className="mt-6 max-w-xl mx-auto border border-slate-800 rounded-xl p-4 bg-slate-950">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {answer !== null && (
-              <div className="text-center">
-                <div className="text-slate-400 text-sm">Days&apos; supply</div>
-                <div className="text-yellow-300 text-4xl font-black">
-                  {answer}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={calculate}
+                  className={`${PRESS} flex-1 rounded-xl bg-cyan-600 py-3 text-sm font-semibold text-white hover:bg-cyan-700`}
+                >
+                  Confirm
+                </button>
+
+                <button
+                  onClick={reset}
+                  className={`${PRESS} flex-1 rounded-xl border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50`}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <h2 className="text-xl font-bold text-slate-900">
+                Product details
+              </h2>
+
+              <div className="mt-4 space-y-3 text-sm text-slate-700">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="font-semibold text-slate-900">Prime:</span>{" "}
+                  {prime} units
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="font-semibold text-slate-900">
+                    Expiration:
+                  </span>{" "}
+                  {medicine.expire ?? "—"} days
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="font-semibold text-slate-900">
+                    Total units:
+                  </span>{" "}
+                  {medicine.unitsInPen ?? "—"}
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <span className="font-semibold text-slate-900">
+                    Pens per box:
+                  </span>{" "}
+                  {medicine.pensAmount ?? "—"}
                 </div>
               </div>
-            )}
+            </section>
 
-            {boxAnswer !== null && (
-              <div className="text-center">
-                <div className="text-slate-400 text-sm">
-                  Days&apos; supply per box
-                </div>
-                <div className="text-yellow-300 text-4xl font-black">
-                  {boxAnswer}
-                </div>
-              </div>
-            )}
+            <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6">
+              <h2 className="text-xl font-bold text-amber-900">
+                Professional use notice
+              </h2>
+
+              <p className="mt-3 text-sm leading-7 text-amber-800">
+                Verify calculations against the prescription, product labeling,
+                payer requirements, and professional judgment before using the
+                result for dispensing or billing.
+              </p>
+            </section>
           </div>
-        </div>
-      )}
-
-      {/* Inputs */}
-      <div className="mt-6 max-w-md mx-auto space-y-4">
-        <div>
-          <label className="block text-slate-200 mb-2">Units per dose</label>
-          <input
-            ref={unitsRef}
-            value={units}
-            onChange={(e) => setUnits(e.target.value.replace(/[^0-9.]/g, ""))}
-            onKeyDown={onKeyDown}
-            inputMode="decimal"
-            className={[
-              "w-full p-3 rounded-lg bg-slate-900 border text-slate-100",
-              "focus:outline-none focus:ring-2 focus:ring-cyan-400/70",
-              attempted && !parsed.unitsValid
-                ? "border-rose-500/60"
-                : "border-slate-700",
-            ].join(" ")}
-            placeholder="e.g. 20"
-          />
-        </div>
-
-        <div>
-          <label className="block text-slate-200 mb-2">Times per day</label>
-          <input
-            value={times}
-            onChange={(e) => setTimes(e.target.value.replace(/[^0-9.]/g, ""))}
-            onKeyDown={onKeyDown}
-            inputMode="decimal"
-            className={[
-              "w-full p-3 rounded-lg bg-slate-900 border text-slate-100",
-              "focus:outline-none focus:ring-2 focus:ring-cyan-400/70",
-              attempted && !parsed.timesValid
-                ? "border-rose-500/60"
-                : "border-slate-700",
-            ].join(" ")}
-            placeholder="e.g. 1"
-          />
-        </div>
-
-        {error ? (
-          <div className="rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
-            {error}
-          </div>
-        ) : null}
-
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={calculate}
-            className={`${PRESS} flex-1 bg-green-500 text-black py-3 rounded-lg font-extrabold hover:opacity-90`}
-          >
-            Confirm
-          </button>
-
-          <button
-            onClick={reset}
-            className={`${PRESS} flex-1 border border-slate-500 py-3 rounded-lg font-semibold text-slate-100 hover:bg-slate-900`}
-          >
-            Reset
-          </button>
-        </div>
-
-        <p className="text-center text-xs text-slate-500 pt-2">
-          Prime: {prime} units • Exp: {medicine.expire ?? "—"} days • Total
-          units: {medicine.unitsInPen ?? "—"}
-        </p>
+        </section>
       </div>
     </div>
   );

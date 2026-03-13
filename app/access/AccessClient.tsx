@@ -15,8 +15,6 @@ function isValidEmail(e: string) {
 }
 
 function getSiteUrl(): string {
-  // Prefer an explicit production URL so magic links never point to localhost.
-  // Set NEXT_PUBLIC_SITE_URL in Vercel (Production + Preview).
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/+$/, "");
   return typeof window !== "undefined" ? window.location.origin : "";
@@ -99,7 +97,6 @@ export default function AccessClient() {
     const { error } = await supabaseBrowser.auth.signInWithOtp({
       email: e,
       options: {
-        // ✅ Never use localhost in production emails
         emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(
           nextHref,
         )}`,
@@ -150,23 +147,23 @@ export default function AccessClient() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-lg p-6">
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             ← Home
           </Link>
 
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-500">
             {userEmail ? (
               <span className="inline-flex items-center gap-2">
                 {userEmail}
                 <button
                   onClick={signOut}
-                  className="rounded-lg border border-slate-800 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-800"
+                  className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Sign out
                 </button>
@@ -177,28 +174,40 @@ export default function AccessClient() {
           </div>
         </div>
 
-        <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-center">
-          Access the Calculator
-        </h1>
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+            Pharmacist Access
+          </p>
 
-        {!userEmail ? (
-          <>
-            <p className="mt-2 text-center text-slate-300">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Access the Calculator
+          </h1>
+
+          {!userEmail ? (
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
               Enter your email to receive a secure sign-in link. No password
               required.
             </p>
+          ) : (
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
+              You&apos;re signed in. {isLoading ? "Checking access…" : null}
+            </p>
+          )}
+        </section>
 
-            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
+        {!userEmail ? (
+          <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <label className="block text-sm font-semibold text-slate-900">
                 Email address
               </label>
 
-              <div className="relative">
+              <div className="relative mt-2">
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                   ✉️
                 </span>
                 <input
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-11 pr-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   placeholder="you@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -212,13 +221,13 @@ export default function AccessClient() {
               </div>
 
               {error ? (
-                <div className="mt-3 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
+                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                   {error}
                 </div>
               ) : null}
 
               {sent ? (
-                <div className="mt-3 rounded-xl border border-emerald-900/40 bg-emerald-900/20 p-3 text-sm text-emerald-200">
+                <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
                   Code sent — check your email and enter the 6-digit code.
                 </div>
               ) : null}
@@ -226,38 +235,65 @@ export default function AccessClient() {
               <button
                 onClick={sendMagicLink}
                 disabled={sending}
-                className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white transition hover:bg-cyan-700 disabled:opacity-60"
               >
                 {sending ? "Sending…" : "Send sign-in code"}
               </button>
 
-              <div className="mt-3 text-xs text-slate-400">
+              <div className="mt-3 text-sm text-slate-500">
                 You’ll stay signed in unless you sign out.
               </div>
             </div>
-          </>
-        ) : (
-          <>
-            <p className="mt-2 text-center text-slate-300">
-              You’re signed in. {isLoading ? "Checking access…" : null}
-            </p>
 
-            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <div className="text-sm text-slate-300">
-                Status: <span className="font-semibold">{status}</span>
+            <div className="space-y-6">
+              <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                <h2 className="text-xl font-bold text-slate-900">
+                  Why sign in?
+                </h2>
+
+                <div className="mt-4 space-y-3 text-sm text-slate-700">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    Connects your subscription access
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    Makes billing and renewals easier
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    Helps keep your calculator access consistent
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6">
+                <h2 className="text-xl font-bold text-amber-900">
+                  Professional access note
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-amber-800">
+                  This service is designed for licensed healthcare professionals
+                  using pharmacy workflow tools and subscription-based access.
+                </p>
+              </section>
+            </div>
+          </section>
+        ) : (
+          <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <div className="text-sm text-slate-700">
+                Status:{" "}
+                <span className="font-semibold text-slate-900">{status}</span>
               </div>
 
               {effectiveIsPro ? (
                 <>
                   <div className="mt-4 flex items-center justify-between gap-3">
-                    <div className="inline-flex items-center rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-emerald-200 text-xs font-semibold">
+                    <div className="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
                       Pro active ✓
                     </div>
 
                     {!AUTH_DISABLED ? (
                       <button
                         onClick={openManageSubscription}
-                        className="rounded-lg border border-slate-700/40 bg-slate-950/30 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                       >
                         Manage subscription
                       </button>
@@ -266,7 +302,7 @@ export default function AccessClient() {
 
                   <button
                     onClick={continueToApp}
-                    className="mt-4 w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white transition hover:bg-cyan-700"
                   >
                     Open calculator
                   </button>
@@ -274,20 +310,51 @@ export default function AccessClient() {
               ) : (
                 <Link
                   href="/app/upgrade"
-                  className="mt-4 block w-full rounded-xl bg-cyan-400 px-4 py-3 text-center font-extrabold text-slate-900 hover:brightness-110"
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white transition hover:bg-cyan-700"
                 >
                   Start free trial / Subscribe
                 </Link>
               )}
 
-              <div className="mt-3 text-xs text-slate-400">
+              <div className="mt-4 text-sm text-slate-500">
                 Tip: add this site to your home screen for one-tap access.
               </div>
             </div>
-          </>
+
+            <div className="space-y-6">
+              <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                <h2 className="text-xl font-bold text-slate-900">
+                  Access summary
+                </h2>
+
+                <div className="mt-4 space-y-3 text-sm text-slate-700">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    Signed in as: <strong>{userEmail}</strong>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    Access path:{" "}
+                    <strong>
+                      {effectiveIsPro ? "Pro" : "Upgrade required"}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6">
+                <h2 className="text-xl font-bold text-amber-900">
+                  Professional access note
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-amber-800">
+                  Calculator access and subscription status are linked to your
+                  signed-in account so you can use pharmacist tools consistently
+                  across sessions.
+                </p>
+              </section>
+            </div>
+          </section>
         )}
 
-        <div className="mt-6 text-center text-xs text-slate-500">
+        <div className="mt-8 text-center text-xs text-slate-500">
           For licensed pharmacy professionals only.
         </div>
       </div>

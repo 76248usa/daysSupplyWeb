@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
+import InsulinDaysSupplyCalculatorClient from "./InsulinDaysSupplyCalculatorClient";
 
 export const metadata: Metadata = {
   title: "Insulin Days Supply Calculator | Includes Priming & Expiration",
@@ -86,65 +87,60 @@ export default function InsulinDaysSupplyCalculatorPage() {
   };
 
   return (
-    <main
-      style={{
-        maxWidth: 920,
-        margin: "0 auto",
-        padding: "24px 20px 56px",
-        lineHeight: 1.65,
-      }}
-    >
+    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <h1
-        style={{
-          fontSize: "2rem",
-          lineHeight: 1.2,
-          marginBottom: 12,
-        }}
-      >
-        Insulin Days Supply Calculator | Includes Priming & Expiration
-      </h1>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+          Pharmacist Tool
+        </p>
 
-      <p style={{ fontSize: "1.05rem", marginBottom: 12 }}>
-        An insulin days supply calculator helps pharmacists determine insulin
-        pen and vial days supply using total units dispensed, daily dose,
-        priming considerations, and expiration limits when appropriate.
-      </p>
+        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+          Insulin Days Supply Calculator
+        </h1>
 
-      <p style={{ marginBottom: 24 }}>
-        This calculator includes insulin pen priming and expiration limits,
-        helping pharmacists make more accurate insulin days supply decisions for
-        dispensing, insurance billing, and day-to-day workflow.
-      </p>
+        <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
+          An insulin days supply calculator helps pharmacists determine insulin
+          pen and vial days supply using total units dispensed, daily dose,
+          priming considerations, and expiration limits when appropriate.
+        </p>
 
-      <div style={{ marginBottom: 32 }}>
-        <Link
-          href="/app"
-          style={{
-            display: "inline-block",
-            padding: "14px 24px",
-            borderRadius: 10,
-            textDecoration: "none",
-            fontWeight: 700,
-            background: "#2563eb",
-            color: "#ffffff",
-            fontSize: "1.05rem",
-          }}
-        >
-          Open Full Calculator
-        </Link>
-      </div>
+        <p className="mt-4 max-w-3xl text-slate-700">
+          This calculator includes insulin pen priming and expiration limits,
+          helping pharmacists make more accurate insulin days supply decisions
+          for dispensing, insurance billing, and day-to-day workflow.
+        </p>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/insulin-calculators"
+            className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
+          >
+            Insulin Calculators Hub
+          </Link>
+
+          <Link
+            href="/days-supply-calculators"
+            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            All Days Supply Calculators
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <InsulinDaysSupplyCalculatorClient />
+      </section>
+
+      <section className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-6">
+        <h2 className="text-2xl font-bold text-slate-900">
           How insulin days supply is calculated
         </h2>
 
-        <p>
+        <p className="mt-4 text-slate-700 leading-7">
           Insulin days supply is generally calculated by dividing the total
           insulin units dispensed by the patient&apos;s total daily dose.
           However, for many insulin pen products, priming can reduce the
@@ -152,75 +148,79 @@ export default function InsulinDaysSupplyCalculatorPage() {
           can shorten the practical days supply.
         </p>
 
-        <div
-          style={{
-            background: "#f3f4f6",
-            padding: 16,
-            borderRadius: 8,
-            margin: "16px 0",
-            overflowX: "auto",
-          }}
-        >
-          <code>
+        <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
+          <code className="font-semibold text-slate-900">
             Days Supply = Total Units Dispensed ÷ Total Daily Units Used
           </code>
         </div>
 
-        <p>
+        <p className="mt-4 text-slate-700 leading-7">
           This is why pharmacists often need more than simple unit math alone.
           Priming and expiration can materially affect the final insulin days
           supply used for dispensing and billing workflow.
         </p>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Why this calculator is different</h2>
+      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Why pharmacists use an insulin days supply calculator
+        </h2>
 
-        <ul style={{ paddingLeft: 20, margin: 0 }}>
-          <li style={{ marginBottom: 8 }}>
-            Includes insulin pen priming considerations
-          </li>
-          <li style={{ marginBottom: 8 }}>
-            Includes expiration-after-opening limits
-          </li>
-          <li style={{ marginBottom: 8 }}>
-            Supports insulin pen and vial workflow
-          </li>
-          <li style={{ marginBottom: 8 }}>
-            Designed for pharmacists and pharmacy billing workflow
-          </li>
-        </ul>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {[
+            "Includes insulin pen priming considerations",
+            "Includes expiration-after-opening limits",
+            "Supports insulin pen and vial workflow",
+            "Designed for pharmacists and pharmacy billing workflow",
+          ].map((item) => (
+            <div
+              key={item}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Insulin Days Supply Calculators</h2>
+      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Related insulin days supply calculators
+        </h2>
 
-        <ul style={{ paddingLeft: 20, margin: 0 }}>
+        <p className="mt-3 max-w-3xl text-slate-700">
+          Looking for calculators for specific insulin types? Explore the
+          related insulin calculator pages below.
+        </p>
+
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {calculatorPages.map((item) => (
-            <li key={item.href} style={{ marginBottom: 8 }}>
-              <Link href={item.href}>{item.name}</Link>
+            <li
+              key={item.href}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+            >
+              <Link
+                href={item.href}
+                className="font-semibold text-cyan-700 underline underline-offset-4"
+              >
+                {item.name}
+              </Link>
             </li>
           ))}
         </ul>
       </section>
 
-      <p className="mt-4 text-slate-700">
-        Looking for calculators for specific insulin types? Visit the{" "}
-        <Link
-          href="/insulin-calculators"
-          className="font-semibold text-cyan-700 underline underline-offset-4"
-        >
-          insulin calculators hub
-        </Link>
-        .
-      </p>
+      <section className="mt-10 rounded-3xl border border-cyan-100 bg-cyan-50 p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          More pharmacy calculators
+        </h2>
 
-      <section style={{ marginTop: 40 }}>
-        <h2>More Pharmacy Calculators</h2>
-
-        <p>
+        <p className="mt-3 text-slate-700">
           Looking for additional dispensing tools? Visit the{" "}
-          <Link href="/days-supply-calculators">
+          <Link
+            href="/days-supply-calculators"
+            className="font-semibold text-cyan-700 underline underline-offset-4"
+          >
             pharmacy days supply calculators hub
           </Link>{" "}
           to explore insulin calculators, ophthalmic calculators, and dispensing
@@ -228,10 +228,10 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </p>
       </section>
 
-      <section style={{ marginTop: 32, marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Important note</h2>
+      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">Important note</h2>
 
-        <p>
+        <p className="mt-3 text-slate-700 leading-7">
           Always use professional judgment and follow product labeling, payer,
           plan, store, and workflow requirements when determining billed days
           supply.

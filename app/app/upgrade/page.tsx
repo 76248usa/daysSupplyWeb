@@ -16,7 +16,6 @@ export default function UpgradePage() {
     [],
   );
 
-  // ✅ Enforce login ONLY here (Upgrade), not on AppHome.
   useEffect(() => {
     if (AUTH_DISABLED) {
       setCheckingAuth(false);
@@ -79,66 +78,130 @@ export default function UpgradePage() {
     }
   }
 
-  // If we are checking auth, show a light placeholder (prevents button flashing)
   if (!AUTH_DISABLED && checkingAuth) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto max-w-xl p-6">
-          <div className="mt-10 text-center text-slate-300">
-            Checking sign-in…
-          </div>
+      <main className="min-h-screen bg-white text-slate-900">
+        <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
+            <h1 className="text-2xl font-bold text-slate-900">
+              Checking sign-in…
+            </h1>
+            <p className="mt-3 text-slate-600">
+              Please wait while we verify your session.
+            </p>
+          </section>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-xl p-6">
-        <h1 className="text-2xl font-extrabold text-center">Upgrade to Pro</h1>
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+            Pharmacist Subscription
+          </p>
 
-        <p className="text-center text-slate-300 mt-3">
-          {AUTH_DISABLED
-            ? "Pro is enabled in development mode. Checkout is disabled for now."
-            : "Start a 1-month free trial. Then $10 per year. Cancel anytime."}
-        </p>
+          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            Upgrade to Pro
+          </h1>
 
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <ul className="space-y-3 text-sm text-slate-300">
-            <li>✓ Unlimited insulin calculations</li>
-            <li>✓ Priming logic included</li>
-            <li>✓ Expiration-aware day supply</li>
-            <li>✓ Audit documentation support</li>
-          </ul>
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
+            {AUTH_DISABLED
+              ? "Pro is enabled in development mode. Checkout is disabled for now."
+              : "Start a 1-month free trial. Then $10 per year. Cancel anytime."}
+          </p>
+        </section>
 
-          {AUTH_DISABLED ? (
-            <div className="mt-6 rounded-xl border border-slate-700/40 bg-slate-950/30 p-3 text-sm text-slate-200">
-              Checkout disabled (dev). When auth is re-enabled, this button will
-              start Stripe checkout.
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-2xl font-bold text-slate-900">
+              What&apos;s included in Pro
+            </h2>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[
+                "Unlimited insulin calculations",
+                "Priming logic included",
+                "Expiration-aware day supply",
+                "Audit documentation support",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700"
+                >
+                  {item}
+                </div>
+              ))}
             </div>
-          ) : (
-            <button
-              onClick={startCheckout}
-              disabled={loading}
-              className="mt-6 w-full rounded-xl bg-cyan-400 px-4 py-3 font-extrabold text-slate-900 hover:brightness-110 disabled:opacity-60"
-            >
-              {loading ? "Redirecting to secure checkout…" : "Start Free Trial"}
-            </button>
-          )}
 
-          {!AUTH_DISABLED && error ? (
-            <div className="mt-4 rounded-xl border border-rose-900/40 bg-rose-900/20 p-3 text-sm text-rose-200">
-              {error}
+            <div className="mt-6 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-slate-700">
+              Designed for pharmacists who want faster, more consistent insulin
+              day-supply workflow with priming and expiration considerations.
             </div>
-          ) : null}
+          </div>
 
-          <button
-            onClick={() => router.push("/app")}
-            className="mt-4 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-          >
-            Back to App
-          </button>
-        </div>
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <h2 className="text-xl font-bold text-slate-900">
+                Billing summary
+              </h2>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="text-sm font-medium text-slate-600">Trial</div>
+                <div className="mt-1 text-2xl font-bold text-slate-900">
+                  30 days free
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="text-sm font-medium text-slate-600">
+                  After trial
+                </div>
+                <div className="mt-1 text-2xl font-bold text-cyan-700">
+                  $10/year
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm text-slate-600">
+                Cancel anytime through the billing portal.
+              </p>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              {AUTH_DISABLED ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                  Checkout disabled (dev). When auth is re-enabled, this button
+                  will start Stripe checkout.
+                </div>
+              ) : (
+                <button
+                  onClick={startCheckout}
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white transition hover:bg-cyan-700 disabled:opacity-60"
+                >
+                  {loading
+                    ? "Redirecting to secure checkout…"
+                    : "Start Free Trial"}
+                </button>
+              )}
+
+              {!AUTH_DISABLED && error ? (
+                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  {error}
+                </div>
+              ) : null}
+
+              <button
+                onClick={() => router.push("/app")}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Back to App
+              </button>
+            </section>
+          </div>
+        </section>
       </div>
     </main>
   );
