@@ -3,15 +3,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
-import { Search } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import { usePro } from "@/context/ProContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
 import InstallCalculatorCard from "@/components/InstallCalculatorCard";
-import { ShieldCheck } from "lucide-react";
-
-const TRIAL_LINE = "Start 30-day free trial — $10/year after. Cancel anytime.";
 
 const RECENT_KEY = "ds_recent_checkout_ts";
 const RECENT_MS = 10 * 60 * 1000; // 10 minutes
@@ -286,11 +283,6 @@ export default function AppHome() {
     return medicineData.filter((m) => m.name.toLowerCase().includes(q));
   }, [search]);
 
-  const canOpenDetails = true;
-
-  const showAlreadyProSignIn =
-    !AUTH_DISABLED && status === "no_user" && !effectiveIsPro && !activating;
-
   const showManageBilling =
     !AUTH_DISABLED && status !== "no_user" && effectiveIsPro && !isLoading;
 
@@ -425,20 +417,16 @@ export default function AppHome() {
               expiration logic.
             </p>
 
-            {/* Professional Access Banner */}
             <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
               <div className="flex items-start gap-3">
-                {/* <div className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500"></div> */}
-                <ShieldCheck className="h-5 w-5 text-emerald-600 mt-0.5" />
+                <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" />
 
-                <div className="text-sm text-slate-700 leading-relaxed">
+                <div className="text-sm leading-relaxed text-slate-700">
                   <span className="font-semibold text-slate-900">
                     Free for Pharmacists, Pharmacy Technicians and other
                     Healthcare Professionals.
-                  </span>{" "}
-                  {/* during the launch period while additional pharmacy workflow
-                  tools are being developed. */}
-                  <div className="text-xs text-slate-500 mt-1">
+                  </span>
+                  <div className="mt-1 text-xs text-slate-500">
                     Designed to support accurate day-supply calculations in
                     pharmacy workflow.
                   </div>
@@ -446,92 +434,16 @@ export default function AppHome() {
               </div>
             </div>
 
-            {/*             
-
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm font-semibold text-slate-900">
-                  {AUTH_DISABLED
-                    ? "Pro is enabled in development mode."
-                    : TRIAL_LINE}
-                  <div className="mt-1 text-xs text-slate-500">
-                    {AUTH_DISABLED
-                      ? "Checkout is disabled while auth is disabled."
-                      : "Secure checkout via Stripe • Cancel anytime"}
-                  </div>
-
-                  {showAlreadyProSignIn ? (
-                    <div className="mt-2 text-xs">
-                      <Link
-                        href={`/login?next=${encodeURIComponent("/app")}`}
-                        className={`${PRESS} inline-flex text-sm font-semibold text-cyan-700 underline underline-offset-4 hover:text-cyan-800`}
-                      >
-                        Already Pro? Sign in
-                      </Link>
-                    </div>
-                  ) : null}
+            {effectiveIsPro && (
+              <div className="mt-4 inline-flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="text-xs font-semibold text-emerald-800">
+                  Pro active ✓
                 </div>
-
-                <div className="flex flex-col items-start gap-2 sm:items-end">
-                  {isLoading ? (
-                    <div className="text-xs text-slate-500">Checking…</div>
-                  ) : effectiveIsPro ? (
-                    <div className="inline-flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-                      <div className="text-xs font-semibold text-emerald-800">
-                        Pro active ✓
-                      </div>
-                      <div className="mt-0.5 text-[11px] text-emerald-700">
-                        {proConfidenceLine}
-                      </div>
-                    </div>
-                  ) : activating ? (
-                    <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                      Activating…
-                    </div>
-                  ) : AUTH_DISABLED ? (
-                    <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                      Checkout disabled (dev)
-                    </div>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        const { data } =
-                          await supabaseBrowser.auth.getSession();
-                        const token = data.session?.access_token;
-
-                        if (!token) {
-                          window.location.href = `/login?next=${encodeURIComponent(
-                            "/app/upgrade",
-                          )}`;
-                          return;
-                        }
-
-                        window.location.href = "/app/upgrade";
-                      }}
-                      className={`${PRESS} inline-flex items-center justify-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700`}
-                    >
-                      Start Free Trial
-                    </button>
-                  )}
-
-                  {!AUTH_DISABLED &&
-                  status !== "no_user" &&
-                  !effectiveIsPro &&
-                  !activating ? (
-                    <button
-                      onClick={() =>
-                        refreshWithRetry({ attempts: 10, delayMs: 1200 }).catch(
-                          () => {},
-                        )
-                      }
-                      className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50`}
-                    >
-                      Refresh Pro status
-                    </button>
-                  ) : null}
+                <div className="mt-0.5 text-[11px] text-emerald-700">
+                  {proConfidenceLine}
                 </div>
               </div>
-            </div> */}
+            )}
           </section>
 
           <div className="mt-6">
@@ -567,7 +479,7 @@ export default function AppHome() {
                 <Link
                   key={m.id}
                   href={`/app/medicine/${m.id}`}
-                  className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800`}
+                  className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
                 >
                   <div className="text-lg font-bold tracking-tight text-slate-900">
                     {m.name}
