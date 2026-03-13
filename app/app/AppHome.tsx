@@ -286,7 +286,7 @@ export default function AppHome() {
     return medicineData.filter((m) => m.name.toLowerCase().includes(q));
   }, [search]);
 
-  const canOpenDetails = effectiveIsPro || activating;
+  const canOpenDetails = true;
 
   const showAlreadyProSignIn =
     !AUTH_DISABLED && status === "no_user" && !effectiveIsPro && !activating;
@@ -568,7 +568,7 @@ export default function AppHome() {
                   <Link
                     key={m.id}
                     href={`/app/medicine/${m.id}`}
-                    className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
+                    className={`${PRESS} block rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-800`}
                   >
                     <div className="text-lg font-bold tracking-tight text-slate-900">
                       {m.name}
@@ -579,25 +579,25 @@ export default function AppHome() {
                       </div>
                     ) : null}
                   </Link>
-                ) : (
-                  <Link
-                    key={m.id}
-                    href="/app/upgrade"
-                    className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
-                  >
-                    <div className="text-lg font-bold tracking-tight text-slate-900">
-                      {m.name}
-                    </div>
-                    {m.addToName ? (
-                      <div className="mt-0.5 text-sm font-medium text-slate-600">
-                        {m.addToName}
-                      </div>
-                    ) : null}
-                    <div className="mt-2 text-xs text-amber-700">
-                      Start trial to calculate
-                    </div>
-                  </Link>
-                ),
+                // ) : (
+                //   <Link
+                //     key={m.id}
+                //     href="/app/upgrade"
+                //     className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
+                //   >
+                //     <div className="text-lg font-bold tracking-tight text-slate-900">
+                //       {m.name}
+                //     </div>
+                //     {m.addToName ? (
+                //       <div className="mt-0.5 text-sm font-medium text-slate-600">
+                //         {m.addToName}
+                //       </div>
+                //     ) : null}
+                //     <div className="mt-2 text-xs text-amber-700">
+                //       Start trial to calculate
+                //     </div>
+                //   </Link>
+                // ),
               )}
             </div>
           </section>
