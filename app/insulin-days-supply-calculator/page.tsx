@@ -3,10 +3,23 @@ import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
 import InsulinDaysSupplyCalculatorClient from "./InsulinDaysSupplyCalculatorClient";
 import { ShieldCheck } from "lucide-react";
+
 export const metadata: Metadata = {
   title: "Insulin Days Supply Calculator | Includes Priming & Expiration",
   description:
     "Professional insulin days supply calculator for pharmacists. Calculate insulin pen and vial days supply including priming doses and expiration limits for accurate dispensing and billing.",
+  keywords: [
+    "insulin days supply calculator",
+    "insulin day supply calculator",
+    "insulin pen days supply",
+    "tresiba days supply calculator",
+    "novolog days supply calculator",
+    "humalog days supply calculator",
+    "lantus days supply calculator",
+    "toujeo days supply calculator",
+    "pharmacist insulin calculator",
+    "insulin priming days supply",
+  ],
   alternates: {
     canonical:
       "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
@@ -87,52 +100,13 @@ export default function InsulinDaysSupplyCalculatorPage() {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      {/* 
-
-
-
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      
-        <div className="flex items-start gap-3">
-         
-
-          <div className="space-y-0">
-            <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
-              Insulin Days’ Supply Calculator
-            </h1>
-
-            <p className="text-sm text-slate-600">
-              Accurate insulin days’ supply calculations including priming
-              doses,expiration, pen sizes, and package quantities.
-            </p>
-
-            <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" />
-
-                <div className="text-sm leading-relaxed text-slate-700">
-                  <span className="font-semibold text-slate-900">
-                    Free for Pharmacists, Pharmacy Technicians and other
-                    Healthcare Professionals.
-                  </span>
-                  <div className="mt-1 text-xs text-slate-500">
-                    Designed to support accurate day-supply calculations in
-                    pharmacy workflow.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:px-5 sm:py-4">
+      <section className="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:mt-4 sm:px-5 sm:py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -142,45 +116,54 @@ export default function InsulinDaysSupplyCalculatorPage() {
                 className="h-7 w-7 rounded-md sm:h-8 sm:w-8"
               />
 
-              <h1 className="truncate text-sm font-bold text-slate-900 sm:text-lg">
-                Insulin Days’ Supply Calculator
-              </h1>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 sm:text-[11px]">
+                  Pharmacist Tool
+                </p>
+                <h1 className="truncate text-sm font-bold leading-tight text-slate-900 sm:text-lg">
+                  Insulin Days’ Supply Calculator
+                </h1>
+              </div>
             </div>
 
-            <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:text-xs">
+            <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-1.5 sm:text-xs">
               Calculate insulin days supply including priming doses, pen
               quantities, and expiration limits.
             </p>
 
-            {/* SEO internal links */}
             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
-              <a
+              <span className="text-slate-500">Popular calculators:</span>
+
+              <Link
                 href="/tresiba-days-supply-calculator"
                 className="hover:underline"
               >
                 Tresiba
-              </a>
+              </Link>
               <span>•</span>
-              <a
+
+              <Link
                 href="/novolog-days-supply-calculator"
                 className="hover:underline"
               >
                 Novolog
-              </a>
+              </Link>
               <span>•</span>
-              <a
+
+              <Link
                 href="/lantus-days-supply-calculator"
                 className="hover:underline"
               >
                 Lantus
-              </a>
+              </Link>
               <span>•</span>
-              <a
+
+              <Link
                 href="/humalog-days-supply-calculator"
                 className="hover:underline"
               >
                 Humalog
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -195,16 +178,22 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </div>
       </section>
 
+      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
+        Pharmacist calculator for insulin days supply including priming doses,
+        pen package sizes, and expiration limits. Supports Tresiba, Novolog,
+        Humalog, Lantus, Toujeo, Admelog and other insulin pens.
+      </p>
+
       <section className="mt-4">
         <InsulinDaysSupplyCalculatorClient />
       </section>
 
-      <section className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:mt-10">
         <h2 className="text-2xl font-bold text-slate-900">
           How insulin days supply is calculated
         </h2>
 
-        <p className="mt-4 text-slate-700 leading-7">
+        <p className="mt-4 leading-7 text-slate-700">
           Insulin days supply is generally calculated by dividing the total
           insulin units dispensed by the patient&apos;s total daily dose.
           However, for many insulin pen products, priming can reduce the
@@ -218,14 +207,14 @@ export default function InsulinDaysSupplyCalculatorPage() {
           </code>
         </div>
 
-        <p className="mt-4 text-slate-700 leading-7">
+        <p className="mt-4 leading-7 text-slate-700">
           This is why pharmacists often need more than simple unit math alone.
           Priming and expiration can materially affect the final insulin days
           supply used for dispensing and billing workflow.
         </p>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
           Why pharmacists use an insulin days supply calculator
         </h2>
@@ -247,7 +236,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </div>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
           Related insulin days supply calculators
         </h2>
@@ -274,7 +263,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </ul>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-cyan-100 bg-cyan-50 p-6 sm:p-8">
+      <section className="mt-8 rounded-3xl border border-cyan-100 bg-cyan-50 p-6 sm:mt-10 sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
           More pharmacy calculators
         </h2>
@@ -292,10 +281,10 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </p>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">Important note</h2>
 
-        <p className="mt-3 text-slate-700 leading-7">
+        <p className="mt-3 leading-7 text-slate-700">
           Always use professional judgment and follow product labeling, payer,
           plan, store, and workflow requirements when determining billed days
           supply.
