@@ -316,6 +316,59 @@ export default function AppHome() {
     cancelAtPeriodEnd,
   ]);
 
+  const searchSection = (
+    <section className="mt-4 rounded-2xl border-2 border-cyan-100 bg-white p-4 shadow-sm sm:mt-6 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-8">
+      <h2 className="text-lg font-bold leading-tight text-slate-900 sm:text-2xl">
+        Search insulin products
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-slate-700 sm:mt-3 sm:text-base">
+        Select an insulin product to open the calculator and estimate days
+        supply using product-specific priming and expiration logic.
+      </p>
+
+      <div className="mt-4 relative sm:mt-5">
+        <Search
+          size={16}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 sm:left-4 sm:size-[18px]"
+        />
+        <input
+          id="insulin-search"
+          className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 sm:py-3 sm:pl-10 sm:pr-4"
+          placeholder="Search insulin name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-2.5 sm:mt-5 sm:grid-cols-2 sm:gap-3">
+        {filtered.map((m) => (
+          <Link
+            key={m.id}
+            href={`/app/medicine/${m.id}`}
+            className={`${PRESS} block rounded-xl border border-slate-200 bg-slate-50 p-3 transition hover:bg-slate-100 sm:rounded-2xl sm:p-4`}
+          >
+            <div className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+              {m.name}
+            </div>
+
+            {m.addToName ? (
+              <div className="mt-0.5 text-xs font-medium text-slate-600 sm:text-sm">
+                {m.addToName}
+              </div>
+            ) : null}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+
+  const installSection = (
+    <div className="mt-4 sm:mt-6">
+      <InstallCalculatorCard appName="Insulin Calculator" />
+    </div>
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -323,19 +376,21 @@ export default function AppHome() {
       transition={{ duration: 0.15 }}
     >
       <main className="min-h-screen bg-white text-slate-900">
-        <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-end gap-3">
+        <div className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+          <div className="flex items-center justify-end gap-2 sm:gap-3">
             {showManageBilling ? (
               <div className="flex flex-col items-end gap-1">
                 <button
                   onClick={openBillingPortal}
                   disabled={portalLoading}
-                  className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60`}
+                  className={`${PRESS} rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 sm:rounded-xl sm:px-3 sm:py-2 sm:text-xs`}
                 >
                   {portalLoading ? "Opening billing…" : "Manage billing"}
                 </button>
                 {portalError ? (
-                  <div className="text-[11px] text-rose-700">{portalError}</div>
+                  <div className="text-[10px] text-rose-700 sm:text-[11px]">
+                    {portalError}
+                  </div>
                 ) : null}
               </div>
             ) : null}
@@ -343,7 +398,7 @@ export default function AppHome() {
             {!AUTH_DISABLED && status !== "no_user" ? (
               <button
                 onClick={signOut}
-                className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50`}
+                className={`${PRESS} rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 sm:rounded-xl sm:px-3 sm:py-2 sm:text-xs`}
               >
                 Sign out
               </button>
@@ -356,7 +411,7 @@ export default function AppHome() {
                 aria-label="More"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
-                className={`${PRESS} rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50`}
+                className={`${PRESS} rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 sm:rounded-xl sm:px-3 sm:py-2 sm:text-xs`}
               >
                 ⋯
               </button>
@@ -402,31 +457,32 @@ export default function AppHome() {
               ) : null}
             </div>
           </div>
+          {/* </div>
 
-          <section className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
+          <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-4 sm:rounded-3xl sm:p-8">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-700 sm:mb-3 sm:text-sm">
               Pharmacist Tool
             </p>
 
-            <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            <h1 className="text-xl font-bold leading-tight text-slate-900 sm:text-4xl">
               Insulin Days Supply Calculator with Priming
             </h1>
 
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700 sm:mt-4 sm:text-lg sm:leading-8">
               Professional insulin day-supply calculations with priming and
               expiration logic.
             </p>
 
-            <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" />
+            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 sm:mt-5 sm:rounded-2xl sm:px-4 sm:py-3">
+              <div className="flex items-start gap-2.5 sm:gap-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 sm:h-5 sm:w-5" />
 
-                <div className="text-sm leading-relaxed text-slate-700">
+                <div className="text-xs leading-5 text-slate-700 sm:text-sm sm:leading-relaxed">
                   <span className="font-semibold text-slate-900">
                     Free for Pharmacists, Pharmacy Technicians and other
                     Healthcare Professionals.
                   </span>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-0.5 text-[11px] text-slate-500 sm:mt-1 sm:text-xs">
                     Designed to support accurate day-supply calculations in
                     pharmacy workflow.
                   </div>
@@ -435,99 +491,102 @@ export default function AppHome() {
             </div>
 
             {effectiveIsPro && (
-              <div className="mt-4 inline-flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-                <div className="text-xs font-semibold text-emerald-800">
+              <div className="mt-3 inline-flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 sm:mt-4 sm:px-3">
+                <div className="text-[11px] font-semibold text-emerald-800 sm:text-xs">
                   Pro active ✓
                 </div>
-                <div className="mt-0.5 text-[11px] text-emerald-700">
+                <div className="mt-0.5 text-[10px] text-emerald-700 sm:text-[11px]">
                   {proConfidenceLine}
                 </div>
               </div>
             )}
-          </section>
+          </section> */}
 
-          <div className="mt-6">
-            <InstallCalculatorCard appName="Insulin Calculator" />
-          </div>
-
-          <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Search insulin products
-            </h2>
-
-            <p className="mt-3 text-slate-700">
-              Select an insulin product to open the calculator and estimate days
-              supply using product-specific priming and expiration logic.
-            </p>
-
-            <div className="mt-5 relative">
-              <Search
-                size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                id="insulin-search"
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                placeholder="Search insulin name..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {filtered.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/app/medicine/${m.id}`}
-                  className={`${PRESS} block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100`}
-                >
-                  <div className="text-lg font-bold tracking-tight text-slate-900">
-                    {m.name}
+          <section className="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:mt-4 sm:px-5 sm:py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <img
+                    src="/icons/icon-192.png"
+                    alt="Insulin Days Supply Calculator"
+                    className="h-7 w-7 rounded-md sm:h-8 sm:w-8"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 sm:text-[11px]">
+                      Pharmacist Tool
+                    </p>
+                    <h1 className="truncate text-sm font-bold leading-tight text-slate-900 sm:text-lg">
+                      Insulin Days Supply Calculator with Priming
+                    </h1>
                   </div>
+                </div>
 
-                  {m.addToName ? (
-                    <div className="mt-0.5 text-sm font-medium text-slate-600">
-                      {m.addToName}
-                    </div>
-                  ) : null}
-                </Link>
-              ))}
+                <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-1.5 sm:text-xs">
+                  Free for Pharmacists, Pharmacy Technicians and other
+                  Healthcare Professionals.
+                </p>
+              </div>
+
+              {effectiveIsPro ? (
+                <div className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-right">
+                  <div className="text-[10px] font-semibold text-emerald-800">
+                    Pro active ✓
+                  </div>
+                  <div className="text-[10px] text-emerald-700">
+                    {proConfidenceLine}
+                  </div>
+                </div>
+              ) : (
+                <div className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="text-[10px] font-semibold text-emerald-800">
+                      Free professional tool
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
+
+          <div className="sm:hidden">{searchSection}</div>
+          <div className="hidden sm:block">{installSection}</div>
+          <div className="sm:hidden">{installSection}</div>
+          <div className="hidden sm:block">{searchSection}</div>
 
           <div
             id="disclaimer"
-            className="mx-auto mt-8 max-w-3xl rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800 shadow-sm"
+            className="mx-auto mt-6 max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-800 shadow-sm sm:mt-8 sm:rounded-3xl sm:p-6 sm:text-sm"
           >
             <p className="font-semibold text-amber-900">
               Professional Use Notice
             </p>
-            <p className="mt-3">
+            <p className="mt-2 sm:mt-3">
               This calculator is intended for licensed healthcare professionals.
               It provides insulin day-supply estimates based on user-entered
               dosing information, product characteristics, priming assumptions,
               and expiration limits.
             </p>
-            <p className="mt-3">
+            <p className="mt-2 sm:mt-3">
               Results are provided for clinical support only and do not replace
               independent professional judgment. Users must verify all
               calculations against the prescription, manufacturer labeling,
               payer requirements, and applicable regulations.
             </p>
-            <p className="mt-3">
+            <p className="mt-2 sm:mt-3">
               By using this tool, users acknowledge that final responsibility
               for prescription verification and documentation remains with the
               dispensing professional.
             </p>
-            <p className="mt-3">
+            <p className="mt-2 sm:mt-3">
               This software is independently developed, not affiliated with any
               pharmaceutical manufacturer, does not provide medical advice, and
               is not intended for patient use.
             </p>
-            <p className="mt-4 text-amber-700">
+            <p className="mt-3 sm:mt-4 text-amber-700">
               We do not sell user information.
             </p>
-            <p className="mt-2 text-amber-700">
+            <p className="mt-1.5 sm:mt-2 text-amber-700">
               Support: support@insulinprimingdayssupply.com
             </p>
           </div>

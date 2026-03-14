@@ -93,14 +93,14 @@ export default function InsulinDaysSupplyCalculatorPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
+      {/* 
+
+
+
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {/* Left side */}
+      
         <div className="flex items-start gap-3">
-          {/* <img
-            src="/icons/icon-192.png"
-            alt="Insulin Days Supply Calculator"
-            className="w-10 h-10 rounded-lg"
-          /> */}
+         
 
           <div className="space-y-0">
             <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
@@ -130,17 +130,70 @@ export default function InsulinDaysSupplyCalculatorPage() {
             </div>
           </div>
         </div>
+      </div> */}
 
-        {/* Right side badge */}
-        {/* <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="px-2 py-1 rounded-md bg-slate-100">
-            Evidence-based
-          </span>
-          <span className="px-2 py-1 rounded-md bg-slate-100">
-            Audit-friendly
-          </span>
-        </div> */}
-      </div>
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:px-5 sm:py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <img
+                src="/icons/icon-192.png"
+                alt="Insulin Days Supply Calculator"
+                className="h-7 w-7 rounded-md sm:h-8 sm:w-8"
+              />
+
+              <h1 className="truncate text-sm font-bold text-slate-900 sm:text-lg">
+                Insulin Days’ Supply Calculator
+              </h1>
+            </div>
+
+            <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:text-xs">
+              Calculate insulin days supply including priming doses, pen
+              quantities, and expiration limits.
+            </p>
+
+            {/* SEO internal links */}
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
+              <a
+                href="/tresiba-days-supply-calculator"
+                className="hover:underline"
+              >
+                Tresiba
+              </a>
+              <span>•</span>
+              <a
+                href="/novolog-days-supply-calculator"
+                className="hover:underline"
+              >
+                Novolog
+              </a>
+              <span>•</span>
+              <a
+                href="/lantus-days-supply-calculator"
+                className="hover:underline"
+              >
+                Lantus
+              </a>
+              <span>•</span>
+              <a
+                href="/humalog-days-supply-calculator"
+                className="hover:underline"
+              >
+                Humalog
+              </a>
+            </div>
+          </div>
+
+          <div className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-[10px] font-semibold text-emerald-800">
+                Free pharmacist tool
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="mt-4">
         <InsulinDaysSupplyCalculatorClient />
