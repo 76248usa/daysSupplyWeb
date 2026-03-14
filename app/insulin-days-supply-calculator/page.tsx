@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { medicineData } from "@/lib/medicineData";
 import InsulinDaysSupplyCalculatorClient from "./InsulinDaysSupplyCalculatorClient";
-
+import { ShieldCheck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Insulin Days Supply Calculator | Includes Priming & Expiration",
   description:
@@ -93,43 +93,54 @@ export default function InsulinDaysSupplyCalculatorPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
-          Pharmacist Tool
-        </p>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Left side */}
+        <div className="flex items-start gap-3">
+          {/* <img
+            src="/icons/icon-192.png"
+            alt="Insulin Days Supply Calculator"
+            className="w-10 h-10 rounded-lg"
+          /> */}
 
-        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-          Insulin Days Supply Calculator
-        </h1>
+          <div className="space-y-1">
+            <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
+              Insulin Days’ Supply Calculator
+            </h1>
 
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
-          A free insulin days supply calculator helps pharmacists determine
-          insulin pen and vial days supply using total units dispensed, daily
-          dose, priming considerations, and expiration limits when appropriate.
-        </p>
+            <p className="text-sm text-slate-600">
+              Accurate insulin days’ supply calculations including priming
+              doses, pen sizes, and package quantities.
+            </p>
 
-        <p className="mt-4 max-w-3xl text-slate-700">
-          This calculator includes insulin pen priming and expiration limits,
-          helping pharmacists make more accurate insulin days supply decisions
-          for dispensing, insurance billing, and day-to-day workflow.
-        </p>
+            <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" />
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/insulin-calculators"
-            className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
-          >
-            Insulin Calculators Hub
-          </Link>
-
-          <Link
-            href="/days-supply-calculators"
-            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            All Days Supply Calculators
-          </Link>
+                <div className="text-sm leading-relaxed text-slate-700">
+                  <span className="font-semibold text-slate-900">
+                    Free for Pharmacists, Pharmacy Technicians and other
+                    Healthcare Professionals.
+                  </span>
+                  <div className="mt-1 text-xs text-slate-500">
+                    Designed to support accurate day-supply calculations in
+                    pharmacy workflow.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+
+        {/* Right side badge */}
+        {/* <div className="flex items-center gap-2 text-xs text-slate-500">
+          <span className="px-2 py-1 rounded-md bg-slate-100">
+            Evidence-based
+          </span>
+          <span className="px-2 py-1 rounded-md bg-slate-100">
+            Audit-friendly
+          </span>
+        </div> */}
+      </div>
 
       <section className="mt-10">
         <InsulinDaysSupplyCalculatorClient />
