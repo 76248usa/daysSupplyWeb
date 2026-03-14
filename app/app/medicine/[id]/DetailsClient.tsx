@@ -5,6 +5,12 @@ import Link from "next/link";
 import type { Medicine } from "@/lib/medicineData";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 function formatDateShort(iso?: string | null) {
   if (!iso) return null;
   const d = new Date(iso);
@@ -194,6 +200,10 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
     } else {
       setBoxAnswer(null);
     }
+
+    window.gtag?.("event", "insulin_calculation", {
+      insulin: medicine.name,
+    });
   };
 
   const reset = () => {

@@ -103,9 +103,9 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </h1>
 
         <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
-          An insulin days supply calculator helps pharmacists determine insulin
-          pen and vial days supply using total units dispensed, daily dose,
-          priming considerations, and expiration limits when appropriate.
+          A free insulin days supply calculator helps pharmacists determine
+          insulin pen and vial days supply using total units dispensed, daily
+          dose, priming considerations, and expiration limits when appropriate.
         </p>
 
         <p className="mt-4 max-w-3xl text-slate-700">
