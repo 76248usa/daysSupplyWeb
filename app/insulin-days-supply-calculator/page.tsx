@@ -109,7 +109,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
 
             <p className="text-sm text-slate-600">
               Accurate insulin days’ supply calculations including priming
-              doses, pen sizes, and package quantities.
+              doses,expiration, pen sizes, and package quantities.
             </p>
 
             <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">

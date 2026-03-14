@@ -34,12 +34,12 @@ export default function InsulinDaysSupplyCalculatorClient() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-3">
         <h3 className="text-xl font-semibold text-slate-900">
           Select an insulin product
         </h3>
 
-        <p className="mt-2 text-slate-700">
+        <p className="text-xs mt-2 text-slate-700">
           Search for an insulin product, then use the calculator below to
           estimate days supply with priming and expiration considerations.
         </p>
