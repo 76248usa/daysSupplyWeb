@@ -11,7 +11,7 @@ const PRESS =
 export default function InsulinDaysSupplyCalculatorClient() {
   const [search, setSearch] = useState("");
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(
-    medicineData[0] ?? null,
+    null,
   );
 
   const filtered = useMemo(() => {
