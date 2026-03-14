@@ -87,7 +87,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
@@ -102,7 +102,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
             className="w-10 h-10 rounded-lg"
           /> */}
 
-          <div className="space-y-1">
+          <div className="space-y-0">
             <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
               Insulin Days’ Supply Calculator
             </h1>
@@ -142,11 +142,11 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </div> */}
       </div>
 
-      <section className="mt-10">
+      <section className="mt-4">
         <InsulinDaysSupplyCalculatorClient />
       </section>
 
-      <section className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-6">
+      <section className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-4">
         <h2 className="text-2xl font-bold text-slate-900">
           How insulin days supply is calculated
         </h2>

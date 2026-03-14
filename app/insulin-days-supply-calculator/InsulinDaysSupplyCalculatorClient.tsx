@@ -33,7 +33,7 @@ export default function InsulinDaysSupplyCalculatorClient() {
   }, [search]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-1">
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-3">
         <h3 className="text-xl font-semibold text-slate-900">
           Select an insulin product
