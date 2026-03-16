@@ -141,7 +141,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
               Calculate insulin days supply and insulin day supply including
               priming doses, pen quantities, and expiration limits.
             </p>
-
+            {/* 
             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
               <span className="text-slate-500">Popular calculators:</span>
 
@@ -174,6 +174,57 @@ export default function InsulinDaysSupplyCalculatorPage() {
                 className="hover:underline"
               >
                 Humalog days supply calculator
+              </Link>
+            </div> */}
+
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
+              <span className="text-slate-500">Popular pages:</span>
+
+              <Link
+                href="/tresiba-days-supply-calculator"
+                className="hover:underline"
+              >
+                Tresiba days supply calculator
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/novolog-days-supply-calculator"
+                className="hover:underline"
+              >
+                Novolog days supply calculator
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/lantus-days-supply-calculator"
+                className="hover:underline"
+              >
+                Lantus days supply calculator
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/humalog-days-supply-calculator"
+                className="hover:underline"
+              >
+                Humalog days supply calculator
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/insulin-pen-priming-days-supply"
+                className="hover:underline"
+              >
+                Pen priming guide
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/insulin-expiration-after-opening"
+                className="hover:underline"
+              >
+                Insulin expiration guide
               </Link>
             </div>
           </div>
