@@ -7,10 +7,13 @@ import { ShieldCheck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Insulin Days Supply Calculator | Includes Priming & Expiration",
   description:
-    "Professional insulin days supply calculator for pharmacists. Calculate insulin pen and vial days supply including priming doses and expiration limits for accurate dispensing and billing.",
+    "Professional insulin days supply calculator and insulin day supply calculator for pharmacists. Calculate insulin pen and vial day supply including priming doses and expiration limits for accurate dispensing and billing.",
   keywords: [
     "insulin days supply calculator",
     "insulin day supply calculator",
+    "insulin day supply",
+    "insulin days supply",
+    "insulin pen day supply",
     "insulin pen days supply",
     "tresiba days supply calculator",
     "novolog days supply calculator",
@@ -54,7 +57,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
     name: "Insulin Days Supply Calculator",
     url: "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
     description:
-      "Professional insulin days supply calculator for pharmacists. Includes insulin pen priming doses and expiration limits for pharmacy workflow support.",
+      "Professional insulin days supply calculator and insulin day supply calculator for pharmacists. Includes insulin pen priming doses and expiration limits for pharmacy workflow support.",
     audience: {
       "@type": "MedicalAudience",
       audienceType: "Pharmacists",
@@ -70,6 +73,14 @@ export default function InsulinDaysSupplyCalculatorPage() {
         acceptedAnswer: {
           "@type": "Answer",
           text: "An insulin days supply calculator helps pharmacists estimate days supply using total insulin dispensed, daily dose, priming considerations, and expiration limits when applicable.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is an insulin day supply calculator?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "An insulin day supply calculator helps pharmacists determine the correct day supply for insulin prescriptions based on total units dispensed, daily dosing, priming loss, and expiration limits.",
         },
       },
       {
@@ -127,8 +138,8 @@ export default function InsulinDaysSupplyCalculatorPage() {
             </div>
 
             <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-1.5 sm:text-xs">
-              Calculate insulin days supply including priming doses, pen
-              quantities, and expiration limits.
+              Calculate insulin days supply and insulin day supply including
+              priming doses, pen quantities, and expiration limits.
             </p>
 
             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
@@ -138,7 +149,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
                 href="/tresiba-days-supply-calculator"
                 className="hover:underline"
               >
-                Tresiba
+                Tresiba days supply calculator
               </Link>
               <span>•</span>
 
@@ -146,7 +157,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
                 href="/novolog-days-supply-calculator"
                 className="hover:underline"
               >
-                Novolog
+                Novolog days supply calculator
               </Link>
               <span>•</span>
 
@@ -154,7 +165,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
                 href="/lantus-days-supply-calculator"
                 className="hover:underline"
               >
-                Lantus
+                Lantus days supply calculator
               </Link>
               <span>•</span>
 
@@ -162,7 +173,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
                 href="/humalog-days-supply-calculator"
                 className="hover:underline"
               >
-                Humalog
+                Humalog days supply calculator
               </Link>
             </div>
           </div>
@@ -179,9 +190,10 @@ export default function InsulinDaysSupplyCalculatorPage() {
       </section>
 
       <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
-        Pharmacist calculator for insulin days supply including priming doses,
-        pen package sizes, and expiration limits. Supports Tresiba, Novolog,
-        Humalog, Lantus, Toujeo, Admelog and other insulin pens.
+        Pharmacist calculator for insulin days supply and insulin day supply
+        including priming doses, pen package sizes, and expiration limits.
+        Supports Tresiba, Novolog, Humalog, Lantus, Toujeo, Admelog and other
+        insulin pens.
       </p>
 
       <section className="mt-4">
@@ -190,7 +202,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:mt-10">
         <h2 className="text-2xl font-bold text-slate-900">
-          How insulin days supply is calculated
+          How insulin days supply (day supply) is calculated
         </h2>
 
         <p className="mt-4 leading-7 text-slate-700">
@@ -198,7 +210,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
           insulin units dispensed by the patient&apos;s total daily dose.
           However, for many insulin pen products, priming can reduce the
           effective insulin available for dosing, and expiration after opening
-          can shorten the practical days supply.
+          can shorten the practical day supply or billed days supply.
         </p>
 
         <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
@@ -210,7 +222,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
         <p className="mt-4 leading-7 text-slate-700">
           This is why pharmacists often need more than simple unit math alone.
           Priming and expiration can materially affect the final insulin days
-          supply used for dispensing and billing workflow.
+          supply used for dispensing, billing, and documentation workflow.
         </p>
       </section>
 
@@ -234,6 +246,109 @@ export default function InsulinDaysSupplyCalculatorPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Frequently asked questions
+        </h2>
+
+        <div className="mt-6 space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              What is an insulin days supply calculator?
+            </h3>
+            <p className="mt-2 leading-7 text-slate-700">
+              An insulin days supply calculator helps pharmacists estimate days
+              supply using total insulin dispensed, daily dose, priming
+              considerations, and expiration limits when applicable.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              What is an insulin day supply calculator?
+            </h3>
+            <p className="mt-2 leading-7 text-slate-700">
+              An insulin day supply calculator helps pharmacists determine the
+              correct day supply for insulin prescriptions based on total units
+              dispensed, daily dosing, priming loss, and expiration limits.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              How do you calculate insulin days supply?
+            </h3>
+            <p className="mt-2 leading-7 text-slate-700">
+              Insulin days supply is typically calculated by dividing the total
+              insulin units dispensed by the total daily units used, while also
+              considering priming loss and expiration limits when relevant.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Why does insulin pen priming affect days supply?
+            </h3>
+            <p className="mt-2 leading-7 text-slate-700">
+              Priming removes air from insulin pens but uses insulin units that
+              are not delivered therapeutically, which can reduce the effective
+              insulin available for patient use.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Why does insulin expiration matter for days supply?
+            </h3>
+            <p className="mt-2 leading-7 text-slate-700">
+              Some insulin products expire after opening, so the practical
+              billed or usable days supply may be shorter than the mathematical
+              unit-based calculation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Learn more about insulin days supply
+        </h2>
+
+        <p className="mt-3 max-w-3xl text-slate-700">
+          Need more detail on pharmacist workflow? These guides explain how
+          insulin pen priming and expiration after opening can affect practical
+          insulin days supply and insulin day supply calculations.
+        </p>
+
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+          <li className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <Link
+              href="/insulin-pen-priming-days-supply"
+              className="font-semibold text-cyan-700 underline underline-offset-4"
+            >
+              Insulin pen priming and days supply
+            </Link>
+            <p className="mt-2 text-sm text-slate-600">
+              Learn how priming loss can reduce usable insulin units and affect
+              billed day supply.
+            </p>
+          </li>
+
+          <li className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <Link
+              href="/insulin-expiration-after-opening"
+              className="font-semibold text-cyan-700 underline underline-offset-4"
+            >
+              Insulin expiration after opening
+            </Link>
+            <p className="mt-2 text-sm text-slate-600">
+              Learn how expiration limits can shorten practical insulin days
+              supply for pens and vials.
+            </p>
+          </li>
+        </ul>
       </section>
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">

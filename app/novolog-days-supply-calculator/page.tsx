@@ -83,7 +83,9 @@ export default function NovoLogDaysSupplyCalculatorPage() {
         <p className="mt-4 text-lg text-slate-700 leading-8">
           This page explains how pharmacists calculate{" "}
           <strong>NovoLog days supply</strong> using insulin pen units, total
-          daily dose, and priming considerations.
+          daily dose, and priming considerations. Use this insulin days supply
+          calculator to estimate the correct insulin day supply for
+          prescriptions including priming and expiration considerations
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">

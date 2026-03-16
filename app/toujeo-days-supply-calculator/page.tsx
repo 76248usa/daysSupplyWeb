@@ -92,7 +92,9 @@ export default function ToujeoDaysSupplyCalculatorPage() {
         <p className="mt-4 text-lg leading-8 text-slate-700">
           This page explains how pharmacists calculate{" "}
           <strong>Toujeo days supply</strong> using total insulin units, patient
-          daily dose, and priming considerations.
+          daily dose, and priming considerations. Use this insulin days supply
+          calculator to estimate the correct insulin day supply for
+          prescriptions including priming and expiration considerations
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">

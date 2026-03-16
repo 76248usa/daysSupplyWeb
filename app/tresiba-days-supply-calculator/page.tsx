@@ -379,8 +379,9 @@ export default function TresibaDaysSupplyCalculatorPage() {
           Calculate Tresiba days supply faster
         </h2>
         <p className="mt-3 max-w-3xl leading-7 text-slate-700">
-          Use your main insulin calculator for faster workflow, then cross-check
-          against your priming and expiration reference pages when needed.
+          The perfect tool for faster workflow. Use this Tresiba insulin days
+          supply calculator to estimate the correct insulin day supply for
+          prescriptions including priming and expiration considerations.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
