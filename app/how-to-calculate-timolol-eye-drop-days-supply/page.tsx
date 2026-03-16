@@ -60,7 +60,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: "Timolol",
     },
     mainEntity: faqs.map((faq) => ({

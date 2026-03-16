@@ -73,7 +73,7 @@ export default async function EyeDropDrugPage({ params }: Props) {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: group.genericName,
     },
   };

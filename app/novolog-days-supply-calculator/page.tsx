@@ -55,7 +55,7 @@ export default function NovoLogDaysSupplyCalculatorPage() {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: "NovoLog",
     },
     mainEntity: faqs.map((faq) => ({

@@ -63,7 +63,7 @@ export default function AdmelogDaysSupplyCalculatorPage() {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: "Admelog",
     },
     mainEntity: faqs.map((faq) => ({
