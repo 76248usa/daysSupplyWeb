@@ -37,7 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Insulin Days Supply Calculator | Includes Priming & Expiration",
+    title:
+      "Insulin Days Supply Calculator (With Priming & Expiration) | Pharmacist Tool",
     description:
       "Professional insulin days supply calculator for pharmacists with priming doses and expiration limits included.",
   },
