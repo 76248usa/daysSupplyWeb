@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Insulin Days Supply Calculator with Priming",
@@ -63,6 +64,19 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-950 overscroll-none">
         <Providers>{children}</Providers>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-TCL760SLSX');
+          `}
+        </Script>
       </body>
     </html>
   );
