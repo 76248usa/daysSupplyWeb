@@ -40,9 +40,9 @@ export default function EyeDropsCalculatorClient() {
   const [bottleCount, setBottleCount] = useState("1");
   const [bottleSizeMl, setBottleSizeMl] = useState("");
   const [dropsPerMl, setDropsPerMl] = useState(String(DEFAULT_DROPS_PER_ML));
-  const [dropsPerDose, setDropsPerDose] = useState("1");
+  const [leftEyeDropsPerDose, setLeftEyeDropsPerDose] = useState("1");
+  const [rightEyeDropsPerDose, setRightEyeDropsPerDose] = useState("1");
   const [timesPerDay, setTimesPerDay] = useState("2");
-  const [eyesTreated, setEyesTreated] = useState("2");
 
   useEffect(() => {
     let active = true;
@@ -96,9 +96,9 @@ export default function EyeDropsCalculatorClient() {
   const bottleCountNum = Number.parseFloat(bottleCount);
   const bottleSizeMlNum = Number.parseFloat(bottleSizeMl);
   const dropsPerMlNum = Number.parseFloat(dropsPerMl);
-  const dropsPerDoseNum = Number.parseFloat(dropsPerDose);
+  const leftEyeDropsPerDoseNum = Number.parseFloat(leftEyeDropsPerDose);
+  const rightEyeDropsPerDoseNum = Number.parseFloat(rightEyeDropsPerDose);
   const timesPerDayNum = Number.parseFloat(timesPerDay);
-  const eyesTreatedNum = Number.parseFloat(eyesTreated);
 
   const totalDrops = useMemo(() => {
     if (
@@ -118,19 +118,30 @@ export default function EyeDropsCalculatorClient() {
 
   const dropsPerDay = useMemo(() => {
     if (
-      !Number.isFinite(dropsPerDoseNum) ||
-      !Number.isFinite(timesPerDayNum) ||
-      !Number.isFinite(eyesTreatedNum)
+      !Number.isFinite(leftEyeDropsPerDoseNum) ||
+      !Number.isFinite(rightEyeDropsPerDoseNum) ||
+      !Number.isFinite(timesPerDayNum)
     ) {
       return null;
     }
 
-    if (dropsPerDoseNum <= 0 || timesPerDayNum <= 0 || eyesTreatedNum <= 0) {
+    if (
+      leftEyeDropsPerDoseNum < 0 ||
+      rightEyeDropsPerDoseNum < 0 ||
+      timesPerDayNum <= 0
+    ) {
       return null;
     }
 
-    return dropsPerDoseNum * timesPerDayNum * eyesTreatedNum;
-  }, [dropsPerDoseNum, timesPerDayNum, eyesTreatedNum]);
+    const totalDropsPerAdministration =
+      leftEyeDropsPerDoseNum + rightEyeDropsPerDoseNum;
+
+    if (totalDropsPerAdministration <= 0) {
+      return null;
+    }
+
+    return totalDropsPerAdministration * timesPerDayNum;
+  }, [leftEyeDropsPerDoseNum, rightEyeDropsPerDoseNum, timesPerDayNum]);
 
   const estimatedDaysSupply = useMemo(() => {
     if (totalDrops == null || dropsPerDay == null || dropsPerDay <= 0) {
@@ -277,24 +288,6 @@ export default function EyeDropsCalculatorClient() {
 
             <div>
               <label
-                htmlFor="dropsPerDose"
-                className="block text-sm font-semibold text-slate-900"
-              >
-                Drops per administration
-              </label>
-              <input
-                id="dropsPerDose"
-                type="number"
-                min="1"
-                step="1"
-                value={dropsPerDose}
-                onChange={(e) => setDropsPerDose(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label
                 htmlFor="timesPerDay"
                 className="block text-sm font-semibold text-slate-900"
               >
@@ -313,20 +306,44 @@ export default function EyeDropsCalculatorClient() {
 
             <div>
               <label
-                htmlFor="eyesTreated"
+                htmlFor="leftEyeDropsPerDose"
                 className="block text-sm font-semibold text-slate-900"
               >
-                Eyes treated
+                Left eye drops per administration
               </label>
-              <select
-                id="eyesTreated"
-                value={eyesTreated}
-                onChange={(e) => setEyesTreated(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900"
+              <input
+                id="leftEyeDropsPerDose"
+                type="number"
+                min="0"
+                step="1"
+                value={leftEyeDropsPerDose}
+                onChange={(e) => setLeftEyeDropsPerDose(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="rightEyeDropsPerDose"
+                className="block text-sm font-semibold text-slate-900"
               >
-                <option value="1">1 eye</option>
-                <option value="2">2 eyes</option>
-              </select>
+                Right eye drops per administration
+              </label>
+              <input
+                id="rightEyeDropsPerDose"
+                type="number"
+                min="0"
+                step="1"
+                value={rightEyeDropsPerDose}
+                onChange={(e) => setRightEyeDropsPerDose(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <p className="text-xs text-slate-500">
+                Enter 0 for an eye that is not being treated.
+              </p>
             </div>
           </div>
         </div>
@@ -387,7 +404,8 @@ export default function EyeDropsCalculatorClient() {
               Total Drops = bottle count × bottle size (mL) × drops per mL
             </p>
             <p className="mt-2 text-sm leading-7 text-slate-700">
-              Drops Used Per Day = drops per dose × times per day × eyes treated
+              Drops Used Per Day = (left eye drops + right eye drops) × times
+              per day
             </p>
           </section>
         </div>
@@ -402,7 +420,7 @@ export default function EyeDropsCalculatorClient() {
           {[
             "Bottle size may be auto-detected from FDA package description.",
             "Drops per mL is an estimate and may vary by bottle design.",
-            "Eye-drop days supply can differ if used in one eye versus both eyes.",
+            "Left and right eye dosing can be entered separately.",
             "Always follow your pharmacy workflow and payer requirements.",
           ].map((note) => (
             <div
