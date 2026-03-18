@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { medicineData, type Medicine } from "@/lib/medicineData";
+import { medicineData } from "@/lib/medicineData";
 import DetailsClient from "@/app/app/medicine/[id]/DetailsClient";
 
 const PRESS =
@@ -10,9 +10,7 @@ const PRESS =
 
 export default function InsulinDaysSupplyCalculatorClient() {
   const [search, setSearch] = useState("");
-  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(
-    null,
-  );
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -32,6 +30,11 @@ export default function InsulinDaysSupplyCalculatorClient() {
     });
   }, [search]);
 
+  const selectedMedicine = useMemo(
+    () => medicineData.find((m) => m.id === selectedId) ?? null,
+    [selectedId],
+  );
+
   return (
     <div className="space-y-1">
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-3">
@@ -39,12 +42,12 @@ export default function InsulinDaysSupplyCalculatorClient() {
           Select an insulin product
         </h3>
 
-        <p className="text-xs mt-2 text-slate-700">
+        <p className="mt-2 text-xs text-slate-700">
           Search for an insulin product, then use the calculator below to
           estimate days supply with priming and expiration considerations.
         </p>
 
-        <div className="mt-5 relative">
+        <div className="relative mt-5">
           <Search
             size={18}
             className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -59,13 +62,13 @@ export default function InsulinDaysSupplyCalculatorClient() {
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {filtered.map((m) => {
-            const isSelected = selectedMedicine?.id === m.id;
+            const isSelected = selectedId === m.id;
 
             return (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setSelectedMedicine(m)}
+                onClick={() => setSelectedId(m.id)}
                 className={[
                   PRESS,
                   "rounded-2xl border p-4 text-left transition",
@@ -94,8 +97,14 @@ export default function InsulinDaysSupplyCalculatorClient() {
       </div>
 
       {selectedMedicine ? (
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <DetailsClient medicine={selectedMedicine} />
+        <section
+          id="calculator"
+          className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+        >
+          <DetailsClient
+            key={selectedMedicine.id}
+            medicine={selectedMedicine}
+          />
         </section>
       ) : (
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -113,7 +113,7 @@ export default function EarDropsDaysSupplyCalculatorPage() {
               optional duration limits.
             </p>
 
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
+            {/* <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
               <span className="text-slate-500">Related pages:</span>
 
               <Link href="/days-supply-calculators" className="hover:underline">
@@ -134,6 +134,38 @@ export default function EarDropsDaysSupplyCalculatorPage() {
                 className="hover:underline"
               >
                 Insulin calculator
+              </Link>
+            </div> */}
+
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
+              <span className="text-slate-500">Resources:</span>
+
+              <Link
+                href="/how-to-calculate-ear-drop-days-supply"
+                className="hover:underline"
+              >
+                Ear drops guide
+              </Link>
+              <span>•</span>
+
+              <Link href="/days-supply-calculators" className="hover:underline">
+                Calculators hub
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/eye-drops-days-supply-calculator"
+                className="hover:underline"
+              >
+                Eye drops
+              </Link>
+              <span>•</span>
+
+              <Link
+                href="/insulin-days-supply-calculator"
+                className="hover:underline"
+              >
+                Insulin
               </Link>
             </div>
           </div>
@@ -159,6 +191,24 @@ export default function EarDropsDaysSupplyCalculatorPage() {
         <EarDropsCalculatorClient />
       </section>
 
+      <section className="mt-6 rounded-3xl border border-cyan-100 bg-cyan-50 p-5">
+        <h2 className="text-lg font-bold text-slate-900">
+          Learn how ear drops days supply is calculated
+        </h2>
+
+        <p className="mt-2 text-sm text-slate-700">
+          See a step-by-step pharmacist guide covering bottle size, drops per
+          mL, one-ear vs both-ears dosing, and duration limits.
+        </p>
+
+        <Link
+          href="/how-to-calculate-ear-drop-days-supply"
+          className="mt-3 inline-flex rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+        >
+          View ear drops guide
+        </Link>
+      </section>
+
       <section className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:mt-10">
         <h2 className="text-2xl font-bold text-slate-900">
           How ear drops days supply is calculated
@@ -169,7 +219,7 @@ export default function EarDropsDaysSupplyCalculatorPage() {
           number of drops in the dispensed bottle and dividing by the number of
           drops used per day. In pharmacy workflow, the calculation may also be
           limited by the prescribed duration when directions specify a fixed
-          number of days.
+          number of days. Use our ear drop days supply calculator.
         </p>
 
         <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
