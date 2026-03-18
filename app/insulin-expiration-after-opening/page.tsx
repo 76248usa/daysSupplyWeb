@@ -110,6 +110,23 @@ export default function InsulinExpirationAfterOpeningPage() {
               and insulin day supply calculations for pens and vials.
             </p>
 
+            <h2>How long is insulin good after opening?</h2>
+
+            <p>
+              Most insulin products expire 28 days after opening, although some
+              products differ. This expiration can limit the maximum billable
+              days supply regardless of total units.
+            </p>
+
+            <p>
+              For example, even if calculated days supply is 40 days, expiration
+              may limit it to 28 days.
+            </p>
+
+            <Link href="/insulin-days-supply-calculator">
+              Use the insulin days supply calculator →
+            </Link>
+
             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
               <Link
                 href="/insulin-days-supply-calculator"

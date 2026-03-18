@@ -33,6 +33,11 @@ export default function DaysSupplyCalculatorsHub() {
         Pharmacy Days Supply Calculators
       </h1>
 
+      <p>
+        This insulin days supply calculator is designed for pharmacists and
+        pharmacy technicians.
+      </p>
+
       <p style={{ fontSize: "1.05rem", marginBottom: 20 }}>
         Professional days supply calculators designed for pharmacist workflow.
         These tools help estimate medication days supply for dispensing,

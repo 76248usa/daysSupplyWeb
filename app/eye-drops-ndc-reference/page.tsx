@@ -93,6 +93,11 @@ export default async function EyeDropsNdcReferencePage() {
         </div>
       </section>
 
+      <p>
+        These days supply calculators are designed for pharmacists and pharmacy
+        technicians.
+      </p>
+
       <section className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-6">
         <h2 className="text-2xl font-bold text-slate-900">
           Browse by ophthalmic drug

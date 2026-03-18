@@ -25,9 +25,10 @@ export default function EyeDropsLanding() {
         </h1>
 
         <p className="mt-3 max-w-2xl text-slate-300">
-          A pharmacist-focused calculator to support consistent day-supply
-          documentation for ophthalmic products using bottle size, drops per mL,
-          dosing frequency, and one-eye or both-eyes directions.
+          A pharmacist and pharmacy technician-focused calculator to support
+          consistent day-supply documentation for ophthalmic products using
+          bottle size, drops per mL, dosing frequency, and one-eye or both-eyes
+          directions.
         </p>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">

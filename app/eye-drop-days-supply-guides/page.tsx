@@ -61,6 +61,11 @@ export default async function EyeDropGuidesIndexPage() {
           supply using bottle size, drops per mL, and daily dosing directions.
         </p>
 
+        <p>
+          This eye drops supply calculator is designed for pharmacists and
+          pharmacy technicians.
+        </p>
+
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/eye-drops-days-supply-calculator"

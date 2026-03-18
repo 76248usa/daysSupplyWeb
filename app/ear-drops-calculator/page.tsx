@@ -32,6 +32,11 @@ export default function EarDropsLanding() {
           day-supply documentation for prescription otic drops.
         </p>
 
+        <p>
+          This ear drops calculator is designed for pharmacists and pharmacy
+          technicians.
+        </p>
+
         {/* What it does */}
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <div className="text-sm font-semibold text-slate-200">

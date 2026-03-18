@@ -105,6 +105,23 @@ export default function InsulinPenPrimingDaysSupplyPage() {
               </div>
             </div>
 
+            <h2>How many units are lost during insulin pen priming?</h2>
+
+            <p>
+              Most insulin pens require 1–2 units per priming attempt. If
+              priming is done before each injection, this can significantly
+              reduce total usable insulin.
+            </p>
+
+            <p>
+              This is why insulin days supply calculations may be shorter than
+              expected.
+            </p>
+
+            <Link href="/insulin-days-supply-calculator">
+              Calculate insulin days supply including priming →
+            </Link>
+
             <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-1.5 sm:text-xs">
               Learn how insulin pen priming can affect insulin days supply and
               insulin day supply calculations in pharmacy workflow.

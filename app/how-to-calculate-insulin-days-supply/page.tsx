@@ -27,6 +27,19 @@ export default function HowToCalculateInsulinDaysSupplyPage() {
         calculations.
       </p>
 
+      <h2>Step-by-step insulin day supply calculation</h2>
+
+      <p>Example: 1500 units ÷ 50 units/day = 30 days supply</p>
+
+      <p>
+        But priming loss and expiration limits may reduce the final insulin day
+        supply.
+      </p>
+
+      <Link href="/insulin-days-supply-calculator">
+        Use the insulin days supply calculator →
+      </Link>
+
       <section className="mt-8">
         <h2 className="text-2xl font-semibold text-slate-900">
           Basic insulin days supply formula

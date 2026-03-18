@@ -2,75 +2,77 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "How to Calculate Timolol Eye Drop Days Supply | Pharmacist Guide",
+  title: "How to Calculate Brimonidine Eye Drop Days Supply | Pharmacist Guide",
   description:
-    "Step-by-step pharmacist guide explaining how to calculate timolol eye drop days supply using bottle size, drops per mL, dosing frequency, and practical workflow considerations.",
+    "Step-by-step pharmacist guide explaining how to calculate brimonidine eye drop days supply using bottle size, drops per mL, dosing frequency, and practical workflow considerations.",
   keywords: [
-    "timolol eye drop days supply",
-    "how to calculate timolol eye drop days supply",
-    "timolol ophthalmic days supply",
-    "timolol day supply",
-    "eye drop days supply calculator timolol",
-    "timolol eye drops pharmacist guide",
+    "brimonidine eye drop days supply",
+    "how to calculate brimonidine eye drop days supply",
+    "brimonidine ophthalmic days supply",
+    "brimonidine day supply",
+    "eye drop days supply calculator brimonidine",
+    "brimonidine eye drops pharmacist guide",
   ],
   alternates: {
     canonical:
-      "https://www.insulinprimingdayssupply.com/how-to-calculate-timolol-eye-drop-days-supply",
+      "https://www.insulinprimingdayssupply.com/how-to-calculate-brimonidine-eye-drop-days-supply",
   },
   openGraph: {
-    title: "How to Calculate Timolol Eye Drop Days Supply | Pharmacist Guide",
+    title:
+      "How to Calculate Brimonidine Eye Drop Days Supply | Pharmacist Guide",
     description:
-      "Step-by-step pharmacist guide explaining how to calculate timolol eye drop days supply using bottle size, drops per mL, dosing frequency, and practical workflow considerations.",
-    url: "https://www.insulinprimingdayssupply.com/how-to-calculate-timolol-eye-drop-days-supply",
+      "Step-by-step pharmacist guide explaining how to calculate brimonidine eye drop days supply using bottle size, drops per mL, dosing frequency, and practical workflow considerations.",
+    url: "https://www.insulinprimingdayssupply.com/how-to-calculate-brimonidine-eye-drop-days-supply",
     siteName: "Insulin Days' Supply",
     type: "article",
   },
   twitter: {
     card: "summary_large_image",
-    title: "How to Calculate Timolol Eye Drop Days Supply | Pharmacist Guide",
+    title:
+      "How to Calculate Brimonidine Eye Drop Days Supply | Pharmacist Guide",
     description:
-      "Step-by-step pharmacist guide explaining how to calculate timolol eye drop days supply using bottle size, drops per mL, dosing frequency, and practical workflow considerations.",
+      "Step-by-step pharmacist guide explaining how to calculate brimonidine eye drop days supply using bottle size, drops per mL, dosing frequency, and practical workflow considerations.",
   },
 };
 
 const faqs = [
   {
-    question: "How do you calculate timolol eye drop days supply?",
+    question: "How do you calculate brimonidine eye drop days supply?",
     answer:
-      "Estimate the total number of drops in the bottle, then divide by the number of drops the patient uses each day based on directions for both eyes or one eye.",
+      "Estimate the total number of drops in the bottle, then divide by the total number of drops used each day based on whether the medication is used in one eye or both eyes.",
   },
   {
-    question: "How many drops are in a 5 mL timolol bottle?",
+    question: "How many drops are in a 5 mL brimonidine bottle?",
     answer:
       "The exact number can vary by bottle and drop size, but many pharmacy workflows estimate around 15 to 20 drops per mL unless a different standard is used.",
   },
   {
-    question: "Why can timolol eye drop days supply vary?",
+    question: "Why can brimonidine eye drop days supply vary?",
     answer:
       "Days supply can vary because drop size differs by bottle design, patient technique, prescribed frequency, and whether one or both eyes are being treated.",
   },
   {
-    question: "Why is timolol days supply important for billing?",
+    question: "Why is brimonidine days supply important for billing?",
     answer:
       "Accurate eye drop days supply helps support refill timing, prescription processing, and documentation consistency for pharmacy billing workflows.",
   },
 ];
 
-export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
+export default function HowToCalculateBrimonidineEyeDropDaysSupplyPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": ["MedicalWebPage", "FAQPage"],
-    name: "How to Calculate Timolol Eye Drop Days Supply",
-    url: "https://www.insulinprimingdayssupply.com/how-to-calculate-timolol-eye-drop-days-supply",
+    name: "How to Calculate Brimonidine Eye Drop Days Supply",
+    url: "https://www.insulinprimingdayssupply.com/how-to-calculate-brimonidine-eye-drop-days-supply",
     description:
-      "Step-by-step guide for calculating timolol eye drop days supply using bottle size, drops per mL, and dosing frequency.",
+      "Step-by-step guide for calculating brimonidine eye drop days supply using bottle size, drops per mL, and dosing frequency.",
     audience: {
       "@type": "MedicalAudience",
       audienceType: "Pharmacists",
     },
     about: {
       "@type": "MedicalEntity",
-      name: "Timolol",
+      name: "Brimonidine",
     },
     isPartOf: {
       "@type": "WebSite",
@@ -80,9 +82,9 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
     relatedLink: [
       "https://www.insulinprimingdayssupply.com/eye-drops-days-supply-calculator",
       "https://www.insulinprimingdayssupply.com/how-to-calculate-eye-drop-days-supply",
-      "https://www.insulinprimingdayssupply.com/eye-drops-ndc-reference/timolol",
+      "https://www.insulinprimingdayssupply.com/eye-drops-ndc-reference/brimonidine",
+      "https://www.insulinprimingdayssupply.com/how-to-calculate-timolol-eye-drop-days-supply",
       "https://www.insulinprimingdayssupply.com/how-to-calculate-latanoprost-eye-drop-days-supply",
-      "https://www.insulinprimingdayssupply.com/how-to-calculate-brimonidine-eye-drop-days-supply",
       "https://www.insulinprimingdayssupply.com/how-to-calculate-dorzolamide-eye-drop-days-supply",
     ],
     mainEntity: faqs.map((faq) => ({
@@ -108,12 +110,12 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
         </p>
 
         <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-          How to Calculate Timolol Eye Drop Days Supply
+          How to Calculate Brimonidine Eye Drop Days Supply
         </h1>
 
         <p className="mt-4 text-lg leading-8 text-slate-700">
           This pharmacist-focused guide explains how to calculate{" "}
-          <strong>timolol eye drop days supply</strong> using bottle size,
+          <strong>brimonidine eye drop days supply</strong> using bottle size,
           estimated drops per mL, and prescribed daily use.
         </p>
 
@@ -133,10 +135,10 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
           </Link>
 
           <Link
-            href="/eye-drops-ndc-reference/timolol"
+            href="/eye-drops-ndc-reference/brimonidine"
             className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Timolol NDC Page
+            Brimonidine NDC Page
           </Link>
         </div>
       </section>
@@ -160,7 +162,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
 
       <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
-          Step-by-step: how to calculate timolol eye drop days supply
+          Step-by-step: how to calculate brimonidine eye drop days supply
         </h2>
 
         <div className="mt-6 space-y-6 text-slate-700">
@@ -169,9 +171,9 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
               Step 1: Confirm the bottle size
             </h3>
             <p className="mt-2 leading-7">
-              Review the exact timolol product and bottle size dispensed. Many
-              common ophthalmic products are supplied in small bottles such as 5
-              mL, but the exact package should always be confirmed.
+              Review the exact brimonidine product and bottle size dispensed.
+              Many common ophthalmic products are supplied in small bottles such
+              as 5 mL, but the exact package should always be confirmed.
             </p>
           </div>
 
@@ -194,6 +196,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
               Review the prescription directions carefully. Count the total
               number of drops used each day, taking into account frequency and
               whether the medication is used in one eye or both eyes.
+              Brimonidine is often dosed more than once daily.
             </p>
           </div>
 
@@ -232,7 +235,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
 
       <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
-          Example timolol eye drop days supply calculation
+          Example brimonidine eye drop days supply calculation
         </h2>
 
         <div className="mt-6 space-y-5 text-slate-700">
@@ -241,13 +244,13 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
               <li>Bottle size: 5 mL</li>
               <li>Estimated drops per mL: 20</li>
               <li>Total estimated drops: 100 drops</li>
-              <li>Directions: 1 drop in each eye twice daily</li>
-              <li>Total daily use: 4 drops per day</li>
+              <li>Directions: 1 drop in each eye three times daily</li>
+              <li>Total daily use: 6 drops per day</li>
             </ul>
           </div>
 
           <div className="rounded-2xl bg-cyan-50 p-5 text-slate-900">
-            <p className="font-semibold">100 ÷ 4 = 25 days supply</p>
+            <p className="font-semibold">100 ÷ 6 = 16.7 days supply</p>
           </div>
 
           <p className="leading-7">
@@ -260,7 +263,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
 
       <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
-          Common timolol eye drop days supply mistakes
+          Common brimonidine eye drop days supply mistakes
         </h2>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -268,7 +271,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
             "Forgetting to count both eyes",
             "Using the wrong bottle size",
             "Ignoring pharmacy drop-per-mL standards",
-            "Missing frequency in the directions",
+            "Missing dosing frequency in the directions",
             "Assuming every bottle produces identical drop size",
             "Not documenting the workflow used for estimation",
           ].map((item) => (
@@ -289,6 +292,18 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Link
+            href="/how-to-calculate-timolol-eye-drop-days-supply"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Timolol eye drop days supply
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Example calculations for twice-daily ophthalmic dosing.
+            </p>
+          </Link>
+
+          <Link
             href="/how-to-calculate-latanoprost-eye-drop-days-supply"
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
           >
@@ -297,18 +312,6 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
             </h3>
             <p className="mt-2 text-slate-700">
               Example calculations for once-daily ophthalmic dosing.
-            </p>
-          </Link>
-
-          <Link
-            href="/how-to-calculate-brimonidine-eye-drop-days-supply"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
-          >
-            <h3 className="text-lg font-semibold text-slate-900">
-              Brimonidine eye drop days supply
-            </h3>
-            <p className="mt-2 text-slate-700">
-              Guide for more frequent ophthalmic dosing workflows.
             </p>
           </Link>
 
@@ -345,14 +348,14 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Link
-            href="/eye-drops-ndc-reference/timolol"
+            href="/eye-drops-ndc-reference/brimonidine"
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
           >
             <h3 className="text-lg font-semibold text-slate-900">
-              Timolol Eye Drops NDC Reference
+              Brimonidine Eye Drops NDC Reference
             </h3>
             <p className="mt-2 text-slate-700">
-              Package NDCs, brands, and labelers for timolol ophthalmic
+              Package NDCs, brands, and labelers for brimonidine ophthalmic
               products.
             </p>
           </Link>
@@ -398,7 +401,7 @@ export default function HowToCalculateTimololEyeDropDaysSupplyPage() {
 
       <section className="mt-10 rounded-3xl border border-cyan-100 bg-cyan-50 p-6 sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
-          Frequently asked questions about timolol eye drop days supply
+          Frequently asked questions about brimonidine eye drop days supply
         </h2>
 
         <div className="mt-6 space-y-4">
