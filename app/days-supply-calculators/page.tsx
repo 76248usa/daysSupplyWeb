@@ -63,7 +63,9 @@ export default function DaysSupplyCalculatorsHub() {
           </li>
 
           <li>
-            <Link href="/ear-drops-calculator">Ear Drops Calculator</Link>
+            <Link href="/ear-drops-calculator">
+              Ear Drops Days Supply Calculator
+            </Link>
           </li>
         </ul>
       </section>

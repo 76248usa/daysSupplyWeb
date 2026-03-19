@@ -186,6 +186,10 @@ export default function EarDropsDaysSupplyCalculatorPage() {
         drops per dose, administrations per day, one ear or both ears, and
         optional duration caps.
       </p>
+      <p className="mt-2 text-[12px] text-slate-600">
+        This ear drop days supply calculator helps pharmacists calculate otic
+        days supply using bottle size, drops per mL, and dosing frequency.
+      </p>
 
       <section className="mt-4">
         <EarDropsCalculatorClient />

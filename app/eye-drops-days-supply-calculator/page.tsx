@@ -270,6 +270,17 @@ export default function EyeDropsDaysSupplyCalculatorPage() {
           </Link>{" "}
           for a step-by-step explanation.
         </p>
+
+        <p className="mt-3 text-slate-700 text-sm">
+          Also calculating otic prescriptions? Use the{" "}
+          <Link
+            href="/ear-drops-days-supply-calculator"
+            className="text-cyan-700 underline"
+          >
+            ear drop days supply calculator
+          </Link>
+          .
+        </p>
       </section>
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:mt-10 sm:p-8">

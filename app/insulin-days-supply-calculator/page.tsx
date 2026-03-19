@@ -248,6 +248,17 @@ export default function InsulinDaysSupplyCalculatorPage() {
         insulin pens.
       </p>
 
+      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
+        Also calculating otic prescriptions? Use the{" "}
+        <Link
+          href="/ear-drops-days-supply-calculator"
+          className="text-cyan-700 underline"
+        >
+          ear drops days supply calculator
+        </Link>{" "}
+        to estimate otic days supply using bottle size and dosing frequency.
+      </p>
+
       <section className="mt-4">
         <InsulinDaysSupplyCalculatorClient />
       </section>
