@@ -96,68 +96,19 @@ export default function HowToCalculateEyeDropDaysSupplyPage() {
           billing, refill timing, and workflow consistency.
         </p>
 
-        <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-bold text-slate-900">
-            Common ophthalmic examples
-          </h2>
-
-          <p className="mt-3 text-slate-700">
-            These examples show how eye drop days supply calculations apply to
-            common ophthalmic medications used in pharmacy workflow.
-          </p>
-
-          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-            <li className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <Link
-                href="/how-to-calculate-timolol-eye-drop-days-supply"
-                className="font-semibold text-cyan-700 underline underline-offset-4"
-              >
-                Timolol eye drop days supply
-              </Link>
-            </li>
-
-            <li className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <Link
-                href="/how-to-calculate-latanoprost-eye-drop-days-supply"
-                className="font-semibold text-cyan-700 underline underline-offset-4"
-              >
-                Latanoprost eye drop days supply
-              </Link>
-            </li>
-
-            <li className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <Link
-                href="/how-to-calculate-brimonidine-eye-drop-days-supply"
-                className="font-semibold text-cyan-700 underline underline-offset-4"
-              >
-                Brimonidine eye drop days supply
-              </Link>
-            </li>
-
-            <li className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <Link
-                href="/how-to-calculate-dorzolamide-eye-drop-days-supply"
-                className="font-semibold text-cyan-700 underline underline-offset-4"
-              >
-                Dorzolamide eye drop days supply
-              </Link>
-            </li>
-          </ul>
-        </section>
-
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/eye-drops-ndc-reference"
+            href="/eye-drops-days-supply-calculator"
             className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
           >
-            Eye Drops NDC Reference
+            Eye Drops Calculator
           </Link>
 
           <Link
-            href="/how-to-calculate-timolol-eye-drop-days-supply"
+            href="/eye-drops-ndc-reference"
             className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Timolol Guide
+            Eye Drops NDC Reference
           </Link>
         </div>
       </section>
@@ -280,6 +231,72 @@ export default function HowToCalculateEyeDropDaysSupplyPage() {
 
       <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">
+          Common eye drop examples
+        </h2>
+
+        <p className="mt-3 max-w-3xl text-slate-700">
+          Looking for drug-specific examples? These ophthalmic guides show how
+          days supply calculations can vary by bottle size, drops per mL, and
+          dosing frequency.
+        </p>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/latanoprost-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Latanoprost days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Step-by-step guide for latanoprost eye drop day supply
+              calculations.
+            </p>
+          </Link>
+
+          <Link
+            href="/timolol-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Timolol days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Common ophthalmic example using bottle size, drops per mL, and
+              daily dosing.
+            </p>
+          </Link>
+
+          <Link
+            href="/brimonidine-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Brimonidine days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Drug-specific guide for brimonidine ophthalmic day supply
+              workflow.
+            </p>
+          </Link>
+
+          <Link
+            href="/eye-drops-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Eye drops days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Use the calculator for one eye, both eyes, bottle size, and dosing
+              frequency.
+            </p>
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
           Common eye drop days supply mistakes
         </h2>
 
@@ -309,11 +326,11 @@ export default function HowToCalculateEyeDropDaysSupplyPage() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Link
-            href="/how-to-calculate-timolol-eye-drop-days-supply"
+            href="/timolol-days-supply-calculator"
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
           >
             <h3 className="text-lg font-semibold text-slate-900">
-              How to Calculate Timolol Eye Drop Days Supply
+              Timolol days supply calculator
             </h3>
             <p className="mt-2 text-slate-700">
               Step-by-step guide for timolol ophthalmic days supply.
@@ -345,11 +362,11 @@ export default function HowToCalculateEyeDropDaysSupplyPage() {
           </Link>
 
           <Link
-            href="/insulin-calculators"
+            href="/insulin-days-supply-calculator"
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
           >
             <h3 className="text-lg font-semibold text-slate-900">
-              Insulin Calculators
+              Insulin Days Supply Calculator
             </h3>
             <p className="mt-2 text-slate-700">
               Browse insulin days supply calculators and pharmacist references.

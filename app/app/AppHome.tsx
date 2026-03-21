@@ -341,6 +341,16 @@ export default function AppHome() {
         />
       </div>
 
+      <p className="mt-2 text-[11px] text-slate-500">
+        See full calculation method →
+        <Link
+          href="/insulin-days-supply-calculator"
+          className="text-cyan-700 underline ml-1"
+        >
+          insulin day supply explanation
+        </Link>
+      </p>
+
       <div className="mt-4 grid gap-2.5 sm:mt-5 sm:grid-cols-2 sm:gap-3">
         {filtered.map((m) => (
           <Link
@@ -548,6 +558,16 @@ export default function AppHome() {
               )}
             </div>
           </section>
+
+          <p className="mt-2 text-[11px] text-slate-600">
+            Learn how insulin days supply is calculated →
+            <Link
+              href="/insulin-days-supply-calculator"
+              className="text-cyan-700 underline ml-1"
+            >
+              insulin days supply calculator guide
+            </Link>
+          </p>
 
           <div className="sm:hidden">{searchSection}</div>
           <div className="hidden sm:block">{installSection}</div>

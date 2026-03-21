@@ -118,7 +118,7 @@ export default function EyeDropsDaysSupplyCalculatorPage() {
             </p>
 
             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
-              <span className="text-slate-500">Related pages:</span>
+              <span className="text-slate-500">Popular pages:</span>
 
               <Link
                 href="/how-to-calculate-eye-drop-days-supply"
@@ -155,8 +155,77 @@ export default function EyeDropsDaysSupplyCalculatorPage() {
         mL, drops per dose, dosing frequency, and one-eye or both-eyes use.
       </p>
 
+      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
+        This eye drop days supply calculator helps pharmacists calculate
+        ophthalmic days supply using bottle size, drops per mL, and dosing
+        frequency.
+      </p>
+
       <section className="mt-4">
         <EyeDropsCalculatorClient />
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Common eye drop examples
+        </h2>
+
+        <p className="mt-3 max-w-3xl text-slate-700">
+          Need a drug-specific example? These pages show how days supply can be
+          estimated for common ophthalmic prescriptions and then linked back to
+          the main calculator.
+        </p>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/latanoprost-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Latanoprost days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Example calculations for latanoprost eye drop prescriptions.
+            </p>
+          </Link>
+
+          <Link
+            href="/timolol-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Timolol days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Step-by-step timolol ophthalmic day supply workflow example.
+            </p>
+          </Link>
+
+          <Link
+            href="/brimonidine-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Brimonidine days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Drug-specific guide for brimonidine eye drop day supply.
+            </p>
+          </Link>
+
+          <Link
+            href="/how-to-calculate-eye-drop-days-supply"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              General eye drop days supply guide
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Learn the formula and workflow behind ophthalmic day supply
+              calculations.
+            </p>
+          </Link>
+        </div>
       </section>
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:mt-10">

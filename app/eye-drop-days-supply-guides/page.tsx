@@ -1,4 +1,3 @@
-// app/eye-drop-days-supply-guides/page.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getEyeDropDrugGroups } from "@/lib/fdaNdc";
@@ -6,7 +5,14 @@ import { getEyeDropDrugGroups } from "@/lib/fdaNdc";
 export const metadata: Metadata = {
   title: "Eye Drop Days Supply Guides | Pharmacist Reference",
   description:
-    "Browse pharmacist guides for calculating eye drop days supply by ophthalmic drug.",
+    "Browse pharmacist guides for calculating eye drop days supply by ophthalmic drug, including bottle size, drops per mL, and dosing workflow.",
+  keywords: [
+    "eye drop days supply guides",
+    "ophthalmic days supply guides",
+    "eye drop days supply by drug",
+    "pharmacist eye drop guide",
+    "how to calculate eye drop days supply",
+  ],
   alternates: {
     canonical:
       "https://www.insulinprimingdayssupply.com/eye-drop-days-supply-guides",
@@ -16,7 +22,14 @@ export const metadata: Metadata = {
     description:
       "Browse pharmacist guides for calculating eye drop days supply by ophthalmic drug.",
     url: "https://www.insulinprimingdayssupply.com/eye-drop-days-supply-guides",
-    type: "article",
+    siteName: "Insulin Days' Supply",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Eye Drop Days Supply Guides | Pharmacist Reference",
+    description:
+      "Browse pharmacist guides for calculating eye drop days supply by ophthalmic drug.",
   },
 };
 
@@ -32,11 +45,16 @@ export default async function EyeDropGuidesIndexPage() {
       "Browse pharmacist guides for calculating eye drop days supply by ophthalmic drug.",
     audience: {
       "@type": "MedicalAudience",
-      audienceType: "Pharmacist",
+      audienceType: "Pharmacists",
     },
     about: {
       "@type": "DrugClass",
       name: "Ophthalmic Products",
+    },
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Insulin Days' Supply",
+      url: "https://www.insulinprimingdayssupply.com",
     },
   };
 
@@ -61,9 +79,28 @@ export default async function EyeDropGuidesIndexPage() {
           supply using bottle size, drops per mL, and daily dosing directions.
         </p>
 
-        <p>
-          This eye drops supply calculator is designed for pharmacists and
-          pharmacy technicians.
+        <p className="mt-3 max-w-3xl text-sm text-slate-700">
+          These eye drop days supply guides are designed for pharmacists and
+          pharmacy technicians who need drug-specific ophthalmic workflow
+          examples for documentation, billing, and refill timing.
+        </p>
+
+        <p className="mt-3 max-w-3xl text-sm text-slate-600">
+          Looking for the main tool? Use the{" "}
+          <Link
+            href="/eye-drops-days-supply-calculator"
+            className="font-semibold text-cyan-700 underline underline-offset-4"
+          >
+            eye drops days supply calculator
+          </Link>{" "}
+          or start with the{" "}
+          <Link
+            href="/how-to-calculate-eye-drop-days-supply"
+            className="font-semibold text-cyan-700 underline underline-offset-4"
+          >
+            general eye drop days supply guide
+          </Link>
+          .
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -72,6 +109,13 @@ export default async function EyeDropGuidesIndexPage() {
             className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
           >
             Eye Drops Calculator
+          </Link>
+
+          <Link
+            href="/how-to-calculate-eye-drop-days-supply"
+            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            General Eye Drop Guide
           </Link>
 
           <Link
@@ -87,6 +131,12 @@ export default async function EyeDropGuidesIndexPage() {
         <h2 className="text-2xl font-bold text-slate-900">
           Browse by ophthalmic drug
         </h2>
+
+        <p className="mt-3 max-w-3xl text-slate-700">
+          Select a drug below to view a pharmacist guide for calculating eye
+          drop days supply by medication, package size, and common dosing
+          workflow.
+        </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map((group) => (

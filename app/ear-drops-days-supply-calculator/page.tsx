@@ -113,8 +113,8 @@ export default function EarDropsDaysSupplyCalculatorPage() {
               optional duration limits.
             </p>
 
-            {/* <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
-              <span className="text-slate-500">Related pages:</span>
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
+              <span className="text-slate-500">Popular pages:</span>
 
               <Link href="/days-supply-calculators" className="hover:underline">
                 Pharmacy calculators hub
@@ -135,7 +135,15 @@ export default function EarDropsDaysSupplyCalculatorPage() {
               >
                 Insulin calculator
               </Link>
-            </div> */}
+
+              <Link
+                href="/how-to-calculate-ear-drop-days-supply"
+                className="hover:underline"
+              >
+                Ear drop guide
+              </Link>
+              <span>•</span>
+            </div>
 
             <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
               <span className="text-slate-500">Resources:</span>
@@ -193,6 +201,69 @@ export default function EarDropsDaysSupplyCalculatorPage() {
 
       <section className="mt-4">
         <EarDropsCalculatorClient />
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Common ear drop examples
+        </h2>
+
+        <p className="mt-3 max-w-3xl text-slate-700">
+          Need a drug-specific example? These pages show how days supply can be
+          estimated for common otic prescriptions and then linked back to the
+          main calculator.
+        </p>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/ciprodex-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Ciprodex days supply calculator
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Example calculations for Ciprodex ear drop prescriptions.
+            </p>
+          </Link>
+
+          <Link
+            href="/ofloxacin-ear-drops-days-supply"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Ofloxacin ear drops days supply
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Step-by-step ofloxacin otic day supply workflow example.
+            </p>
+          </Link>
+
+          <Link
+            href="/ciprofloxacin-ear-drops-days-supply"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Ciprofloxacin ear drops days supply
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Drug-specific guide for ciprofloxacin ear drop day supply.
+            </p>
+          </Link>
+
+          <Link
+            href="/how-to-calculate-ear-drop-days-supply"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              General ear drop days supply guide
+            </h3>
+            <p className="mt-2 text-slate-700">
+              Learn the formula and workflow behind otic day supply
+              calculations.
+            </p>
+          </Link>
+        </div>
       </section>
 
       <section className="mt-6 rounded-3xl border border-cyan-100 bg-cyan-50 p-5">
