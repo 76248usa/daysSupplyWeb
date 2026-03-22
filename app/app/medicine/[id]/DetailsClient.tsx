@@ -276,7 +276,7 @@ export default function DetailsClient({ medicine }: { medicine: Medicine }) {
               {answer !== null && (
                 <div className="rounded-2xl bg-white p-5 text-center">
                   <div className="text-sm font-medium text-slate-600">
-                    Days&apos; Supply per Pen
+                    Days&apos; Supply
                   </div>
                   <div className="mt-1 text-4xl font-bold text-cyan-700">
                     {answer}
