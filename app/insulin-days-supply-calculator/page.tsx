@@ -142,92 +142,6 @@ export default function InsulinDaysSupplyCalculatorPage() {
               Calculate insulin days supply and insulin day supply including
               priming doses, pen quantities, and expiration limits.
             </p>
-            {/* 
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
-              <span className="text-slate-500">Popular calculators:</span>
-
-              <Link
-                href="/tresiba-days-supply-calculator"
-                className="hover:underline"
-              >
-                Tresiba days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/novolog-days-supply-calculator"
-                className="hover:underline"
-              >
-                Novolog days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/lantus-days-supply-calculator"
-                className="hover:underline"
-              >
-                Lantus days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/humalog-days-supply-calculator"
-                className="hover:underline"
-              >
-                Humalog days supply calculator
-              </Link>
-            </div> */}
-
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-cyan-700">
-              <span className="text-slate-500">Popular pages:</span>
-
-              <Link
-                href="/tresiba-days-supply-calculator"
-                className="hover:underline"
-              >
-                Tresiba days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/novolog-days-supply-calculator"
-                className="hover:underline"
-              >
-                Novolog days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/lantus-days-supply-calculator"
-                className="hover:underline"
-              >
-                Lantus days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/humalog-days-supply-calculator"
-                className="hover:underline"
-              >
-                Humalog days supply calculator
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/insulin-pen-priming-days-supply"
-                className="hover:underline"
-              >
-                Pen priming guide
-              </Link>
-              <span>•</span>
-
-              <Link
-                href="/insulin-expiration-after-opening"
-                className="hover:underline"
-              >
-                Insulin expiration guide
-              </Link>
-            </div>
           </div>
 
           <div className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5">
@@ -241,15 +155,36 @@ export default function InsulinDaysSupplyCalculatorPage() {
         </div>
       </section>
 
-      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
+      <section className="mt-3">
+        <div className="grid grid-cols-3 gap-2">
+          <Link
+            href="/insulin-days-supply-calculator"
+            className="rounded-xl border border-cyan-200 bg-cyan-50 p-2 text-center text-xs font-semibold text-cyan-800"
+          >
+            💉 Insulin
+          </Link>
+
+          <Link
+            href="/eye-drops-days-supply-calculator"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            👁️ Eye Drops
+          </Link>
+
+          <Link
+            href="/ear-drops-days-supply-calculator"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            👂 Ear Drops
+          </Link>
+        </div>
+      </section>
+
+      <p className="mt-2 max-w-4xl text-[10px] text-slate-600">
         Pharmacist calculator for insulin days supply and insulin day supply
         including priming doses, pen package sizes, and expiration limits.
         Supports Tresiba, Novolog, Humalog, Lantus, Toujeo, Admelog and other
-        insulin pens.
-      </p>
-
-      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
-        Also calculating otic prescriptions? Use the{" "}
+        insulin pens. Also calculating otic prescriptions? Use the{" "}
         <Link
           href="/ear-drops-days-supply-calculator"
           className="text-cyan-700 underline"
@@ -259,8 +194,74 @@ export default function InsulinDaysSupplyCalculatorPage() {
         to estimate otic days supply using bottle size and dosing frequency.
       </p>
 
+      {/* <p className="mt-2 max-w-3xl text-[10px] text-slate-600">
+        Also calculating otic prescriptions? Use the{" "}
+        <Link
+          href="/ear-drops-days-supply-calculator"
+          className="text-cyan-700 underline"
+        >
+          ear drops days supply calculator
+        </Link>{" "}
+        to estimate otic days supply using bottle size and dosing frequency.
+      </p> */}
+
       <section className="mt-4">
         <InsulinDaysSupplyCalculatorClient />
+      </section>
+
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <h2 className="text-sm font-semibold text-slate-900 sm:text-base">
+          Popular insulin pages
+        </h2>
+
+        <div className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-[12px] text-cyan-700">
+          <Link
+            href="/tresiba-days-supply-calculator"
+            className="hover:underline"
+          >
+            Tresiba
+          </Link>
+          <span>•</span>
+
+          <Link
+            href="/novolog-days-supply-calculator"
+            className="hover:underline"
+          >
+            Novolog
+          </Link>
+          <span>•</span>
+
+          <Link
+            href="/lantus-days-supply-calculator"
+            className="hover:underline"
+          >
+            Lantus
+          </Link>
+          <span>•</span>
+
+          <Link
+            href="/humalog-days-supply-calculator"
+            className="hover:underline"
+          >
+            Humalog
+          </Link>
+          <span>•</span>
+
+          <Link
+            href="/insulin-pen-priming-days-supply"
+            className="hover:underline"
+          >
+            Pen priming guide
+          </Link>
+          <span>•</span>
+
+          <Link
+            href="/insulin-expiration-after-opening"
+            className="hover:underline"
+          >
+            Insulin expiration guide
+          </Link>
+        </div>
       </section>
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:mt-10">
@@ -463,7 +464,7 @@ export default function InsulinDaysSupplyCalculatorPage() {
         <h2 className="text-2xl font-bold text-slate-900">Important note</h2>
 
         <p className="mt-3 leading-7 text-slate-700">
-          Always use professional judgment and follow product labeling, payer,
+          Always use professional judgment and follow product labeling, payer
           plan, store, and workflow requirements when determining billed days
           supply.
         </p>

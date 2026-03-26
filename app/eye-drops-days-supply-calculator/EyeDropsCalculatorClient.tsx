@@ -158,7 +158,7 @@ export default function EyeDropsCalculatorClient() {
 
   return (
     <>
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      {/* <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-wrap gap-3">
           <Link
             href="/how-to-calculate-eye-drop-days-supply"
@@ -174,7 +174,27 @@ export default function EyeDropsCalculatorClient() {
             Eye Drops NDC Reference
           </Link>
         </div>
-      </section>
+      </section> */}
+
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-cyan-700">
+        <span className="text-slate-500">Resources:</span>
+
+        <Link
+          href="/how-to-calculate-eye-drop-days-supply"
+          className="underline hover:no-underline"
+        >
+          Guide
+        </Link>
+
+        <span>•</span>
+
+        <Link
+          href="/eye-drops-ndc-reference"
+          className="underline hover:no-underline"
+        >
+          NDC Reference
+        </Link>
+      </div>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">

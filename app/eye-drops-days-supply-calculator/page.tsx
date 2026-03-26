@@ -149,17 +149,44 @@ export default function EyeDropsDaysSupplyCalculatorPage() {
         </div>
       </section>
 
-      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
+      <section className="mt-3">
+        <div className="grid grid-cols-3 gap-2">
+          <Link
+            href="/insulin-days-supply-calculator"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            💉 Insulin
+          </Link>
+
+          <Link
+            href="/eye-drops-days-supply-calculator"
+            className="rounded-xl border border-cyan-200 bg-cyan-50 p-2 text-center text-xs font-semibold text-cyan-800"
+          >
+            👁️ Eye Drops
+          </Link>
+
+          <Link
+            href="/ear-drops-days-supply-calculator"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            👂 Ear Drops
+          </Link>
+        </div>
+      </section>
+
+      <p className="mt-2 max-w-4xl text-[10px] text-slate-600">
         Free eye drops days supply calculator for pharmacists and pharmacy
         technicians. Estimate ophthalmic day supply using bottle size, drops per
-        mL, drops per dose, dosing frequency, and one-eye or both-eyes use.
+        mL, drops per dose, dosing frequency, and one-eye or both-eyes use. This
+        eye drop days supply calculator helps pharmacists calculate ophthalmic
+        days supply using bottle size, drops per mL, and dosing frequency.
       </p>
 
-      <p className="mt-2 max-w-3xl text-[12px] text-slate-600">
+      {/* <p className="mt-2 max-w-3xl text-[10px] text-slate-600">
         This eye drop days supply calculator helps pharmacists calculate
         ophthalmic days supply using bottle size, drops per mL, and dosing
         frequency.
-      </p>
+      </p> */}
 
       <section className="mt-4">
         <EyeDropsCalculatorClient />

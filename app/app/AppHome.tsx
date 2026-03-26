@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { motion } from "framer-motion";
 import InstallCalculatorCard from "@/components/InstallCalculatorCard";
+//import FallbackBanner from "@/components/FallbackBanner";
 
 const RECENT_KEY = "ds_recent_checkout_ts";
 const RECENT_MS = 10 * 60 * 1000; // 10 minutes
@@ -327,6 +328,28 @@ export default function AppHome() {
         supply using product-specific priming and expiration logic.
       </p>
 
+      <section className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+        <Link
+          href="/insulin-days-supply-calculator"
+          className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-center text-xs font-semibold text-slate-900 shadow-sm"
+        >
+          💉 Insulin
+        </Link>
+        <Link
+          href="/eye-drops-days-supply-calculator"
+          className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+        >
+          👁️ Eye Drops
+        </Link>
+
+        <Link
+          href="/ear-drops-days-supply-calculator"
+          className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+        >
+          👂 Ear Drops
+        </Link>
+      </section>
+
       <div className="mt-4 relative sm:mt-5">
         <Search
           size={16}
@@ -558,6 +581,7 @@ export default function AppHome() {
               )}
             </div>
           </section>
+          {/* <FallbackBanner /> */}
 
           <p className="mt-2 text-[11px] text-slate-600">
             Learn how insulin days supply is calculated →
