@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title:
-    "Toujeo Days Supply Calculator | How to Calculate Toujeo Pen Days Supply",
+  title: "Toujeo Days Supply Calculator | With Priming and Expiration",
   description:
     "Learn how to calculate Toujeo days supply using total units dispensed, daily dose, priming considerations, and expiration guidance. Pharmacist-focused page with examples.",
   alternates: {

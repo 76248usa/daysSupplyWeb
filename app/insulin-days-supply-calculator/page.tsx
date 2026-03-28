@@ -209,6 +209,18 @@ export default function InsulinDaysSupplyCalculatorPage() {
         <InsulinDaysSupplyCalculatorClient />
       </section>
 
+      <section className="mt-6">
+        <h2 className="text-xl font-bold">Popular insulin calculators</h2>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+          {medicineData.slice(0, 12).map((m) => (
+            <Link key={m.id} href={`/${m.seoSlug}`} className="underline">
+              {m.name}
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <h2 className="text-sm font-semibold text-slate-900 sm:text-base">
           Popular insulin pages

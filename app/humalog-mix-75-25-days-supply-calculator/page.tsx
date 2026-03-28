@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title:
-    "Humalog Mix 75/25 Days Supply Calculator | How to Calculate Premix Insulin Days Supply",
+    "Humalog Mix 75/25 Days Supply Calculator | With Priming and Expiration",
   description:
     "Learn how to calculate Humalog Mix 75/25 days supply with pharmacist-focused examples including multiple daily injections, priming considerations, and insulin expiration guidance.",
   alternates: {

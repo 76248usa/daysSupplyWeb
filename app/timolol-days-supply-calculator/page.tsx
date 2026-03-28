@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Timolol Days Supply Calculator | Pharmacist Guide",
+  title: "Timolol Days Supply Calculator | With Priming and Expiration",
   description:
     "Step-by-step pharmacist guide explaining how to calculate timolol days supply using bottle size, drops per mL, dosing frequency, and one-eye or both-eyes directions.",
   keywords: [

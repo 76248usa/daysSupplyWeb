@@ -172,6 +172,25 @@ export default async function SeoMedicinePage({ params }: Props) {
         </Link>
       </p>
 
+      <section className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+        <p className="text-sm text-slate-700">Also calculate other insulins:</p>
+
+        <div className="mt-2 flex flex-wrap gap-2 text-sm">
+          <Link href="/tresiba-days-supply-calculator" className="underline">
+            Tresiba
+          </Link>
+          <Link href="/novolog-days-supply-calculator" className="underline">
+            NovoLog
+          </Link>
+          <Link href="/lantus-days-supply-calculator" className="underline">
+            Lantus
+          </Link>
+          <Link href="/humalog-days-supply-calculator" className="underline">
+            Humalog
+          </Link>
+        </div>
+      </section>
+
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ marginBottom: 12 }}>
           How {medicine.name} days supply is calculated

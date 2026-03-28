@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title:
-    "Humalog Days Supply Calculator | How to Calculate Humalog Pen Days Supply",
+  title: "Humalog Days Supply Calculator | With Priming and Expiration",
   description:
     "Calculate Humalog days supply with pharmacist-friendly guidance, priming considerations, example math, and links to insulin dosing resources.",
   alternates: {

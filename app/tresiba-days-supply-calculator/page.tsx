@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title:
-    "Tresiba Days Supply Calculator | How to Calculate Tresiba Pen Days Supply",
+  title: "Tresiba Days Supply Calculator | With Priming and Expiration",
   description:
     "Calculate Tresiba days supply with pharmacist-friendly guidance, priming considerations, example math, and quick links to insulin dosing resources.",
 

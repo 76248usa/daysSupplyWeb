@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "How to Calculate Insulin Days Supply | Pharmacist Guide",
+  title: "How to Calculate Insulin Days Supply | With Priming and Expiration",
   description:
     "Step-by-step guide explaining how pharmacists calculate insulin days supply including insulin pens, priming doses, and expiration considerations.",
   alternates: {
