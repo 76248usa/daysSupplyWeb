@@ -738,13 +738,16 @@ export const rawMedicineData: Medicine[] = [
   },
 ];
 
+function generateSlug(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/®|™/g, "")
+    .replace(/\b(u-\d+|ml|pen|pens|vial|cartridge|pack|box|\d+)\b/g, "") // remove noise
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export const medicineData: Medicine[] = rawMedicineData.map((m) => ({
   ...m,
-  seoSlug:
-    m.seoSlug ??
-    m.name
-      .toLowerCase()
-      .replace(/®|™/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") + "-days-supply-calculator",
+  seoSlug: m.seoSlug ?? `${generateSlug(m.name)}-days-supply-calculator`,
 }));
