@@ -61,10 +61,7 @@ export default function HumalogDaysSupplyCalculatorPage() {
       "@type": "MedicalAudience",
       audienceType: "Pharmacist",
     },
-    about: {
-      "@type": "MedicalEntity",
-      name: "Humalog",
-    },
+
     mainEntity: faqs.map((faq) => ({
       "@type": "Question",
       name: faq.question,

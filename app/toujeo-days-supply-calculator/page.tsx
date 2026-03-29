@@ -63,7 +63,7 @@ export default function ToujeoDaysSupplyCalculatorPage() {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: "Toujeo",
     },
     mainEntity: faqs.map((faq) => ({

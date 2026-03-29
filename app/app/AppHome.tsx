@@ -364,13 +364,19 @@ export default function AppHome() {
         />
       </div>
 
-      <p className="mt-2 text-[11px] text-slate-500">
+      <p className="mt-2 text-[11px] text-slate-500 flex gap-4">
         See full calculation method →
         <Link
           href="/insulin-days-supply-calculator"
           className="text-cyan-700 underline ml-1"
         >
           insulin day supply explanation
+        </Link>
+        <Link
+          href="/insulin-days-supply-calculator"
+          className="text-xs text-cyan-700 underline"
+        >
+          Learn how insulin days supply is calculated →
         </Link>
       </p>
 

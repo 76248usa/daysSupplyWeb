@@ -4,8 +4,9 @@ import AppHome from "./AppHome";
 
 export const dynamic = "force-dynamic";
 
+//
 export const metadata: Metadata = {
-  title: "Insulin Days Supply Calculator for Pharmacists",
+  title: "Insulin Days Supply Calculator with Priming and Expiration",
   description:
     "Professional insulin day-supply calculator incorporating priming units and expiration limits. Designed for pharmacists to support accurate, audit-ready documentation.",
   keywords: [
@@ -16,6 +17,18 @@ export const metadata: Metadata = {
     "insulin expiration calculation",
     "pharmacist insulin calculator",
   ],
+
+  // 🔥 ADD THIS
+  robots: {
+    index: false, // 🚫 DO NOT index /app
+    follow: true, // ✅ BUT follow links (important!)
+  },
+
+  // 🔥 ADD THIS (strong signal)
+  alternates: {
+    canonical:
+      "https://www.insulinprimingdayssupply.com/insulin-days-supply-calculator",
+  },
 };
 
 export default function Page() {

@@ -63,7 +63,7 @@ export default function TresibaDaysSupplyCalculatorPage() {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: "Tresiba",
     },
     mainEntity: faqs.map((faq) => ({

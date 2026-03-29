@@ -55,7 +55,7 @@ export default function LantusDaysSupplyCalculatorPage() {
       audienceType: "Pharmacist",
     },
     about: {
-      "@type": "Drug",
+      "@type": "MedicalEntity",
       name: "Lantus",
     },
     mainEntity: faqs.map((faq) => ({
