@@ -2,26 +2,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Tresiba Days Supply Calculator | With Priming and Expiration",
+  title:
+    "Tresiba Days Supply Calculator (With Priming & Expiration) | Pharmacist Tool",
   description:
-    "Calculate Tresiba days supply with pharmacist-friendly guidance, priming considerations, example math, and quick links to insulin dosing resources.",
-
+    "Calculate Tresiba days supply with pharmacist-focused guidance, priming considerations, expiration limits, example math, and quick links to insulin workflow resources.",
+  keywords: [
+    "tresiba days supply calculator",
+    "tresiba day supply calculator",
+    "tresiba days supply",
+    "tresiba insulin day supply",
+    "how to calculate tresiba days supply",
+    "insulin days supply calculator",
+    "insulin pen priming days supply",
+  ],
   alternates: {
     canonical:
       "https://www.insulinprimingdayssupply.com/tresiba-days-supply-calculator",
   },
   openGraph: {
     title:
-      "Tresiba Days Supply Calculator | How to Calculate Tresiba Pen Days Supply",
+      "Tresiba Days Supply Calculator (With Priming & Expiration) | Pharmacist Tool",
     description:
       "Learn how to calculate Tresiba pen days supply step by step, including total units, priming, and expiration considerations.",
     url: "https://www.insulinprimingdayssupply.com/tresiba-days-supply-calculator",
     type: "article",
+    siteName: "Insulin Days' Supply",
   },
   twitter: {
     card: "summary_large_image",
     title:
-      "Tresiba Days Supply Calculator | How to Calculate Tresiba Pen Days Supply",
+      "Tresiba Days Supply Calculator (With Priming & Expiration) | Pharmacist Tool",
     description:
       "Learn how to calculate Tresiba pen days supply step by step, including total units, priming, and expiration considerations.",
   },
@@ -31,36 +41,36 @@ const faqs = [
   {
     question: "How do you calculate days supply for Tresiba?",
     answer:
-      "Multiply the number of pens dispensed by the units in each pen, adjust for priming if your workflow requires it, then divide by the patient’s total daily dose.",
+      "Calculate total units dispensed, adjust for priming if your workflow includes priming loss, then divide usable units by the patient’s total daily dose.",
   },
   {
     question: "How many units are in a Tresiba pen?",
     answer:
-      "Tresiba pen units depend on the product presentation, so the package being dispensed should always be verified before calculating days supply.",
+      "Tresiba pen units depend on the product presentation being dispensed, so the exact package should always be confirmed before calculating days supply.",
   },
   {
     question: "Does priming affect Tresiba days supply?",
     answer:
-      "Yes. Priming can reduce the number of usable units available from the dispensed pens, especially over repeated injections and needle changes.",
+      "Yes. Priming can reduce the usable insulin available from dispensed pens, especially over repeated injections and needle changes.",
   },
   {
     question: "Why can Tresiba days supply be tricky?",
     answer:
-      "Tresiba calculations can be affected by the pen presentation, daily dose, priming assumptions, and product dating after opening.",
+      "Tresiba calculations can be affected by the pen presentation, total daily dose, priming assumptions, and expiration after opening.",
   },
 ];
 
 export default function TresibaDaysSupplyCalculatorPage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "MedicalWebPage",
+    "@type": ["MedicalWebPage", "FAQPage"],
     name: "Tresiba Days Supply Calculator",
     url: "https://www.insulinprimingdayssupply.com/tresiba-days-supply-calculator",
     description:
-      "Pharmacist-focused guide to calculating Tresiba days supply, including examples, priming considerations, and links to insulin reference pages.",
+      "Pharmacist-focused guide to calculating Tresiba days supply, including examples, priming considerations, expiration limits, and links to insulin reference pages.",
     audience: {
       "@type": "MedicalAudience",
-      audienceType: "Pharmacist",
+      audienceType: "Pharmacists",
     },
     about: {
       "@type": "MedicalEntity",
@@ -77,7 +87,7 @@ export default function TresibaDaysSupplyCalculatorPage() {
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -85,7 +95,7 @@ export default function TresibaDaysSupplyCalculatorPage() {
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-cyan-700">
-          Insulin SEO Page
+          Pharmacist Tool
         </p>
 
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -97,9 +107,21 @@ export default function TresibaDaysSupplyCalculatorPage() {
           <span className="font-semibold text-slate-900">
             Tresiba days supply
           </span>{" "}
-          using total dispensed units, daily dose, and priming considerations.
-          It is designed to help with clear, consistent insulin pen calculations
-          and quick access to your main calculator.
+          using total dispensed units, daily dose,{" "}
+          <span className="font-semibold text-slate-900">
+            priming considerations
+          </span>
+          , and{" "}
+          <span className="font-semibold text-slate-900">
+            expiration after opening
+          </span>
+          .
+        </p>
+
+        <p className="mt-3 leading-7 text-slate-700">
+          It is designed to help pharmacists and pharmacy technicians perform
+          clear, consistent insulin pen calculations for dispensing, billing,
+          refill timing, and audit-ready documentation.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -107,14 +129,47 @@ export default function TresibaDaysSupplyCalculatorPage() {
             href="/insulin-days-supply-calculator"
             className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
           >
-            Open Main Calculator
+            Open Main Insulin Calculator
           </Link>
 
           <Link
-            href="/insulin-pen-days-supply"
+            href="/insulin-pen-priming-days-supply"
             className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Read Pen Days Supply Guide
+            Pen Priming Guide
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+        <p className="text-sm font-semibold text-slate-900">
+          Also calculate other insulins
+        </p>
+
+        <div className="mt-2 flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/novolog-days-supply-calculator"
+            className="text-cyan-700 underline underline-offset-4"
+          >
+            NovoLog
+          </Link>
+          <Link
+            href="/lantus-days-supply-calculator"
+            className="text-cyan-700 underline underline-offset-4"
+          >
+            Lantus
+          </Link>
+          <Link
+            href="/humalog-days-supply-calculator"
+            className="text-cyan-700 underline underline-offset-4"
+          >
+            Humalog
+          </Link>
+          <Link
+            href="/toujeo-days-supply-calculator"
+            className="text-cyan-700 underline underline-offset-4"
+          >
+            Toujeo
           </Link>
         </div>
       </section>
@@ -124,13 +179,15 @@ export default function TresibaDaysSupplyCalculatorPage() {
           <h2 className="text-xl font-semibold text-slate-900">
             Quick formula
           </h2>
+
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <p className="font-semibold text-slate-900">
               Days Supply = Usable Total Units ÷ Total Daily Dose
             </p>
             <p className="mt-3 leading-7 text-slate-700">
               For Tresiba, usable total units may be reduced by priming loss if
-              that is part of your pharmacy’s calculation approach.
+              your workflow includes priming in the final days supply
+              calculation.
             </p>
           </div>
         </div>
@@ -139,6 +196,7 @@ export default function TresibaDaysSupplyCalculatorPage() {
           <h2 className="text-xl font-semibold text-slate-900">
             Why this page matters
           </h2>
+
           <ul className="mt-4 space-y-3 text-slate-700">
             <li>Supports more consistent Tresiba calculations</li>
             <li>Helps explain the math clearly</li>
@@ -161,7 +219,8 @@ export default function TresibaDaysSupplyCalculatorPage() {
             <p className="mt-2 leading-7">
               Before calculating days supply, verify the exact Tresiba product
               being dispensed. Different pen presentations can contain different
-              total unit amounts, so confirming the package is essential.
+              total unit amounts, so confirming the correct package is
+              essential.
             </p>
           </div>
 
@@ -182,7 +241,7 @@ export default function TresibaDaysSupplyCalculatorPage() {
             </h3>
             <p className="mt-2 leading-7">
               Confirm how many units the patient injects per day. Since Tresiba
-              is commonly used once daily, this may be straightforward, but the
+              is often used once daily, this may be straightforward, but the
               written directions should always be reviewed carefully.
             </p>
           </div>
@@ -194,15 +253,15 @@ export default function TresibaDaysSupplyCalculatorPage() {
             <p className="mt-2 leading-7">
               If your workflow includes priming in the days supply calculation,
               subtract expected priming units from the total available units.
-              This can slightly reduce the final days supply result.
+              This can slightly reduce the final Tresiba days supply result.
             </p>
             <p className="mt-2 leading-7">
               See the{" "}
               <Link
-                href="/insulin-priming-doses-chart"
+                href="/insulin-pen-priming-days-supply"
                 className="font-semibold text-cyan-700 underline underline-offset-4"
               >
-                priming doses chart
+                insulin pen priming guide
               </Link>{" "}
               for quick reference.
             </p>
@@ -225,15 +284,15 @@ export default function TresibaDaysSupplyCalculatorPage() {
             <p className="mt-2 leading-7">
               Even when the math suggests a certain number of days, practical
               use may also be limited by expiration after opening. Confirm this
-              against your insulin reference page.
+              against your insulin expiration reference.
             </p>
             <p className="mt-2 leading-7">
               Review the{" "}
               <Link
-                href="/insulin-expiration-chart"
+                href="/insulin-expiration-after-opening"
                 className="font-semibold text-cyan-700 underline underline-offset-4"
               >
-                insulin expiration chart
+                insulin expiration guide
               </Link>
               .
             </p>
@@ -267,8 +326,8 @@ export default function TresibaDaysSupplyCalculatorPage() {
           </div>
 
           <p className="leading-7">
-            If priming loss is included in your process, the usable units may be
-            lower and the calculated days supply may decrease slightly.
+            If priming loss is included in your process, usable units may be
+            slightly lower and the calculated days supply may decrease.
           </p>
         </div>
       </section>
@@ -311,43 +370,44 @@ export default function TresibaDaysSupplyCalculatorPage() {
               Insulin Days Supply Calculator
             </h3>
             <p className="mt-2 leading-7 text-slate-700">
-              Open the main calculator for a broader insulin workflow.
+              Open the main calculator for broader insulin workflow.
             </p>
           </Link>
 
           <Link
-            href="/insulin-pen-days-supply"
+            href="/insulin-pen-priming-days-supply"
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
           >
             <h3 className="text-lg font-semibold text-slate-900">
-              Insulin Pen Days Supply Guide
+              Insulin Pen Priming Guide
             </h3>
             <p className="mt-2 leading-7 text-slate-700">
-              Read the step-by-step guide for pen-based insulin calculations.
+              Review how priming loss can affect usable insulin units and days
+              supply.
             </p>
           </Link>
 
           <Link
-            href="/insulin-priming-doses-chart"
+            href="/insulin-expiration-after-opening"
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
           >
             <h3 className="text-lg font-semibold text-slate-900">
-              Priming Doses Chart
-            </h3>
-            <p className="mt-2 leading-7 text-slate-700">
-              Review priming references that may affect usable units.
-            </p>
-          </Link>
-
-          <Link
-            href="/insulin-expiration-chart"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
-          >
-            <h3 className="text-lg font-semibold text-slate-900">
-              Insulin Expiration Chart
+              Insulin Expiration After Opening
             </h3>
             <p className="mt-2 leading-7 text-slate-700">
               Check expiration-after-opening guidance across insulin products.
+            </p>
+          </Link>
+
+          <Link
+            href="/toujeo-days-supply-calculator"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-slate-100"
+          >
+            <h3 className="text-lg font-semibold text-slate-900">
+              Toujeo Days Supply Calculator
+            </h3>
+            <p className="mt-2 leading-7 text-slate-700">
+              Compare another long-acting insulin workflow page.
             </p>
           </Link>
         </div>
@@ -377,10 +437,11 @@ export default function TresibaDaysSupplyCalculatorPage() {
         <h2 className="text-2xl font-bold text-slate-900">
           Calculate Tresiba days supply faster
         </h2>
+
         <p className="mt-3 max-w-3xl leading-7 text-slate-700">
-          The perfect tool for faster workflow. Use this Tresiba insulin days
-          supply calculator to estimate the correct insulin day supply for
-          prescriptions including priming and expiration considerations.
+          Use this Tresiba insulin days supply calculator workflow to estimate
+          correct insulin day supply with priming and expiration considerations
+          in mind.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -391,16 +452,16 @@ export default function TresibaDaysSupplyCalculatorPage() {
             Open Calculator
           </Link>
           <Link
-            href="/insulin-priming-doses-chart"
+            href="/insulin-pen-priming-days-supply"
             className="inline-flex items-center rounded-xl border border-cyan-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Priming Chart
+            Priming Guide
           </Link>
           <Link
-            href="/insulin-expiration-chart"
+            href="/insulin-expiration-after-opening"
             className="inline-flex items-center rounded-xl border border-cyan-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Expiration Chart
+            Expiration Guide
           </Link>
         </div>
       </section>
