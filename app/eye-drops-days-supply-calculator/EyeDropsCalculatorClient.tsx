@@ -41,6 +41,8 @@ export default function EyeDropsCalculatorClient() {
 
   const [productSearch, setProductSearch] = useState("");
   const [selectedPackageNdc, setSelectedPackageNdc] = useState("");
+  const [hasChosenProduct, setHasChosenProduct] = useState(false);
+
   const [bottleCount, setBottleCount] = useState("1");
   const [bottleSizeMl, setBottleSizeMl] = useState("");
   const [dropsPerMl, setDropsPerMl] = useState(String(DEFAULT_DROPS_PER_ML));
@@ -84,79 +86,28 @@ export default function EyeDropsCalculatorClient() {
     };
   }, []);
 
-  // const filteredItems = useMemo(() => {
-  //   const q = productSearch.trim().toLowerCase();
-  //   if (!q) return items.slice(0, 24);
-
-  //   return items
-  //     .filter((item) => {
-  //       const haystack = [
-  //         item.genericName,
-  //         item.brandName,
-  //         item.packageNdc,
-  //         item.productNdc,
-  //         item.labelerName,
-  //         item.packageDescription,
-  //       ]
-  //         .filter(Boolean)
-  //         .join(" ")
-  //         .toLowerCase();
-
-  //       return haystack.includes(q);
-  //     })
-  //     .slice(0, 50);
-  // }, [items, productSearch]);
-
   const filteredItems = useMemo(() => {
     const q = productSearch.trim().toLowerCase();
 
     if (!q) return items.slice(0, 24);
 
-    const scored = items
-      .map((item) => {
+    return items
+      .filter((item) => {
         const generic = (item.genericName || "").toLowerCase().trim();
         const brand = (item.brandName || "").toLowerCase().trim();
         const packageNdc = (item.packageNdc || "").toLowerCase().trim();
         const productNdc = (item.productNdc || "").toLowerCase().trim();
 
-        const searchablePrimary = [
-          generic,
-          brand,
-          packageNdc,
-          productNdc,
-        ].filter(Boolean);
-
-        let score = -1;
-
-        // Best match: starts with generic or brand
-        if (generic.startsWith(q)) score = Math.max(score, 100);
-        if (brand.startsWith(q)) score = Math.max(score, 95);
-
-        // Word-start match: e.g. "tim" matches second word too
-        if (generic.split(/\s+/).some((word) => word.startsWith(q))) {
-          score = Math.max(score, 90);
-        }
-
-        if (brand.split(/\s+/).some((word) => word.startsWith(q))) {
-          score = Math.max(score, 85);
-        }
-
-        // Exact/partial NDC match
-        if (packageNdc.startsWith(q) || productNdc.startsWith(q)) {
-          score = Math.max(score, 80);
-        }
-
-        // Broader contains match only on main product identity fields
-        if (searchablePrimary.some((value) => value.includes(q))) {
-          score = Math.max(score, 60);
-        }
-
-        return { item, score };
+        return (
+          generic.startsWith(q) ||
+          brand.startsWith(q) ||
+          generic.split(/\s+/).some((word) => word.startsWith(q)) ||
+          brand.split(/\s+/).some((word) => word.startsWith(q)) ||
+          packageNdc.startsWith(q) ||
+          productNdc.startsWith(q)
+        );
       })
-      .filter((entry) => entry.score >= 0)
-      .sort((a, b) => b.score - a.score);
-
-    return scored.slice(0, 50).map((entry) => entry.item);
+      .slice(0, 50);
   }, [items, productSearch]);
 
   const selectedItem = useMemo(
@@ -276,12 +227,23 @@ export default function EyeDropsCalculatorClient() {
                   id="productSearch"
                   type="text"
                   value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setProductSearch(value);
+                    setHasChosenProduct(false);
+
+                    if (!value.trim()) {
+                      setSelectedPackageNdc("");
+                    }
+                  }}
                   placeholder="e.g. latanoprost, timolol, NDC"
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 />
 
-                {productSearch.trim() && !isLoading && !loadError ? (
+                {productSearch.trim() &&
+                !hasChosenProduct &&
+                !isLoading &&
+                !loadError ? (
                   <p className="mt-2 text-xs text-slate-500">
                     {filteredItems.length} matching product
                     {filteredItems.length === 1 ? "" : "s"}
@@ -289,44 +251,42 @@ export default function EyeDropsCalculatorClient() {
                 ) : null}
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-slate-900">
-                  Matching products
-                </label>
+              {!hasChosenProduct && (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-900">
+                    Matching products
+                  </label>
 
-                <div className="mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-2">
-                  {isLoading ? (
-                    <p className="p-3 text-sm text-slate-500">
-                      Loading FDA eye-drop data…
-                    </p>
-                  ) : loadError ? (
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                      {loadError}
-                    </div>
-                  ) : filteredItems.length === 0 ? (
-                    <p className="p-3 text-sm text-slate-500">
-                      No matching products found.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {filteredItems.map((item) => {
-                        const isSelected =
-                          item.packageNdc === selectedPackageNdc;
-
-                        return (
+                  <div className="mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                    {isLoading ? (
+                      <p className="p-3 text-sm text-slate-500">
+                        Loading FDA eye-drop data…
+                      </p>
+                    ) : loadError ? (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                        {loadError}
+                      </div>
+                    ) : filteredItems.length === 0 ? (
+                      <p className="p-3 text-sm text-slate-500">
+                        No matching products found.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {filteredItems.map((item) => (
                           <button
                             key={item.packageNdc || buildProductLabel(item)}
                             type="button"
-                            onClick={() =>
-                              setSelectedPackageNdc(item.packageNdc)
-                            }
-                            className={[
-                              PRESS,
-                              "w-full rounded-xl border px-4 py-3 text-left transition",
-                              isSelected
-                                ? "border-cyan-300 bg-cyan-50"
-                                : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/40",
-                            ].join(" ")}
+                            onClick={() => {
+                              setSelectedPackageNdc(item.packageNdc);
+                              setProductSearch(
+                                item.genericName ||
+                                  item.brandName ||
+                                  item.packageNdc ||
+                                  "",
+                              );
+                              setHasChosenProduct(true);
+                            }}
+                            className={`${PRESS} w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-cyan-200 hover:bg-cyan-50/40`}
                           >
                             <div className="text-sm font-semibold text-slate-900">
                               {item.genericName || item.brandName || "Product"}
@@ -349,26 +309,56 @@ export default function EyeDropsCalculatorClient() {
                               </div>
                             ) : null}
                           </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {selectedItem && (
-                <div className="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-sm font-semibold text-slate-900">
-                    Selected product
-                  </div>
-                  <div className="mt-1 text-sm text-slate-700">
-                    {buildProductLabel(selectedItem)}
-                  </div>
-                  {selectedItem.packageDescription ? (
-                    <div className="mt-1 text-xs text-slate-500">
-                      {selectedItem.packageDescription}
+                <div className="sm:col-span-2 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">
+                        Selected product
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">
+                        {selectedItem.genericName ||
+                          selectedItem.brandName ||
+                          "Product"}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-600">
+                        {selectedItem.brandName &&
+                        selectedItem.brandName !== selectedItem.genericName
+                          ? `${selectedItem.brandName} • `
+                          : ""}
+                        {selectedItem.packageNdc
+                          ? `NDC ${selectedItem.packageNdc}`
+                          : ""}
+                        {selectedItem.bottleSizeMl != null
+                          ? ` • ${selectedItem.bottleSizeMl} mL`
+                          : ""}
+                      </div>
+                      {selectedItem.packageDescription ? (
+                        <div className="mt-1 text-xs text-slate-500">
+                          {selectedItem.packageDescription}
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHasChosenProduct(false);
+                        setProductSearch("");
+                        setSelectedPackageNdc("");
+                      }}
+                      className={`${PRESS} rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50`}
+                    >
+                      Change
+                    </button>
+                  </div>
                 </div>
               )}
 
