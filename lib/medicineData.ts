@@ -427,7 +427,7 @@ export const rawMedicineData: Medicine[] = [
   },
   {
     id: 39,
-    name: "Insulin Glargine-YFGN U-100 5 Pens 10mL",
+    name: "Insulin Glargine-YFGN U-100 5 Pens",
     addToName: "3 mL per Pen, 5 Pens per Box",
     ndc: "NDC: 83257-0015-32",
     unitsInPen: 300,
