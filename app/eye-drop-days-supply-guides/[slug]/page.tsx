@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEyeDropDrugBySlug, getEyeDropDrugGroups } from "@/lib/fdaNdc";
-
+import { eyeDropSeoContent } from "@/lib/eyeDropSeoContent";
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -55,6 +55,12 @@ export default async function EyeDropGuidePage({ params }: Props) {
   if (!group) {
     notFound();
   }
+  // const group = await getEyeDropDrugBySlug(slug);
+
+  // if (!group) {
+  //   notFound();
+  // }
+  const seoContent = eyeDropSeoContent[group.slug] ?? null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -93,6 +99,12 @@ export default async function EyeDropGuidePage({ params }: Props) {
           <strong>{group.genericName} eye drop days supply</strong> using bottle
           size, estimated drops per mL, and prescribed daily use.
         </p>
+
+        {seoContent?.introExtra && (
+          <p className="mt-3 text-base leading-7 text-slate-700">
+            {seoContent.introExtra}
+          </p>
+        )}
 
         {group.items.length > 0 && (
           <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -135,6 +147,20 @@ export default async function EyeDropGuidePage({ params }: Props) {
             </div>
           </section>
         )}
+
+        {seoContent?.dosingConsiderations?.length ? (
+          <section className="mt-10 rounded-3xl border border-cyan-200 bg-cyan-50 p-6">
+            <h2 className="text-2xl font-bold text-slate-900">
+              {group.genericName} dosing considerations
+            </h2>
+
+            <ul className="mt-4 space-y-2 text-slate-700">
+              {seoContent.dosingConsiderations.map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {/* <div className="mt-6 flex flex-wrap gap-3">
           <Link
