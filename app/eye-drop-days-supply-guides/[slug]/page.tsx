@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEyeDropDrugBySlug, getEyeDropDrugGroups } from "@/lib/fdaNdc";
 import { eyeDropSeoContent } from "@/lib/eyeDropSeoContent";
+
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -22,22 +23,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!group) {
     return {
       title: "Eye Drop Days Supply Guide",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  const seoContent = eyeDropSeoContent[group.slug] ?? null;
+
   const title = `How to Calculate ${group.genericName} Eye Drop Days Supply | Pharmacist Guide`;
-  const description = `Step-by-step pharmacist guide for calculating ${group.genericName} eye drop days supply using bottle size, drops per mL, dosing frequency, and workflow considerations.`;
+
+  const description = seoContent?.relatedTerms?.length
+    ? `Step-by-step pharmacist guide for calculating ${group.genericName} eye drop days supply using bottle size, drops per mL, dosing frequency, and workflow considerations. Includes ${seoContent.relatedTerms.join(
+        ", ",
+      )}.`
+    : `Step-by-step pharmacist guide for calculating ${group.genericName} eye drop days supply using bottle size, drops per mL, dosing frequency, and workflow considerations.`;
+
+  const url = `https://www.insulinprimingdayssupply.com/eye-drop-days-supply-guides/${group.slug}`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: `https://www.insulinprimingdayssupply.com/eye-drop-days-supply-guides/${group.slug}`,
+      canonical: url,
     },
     openGraph: {
       title,
       description,
-      url: `https://www.insulinprimingdayssupply.com/eye-drop-days-supply-guides/${group.slug}`,
+      url,
+      siteName: "Insulin Days' Supply",
       type: "article",
     },
     twitter: {
@@ -55,12 +70,16 @@ export default async function EyeDropGuidePage({ params }: Props) {
   if (!group) {
     notFound();
   }
-  // const group = await getEyeDropDrugBySlug(slug);
 
-  // if (!group) {
-  //   notFound();
-  // }
   const seoContent = eyeDropSeoContent[group.slug] ?? null;
+
+  const bottleSizes = [
+    ...new Set(
+      group.items
+        .map((item) => item.bottleSizeMl)
+        .filter((value): value is number => value != null),
+    ),
+  ].sort((a, b) => a - b);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -100,13 +119,13 @@ export default async function EyeDropGuidePage({ params }: Props) {
           size, estimated drops per mL, and prescribed daily use.
         </p>
 
-        {seoContent?.introExtra && (
+        {seoContent?.introExtra ? (
           <p className="mt-3 text-base leading-7 text-slate-700">
             {seoContent.introExtra}
           </p>
-        )}
+        ) : null}
 
-        {group.items.length > 0 && (
+        {group.items.length > 0 ? (
           <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <h2 className="text-xl font-semibold text-slate-900">
               {group.genericName} ophthalmic product overview
@@ -117,44 +136,37 @@ export default async function EyeDropGuidePage({ params }: Props) {
                 <strong>Package NDCs found:</strong> {group.items.length}
               </p>
 
-              {group.brandNames.length > 0 && (
+              {group.brandNames.length > 0 ? (
                 <p>
                   <strong>Brand names:</strong> {group.brandNames.join(", ")}
                 </p>
-              )}
+              ) : null}
 
-              {group.labelerNames.length > 0 && (
+              {group.labelerNames.length > 0 ? (
                 <p>
                   <strong>Labelers:</strong>{" "}
                   {group.labelerNames.slice(0, 5).join(", ")}
                   {group.labelerNames.length > 5 ? "..." : ""}
                 </p>
-              )}
+              ) : null}
 
               <p>
                 <strong>Common bottle sizes:</strong>{" "}
-                {[
-                  ...new Set(
-                    group.items
-                      .map((item) => item.bottleSizeMl)
-                      .filter((value): value is number => value != null),
-                  ),
-                ]
-                  .sort((a, b) => a - b)
-                  .map((value) => `${value} mL`)
-                  .join(", ") || "Not available"}
+                {bottleSizes.length
+                  ? bottleSizes.map((value) => `${value} mL`).join(", ")
+                  : "Not available"}
               </p>
             </div>
           </section>
-        )}
+        ) : null}
 
         {seoContent?.dosingConsiderations?.length ? (
-          <section className="mt-10 rounded-3xl border border-cyan-200 bg-cyan-50 p-6">
-            <h2 className="text-2xl font-bold text-slate-900">
+          <section className="mt-8 rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+            <h2 className="text-xl font-semibold text-slate-900">
               {group.genericName} dosing considerations
             </h2>
 
-            <ul className="mt-4 space-y-2 text-slate-700">
+            <ul className="mt-4 space-y-2 text-slate-700 leading-7">
               {seoContent.dosingConsiderations.map((item) => (
                 <li key={item}>• {item}</li>
               ))}
@@ -162,21 +174,34 @@ export default async function EyeDropGuidePage({ params }: Props) {
           </section>
         ) : null}
 
-        {/* <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href={`/eye-drops-ndc-reference/${group.slug}`}
-            className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700"
-          >
-            {group.genericName} NDC Reference
-          </Link>
+        {seoContent?.commonScenarios?.length ? (
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Common {group.genericName} dosing scenarios
+            </h2>
 
-          <Link
-            href="/how-to-calculate-eye-drop-days-supply"
-            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            General Eye Drop Guide
-          </Link>
-        </div> */}
+            <div className="mt-4 space-y-4">
+              {seoContent.commonScenarios.map((scenario) => (
+                <div
+                  key={scenario.title}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <h3 className="font-semibold text-slate-900">
+                    {scenario.title}
+                  </h3>
+                  <p className="mt-2 text-slate-700">
+                    <span className="font-semibold">Typical dosing:</span>{" "}
+                    {scenario.dose}
+                  </p>
+                  <p className="mt-2 text-slate-700">
+                    <span className="font-semibold">Days supply impact:</span>{" "}
+                    {scenario.impact}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
@@ -299,6 +324,25 @@ export default async function EyeDropGuidePage({ params }: Props) {
           </p>
         </div>
       </section>
+
+      {seoContent?.faq?.length ? (
+        <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="text-2xl font-bold text-slate-900">
+            {group.genericName} eye drop days supply FAQs
+          </h2>
+
+          <div className="mt-6 space-y-6 text-slate-700">
+            {seoContent.faq.map((item) => (
+              <div key={item.question}>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {item.question}
+                </h3>
+                <p className="mt-2 leading-7">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-10 rounded-3xl border border-cyan-100 bg-cyan-50 p-6 sm:p-8">
         <h2 className="text-2xl font-bold text-slate-900">Related pages</h2>

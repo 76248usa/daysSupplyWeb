@@ -111,4 +111,58 @@ export const eyeDropSeoContent: Record<string, EyeDropSeoContent> = {
       },
     ],
   },
+
+  "timolol-maleate": {
+    introExtra:
+      "Timolol ophthalmic products are commonly used in glaucoma workflows and are often prescribed on a scheduled daily regimen, so one-eye versus both-eyes directions can significantly affect days supply.",
+    dosingConsiderations: [
+      "Confirm once-daily versus twice-daily directions.",
+      "Both-eyes use doubles daily drop count compared with one-eye use.",
+      "Scheduled dosing usually makes days supply more predictable.",
+      "Bottle size and drops-per-mL assumptions should match pharmacy workflow.",
+    ],
+    commonScenarios: [
+      {
+        title: "Glaucoma maintenance therapy",
+        dose: "1 drop once or twice daily",
+        impact:
+          "Days supply depends heavily on whether one eye or both eyes are treated.",
+      },
+    ],
+    faq: [
+      {
+        question: "Why does timolol eye selection matter for days supply?",
+        answer:
+          "Using timolol in both eyes doubles the daily drop count compared with one-eye directions, which can cut the calculated days supply in half.",
+      },
+    ],
+    relatedTerms: ["glaucoma", "scheduled dosing", "both eyes", "drops per mL"],
+  },
+
+  latanoprost: {
+    introExtra:
+      "Latanoprost is commonly dosed once daily, often in the evening, so small bottle sizes may still produce a relatively long calculated days supply.",
+    dosingConsiderations: [
+      "Often dosed once daily.",
+      "Confirm whether directions are for one eye or both eyes.",
+      "Small bottles can still last several weeks depending on daily use.",
+      "Use the pharmacy’s standard drops-per-mL assumption consistently.",
+    ],
+    commonScenarios: [
+      {
+        title: "Glaucoma maintenance therapy",
+        dose: "1 drop in affected eye(s) once daily in the evening",
+        impact:
+          "Once-daily dosing often creates a longer days supply than twice-daily medications.",
+      },
+    ],
+    faq: [
+      {
+        question: "Why can latanoprost days supply be relatively long?",
+        answer:
+          "Because latanoprost is commonly dosed once daily, total daily drop use may be low compared with medications used multiple times per day.",
+      },
+    ],
+    relatedTerms: ["glaucoma", "once daily", "evening dosing", "drops per mL"],
+  },
 };
