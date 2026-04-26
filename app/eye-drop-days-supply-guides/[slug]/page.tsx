@@ -91,10 +91,6 @@ export default async function EyeDropGuidePage({ params }: Props) {
       "@type": "MedicalAudience",
       audienceType: "Pharmacist",
     },
-    about: {
-      "@type": "Drug",
-      name: group.genericName,
-    },
   };
 
   return (
