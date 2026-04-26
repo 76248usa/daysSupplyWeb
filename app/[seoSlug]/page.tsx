@@ -9,7 +9,7 @@ type Props = {
   }>;
 };
 
-export const dynamicParams = false;
+//export const dynamicParams = false;
 
 function getMedicineBySeoSlug(seoSlug: string) {
   return medicineData.find((medicine) => medicine.seoSlug === seoSlug);
