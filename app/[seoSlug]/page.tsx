@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { medicineData } from "@/lib/medicineData";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{
     seoSlug: string;
