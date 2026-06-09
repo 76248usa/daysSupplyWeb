@@ -199,7 +199,7 @@ export const rawMedicineData: Medicine[] = [
   {
     id: 18,
     name: "Humalog KwikPen U-200 2 Pens",
-    addToName: "3ml per Pen, 10ml per Box",
+    addToName: "3ml per Pen, 6ml per Box",
     ndc: "NDC: 0002-7712-27",
     prime: 2,
     expire: 28,
