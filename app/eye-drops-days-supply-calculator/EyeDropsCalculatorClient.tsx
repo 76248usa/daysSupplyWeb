@@ -18,8 +18,80 @@ type EyeDropItem = {
 
 const DEFAULT_DROPS_PER_ML = 20;
 
+const LATANOPROST_NDC_OVERRIDES: Record<
+  string,
+  {
+    manufacturer: string;
+    bottleSizeMl: number;
+    dropsPerBottle: number;
+    standardDaysSupply: number;
+    message: string;
+  }
+> = {
+  "68462094403": {
+    manufacturer: "Glenmark",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 50,
+    standardDaysSupply: 25,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 50 drops. Standard dosing: 1 bottle is 25 days.",
+  },
+  "70069042101": {
+    manufacturer: "Somerset",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 70,
+    standardDaysSupply: 35,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 70 drops. Standard dosing: 1 bottle is 35 days.",
+  },
+  "24208046325": {
+    manufacturer: "Bausch + Lomb",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 89,
+    standardDaysSupply: 44,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 89 drops. Standard dosing: 1 bottle is 44 days.",
+  },
+  "61314054701": {
+    manufacturer: "Sandoz",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 87,
+    standardDaysSupply: 43,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 87 drops. Standard dosing: 1 bottle is 43 days.",
+  },
+  "61314054703": {
+    manufacturer: "Sandoz",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 87,
+    standardDaysSupply: 43,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 87 drops. Standard dosing: 1 bottle is 43 days.",
+  },
+  "59762033302": {
+    manufacturer: "Viatris",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 80,
+    standardDaysSupply: 40,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 80 drops. Standard dosing: 1 bottle is 40 days.",
+  },
+  "58151041935": {
+    manufacturer: "Viatris",
+    bottleSizeMl: 2.5,
+    dropsPerBottle: 80,
+    standardDaysSupply: 40,
+    message:
+      "This manufacturer specifies that each 2.5 mL bottle has 80 drops. Standard dosing: 1 bottle is 40 days.",
+  },
+};
+
 const PRESS =
   "select-none cursor-pointer active:scale-[0.97] transition-transform";
+
+function normalizeNdc(value?: string | null) {
+  return (value ?? "").replace(/\D/g, "");
+}
 
 function formatNumber(value: number | null, digits = 1) {
   if (value == null || Number.isNaN(value)) return "—";
@@ -115,13 +187,39 @@ export default function EyeDropsCalculatorClient() {
     [items, selectedPackageNdc],
   );
 
+  const latanoprostOverride = useMemo(() => {
+    if (!selectedItem) return null;
+
+    const packageNdc = normalizeNdc(selectedItem.packageNdc);
+    const productNdc = normalizeNdc(selectedItem.productNdc);
+
+    return (
+      LATANOPROST_NDC_OVERRIDES[packageNdc] ??
+      LATANOPROST_NDC_OVERRIDES[productNdc] ??
+      null
+    );
+  }, [selectedItem]);
+
   useEffect(() => {
     if (!selectedItem) return;
+
+    if (latanoprostOverride) {
+      setBottleSizeMl(String(latanoprostOverride.bottleSizeMl));
+      setDropsPerMl("");
+      setTimesPerDay("1");
+      setLeftEyeDropsPerDose("1");
+      setRightEyeDropsPerDose("1");
+      return;
+    }
 
     if (selectedItem.bottleSizeMl != null) {
       setBottleSizeMl(String(selectedItem.bottleSizeMl));
     }
-  }, [selectedItem]);
+
+    if (!dropsPerMl) {
+      setDropsPerMl(String(DEFAULT_DROPS_PER_ML));
+    }
+  }, [selectedItem, latanoprostOverride, dropsPerMl]);
 
   const bottleCountNum = Number.parseFloat(bottleCount);
   const bottleSizeMlNum = Number.parseFloat(bottleSizeMl);
@@ -131,20 +229,24 @@ export default function EyeDropsCalculatorClient() {
   const timesPerDayNum = Number.parseFloat(timesPerDay);
 
   const totalDrops = useMemo(() => {
-    if (
-      !Number.isFinite(bottleCountNum) ||
-      !Number.isFinite(bottleSizeMlNum) ||
-      !Number.isFinite(dropsPerMlNum)
-    ) {
+    if (!Number.isFinite(bottleCountNum) || bottleCountNum <= 0) {
       return null;
     }
 
-    if (bottleCountNum <= 0 || bottleSizeMlNum <= 0 || dropsPerMlNum <= 0) {
+    if (latanoprostOverride) {
+      return bottleCountNum * latanoprostOverride.dropsPerBottle;
+    }
+
+    if (!Number.isFinite(bottleSizeMlNum) || !Number.isFinite(dropsPerMlNum)) {
+      return null;
+    }
+
+    if (bottleSizeMlNum <= 0 || dropsPerMlNum <= 0) {
       return null;
     }
 
     return bottleCountNum * bottleSizeMlNum * dropsPerMlNum;
-  }, [bottleCountNum, bottleSizeMlNum, dropsPerMlNum]);
+  }, [bottleCountNum, bottleSizeMlNum, dropsPerMlNum, latanoprostOverride]);
 
   const dropsPerDay = useMemo(() => {
     if (
@@ -345,6 +447,24 @@ export default function EyeDropsCalculatorClient() {
                           {selectedItem.packageDescription}
                         </div>
                       ) : null}
+
+                      {latanoprostOverride ? (
+                        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">
+                          <div className="font-bold text-emerald-900">
+                            Manufacturer-specific latanoprost edit
+                          </div>
+                          <div className="mt-1">
+                            {latanoprostOverride.message}
+                          </div>
+                          <div className="mt-1">
+                            Manufacturer: {latanoprostOverride.manufacturer}
+                          </div>
+                          <div className="mt-1">
+                            Drops per bottle:{" "}
+                            {latanoprostOverride.dropsPerBottle}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
                     <button
@@ -353,6 +473,8 @@ export default function EyeDropsCalculatorClient() {
                         setHasChosenProduct(false);
                         setProductSearch("");
                         setSelectedPackageNdc("");
+                        setBottleSizeMl("");
+                        setDropsPerMl(String(DEFAULT_DROPS_PER_ML));
                       }}
                       className={`${PRESS} rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50`}
                     >
@@ -393,14 +515,20 @@ export default function EyeDropsCalculatorClient() {
                   min="0"
                   step="0.1"
                   value={bottleSizeMl}
+                  disabled={Boolean(latanoprostOverride)}
                   onChange={(e) => setBottleSizeMl(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:bg-slate-100 disabled:text-slate-500"
                 />
-                {selectedItem?.bottleSizeMl != null && (
+                {latanoprostOverride ? (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Bottle size is fixed from the manufacturer-specific
+                    latanoprost edit.
+                  </p>
+                ) : selectedItem?.bottleSizeMl != null ? (
                   <p className="mt-2 text-xs text-slate-500">
                     Auto-detected from NDC package description.
                   </p>
-                )}
+                ) : null}
               </div>
 
               <div>
@@ -416,11 +544,14 @@ export default function EyeDropsCalculatorClient() {
                   min="1"
                   step="1"
                   value={dropsPerMl}
+                  disabled={Boolean(latanoprostOverride)}
                   onChange={(e) => setDropsPerMl(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:bg-slate-100 disabled:text-slate-500"
                 />
                 <p className="mt-2 text-xs text-slate-500">
-                  Default workflow value is {DEFAULT_DROPS_PER_ML} drops per mL.
+                  {latanoprostOverride
+                    ? "Manufacturer-specific drops per bottle are being used for this NDC."
+                    : `Default workflow value is ${DEFAULT_DROPS_PER_ML} drops per mL.`}
                 </p>
               </div>
 
@@ -498,6 +629,13 @@ export default function EyeDropsCalculatorClient() {
                   <p className="mt-1 text-2xl font-bold text-slate-900">
                     {formatNumber(totalDrops, 0)}
                   </p>
+                  {latanoprostOverride ? (
+                    <p className="mt-1 text-xs font-semibold text-emerald-700">
+                      Using {latanoprostOverride.dropsPerBottle} drops per
+                      bottle × {bottleCount || "—"} bottle
+                      {bottleCount === "1" ? "" : "s"}.
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="rounded-2xl bg-white p-4">
@@ -538,9 +676,27 @@ export default function EyeDropsCalculatorClient() {
                 </p>
               </div>
 
-              <p className="mt-4 text-sm leading-7 text-slate-700">
-                Total Drops = bottle count × bottle size (mL) × drops per mL
-              </p>
+              {latanoprostOverride ? (
+                <>
+                  <p className="mt-4 text-sm leading-7 text-slate-700">
+                    Total Drops = bottle count × manufacturer-specific drops per
+                    bottle
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">
+                    For this NDC, the manufacturer-specific value is{" "}
+                    <span className="font-semibold">
+                      {latanoprostOverride.dropsPerBottle} drops per 2.5 mL
+                      bottle
+                    </span>
+                    .
+                  </p>
+                </>
+              ) : (
+                <p className="mt-4 text-sm leading-7 text-slate-700">
+                  Total Drops = bottle count × bottle size (mL) × drops per mL
+                </p>
+              )}
+
               <p className="mt-2 text-sm leading-7 text-slate-700">
                 Drops Used Per Day = (left eye drops + right eye drops) × times
                 per day
@@ -557,7 +713,9 @@ export default function EyeDropsCalculatorClient() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {[
               "Bottle size may be auto-detected from FDA package description.",
-              "Drops per mL is an estimate and may vary by bottle design.",
+              latanoprostOverride
+                ? "This selected latanoprost NDC uses a manufacturer-specific drops-per-bottle value."
+                : "Drops per mL is an estimate and may vary by bottle design.",
               "Left and right eye dosing can be entered separately.",
               "Always follow your pharmacy workflow and payer requirements.",
             ].map((note) => (
